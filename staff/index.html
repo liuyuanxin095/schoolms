@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>教職員管理 - 補習班系統</title>
+  <title>教職員管理 - 專業 HR 系統</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <style>
     :root { --primary: #2563eb; --primary-hover: #1d4ed8; --danger: #dc2626; --bg-color: #f3f4f6; --surface: #ffffff; --text-main: #1f2937; --text-light: #6b7280; --border: #e5e7eb; }
@@ -12,7 +12,7 @@
     .header { background-color: var(--surface); padding: 15px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .header-left { display: flex; align-items: center; gap: 10px; }
     .header h1 { margin: 0; font-size: 20px; }
-    .back-btn { text-decoration: none; color: var(--text-main); display: flex; align-items: gap: 5px; font-weight: 500; }
+    .back-btn { text-decoration: none; color: var(--text-main); display: flex; align-items: center; gap: 5px; font-weight: 500; }
     
     .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
     .card { background-color: var(--surface); border-radius: 8px; border: 1px solid var(--border); padding: 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
@@ -28,17 +28,34 @@
     table { width: 100%; border-collapse: collapse; }
     th, td { border-bottom: 1px solid var(--border); padding: 12px 16px; text-align: left; font-size: 14px; vertical-align: middle; }
     th { background-color: #f9fafb; font-weight: 600; color: var(--text-light); }
+    tbody tr:hover { background-color: #f8fafc; }
     
     .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background-color: #e5e7eb; }
     .staff-info { display: flex; align-items: center; gap: 12px; }
     .action-btns { display: flex; gap: 8px; }
     .btn-icon { background: none; border: 1px solid var(--border); padding: 6px; border-radius: 6px; cursor: pointer; color: var(--text-light); display: flex; align-items: center; text-decoration: none; }
+    .btn-icon:hover { background-color: #f3f4f6; color: var(--primary); }
     
     /* 角色標籤樣式 */
-    .role-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+    .role-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; display: inline-block; }
     .role-admin { background-color: #fee2e2; color: #b91c1c; }
     .role-manager { background-color: #e0e7ff; color: #4338ca; }
     .role-teacher { background-color: #dcfce7; color: #15803d; }
+
+    /* --- 浮動詳細視窗 (Modal) 樣式 --- */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-content { background: var(--surface); padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); position: relative; }
+    .modal-close { position: absolute; top: 20px; right: 20px; cursor: pointer; color: var(--text-light); background: #f3f4f6; padding: 4px; border-radius: 50%; transition: 0.2s; }
+    .modal-close:hover { background: #e5e7eb; color: var(--danger); }
+    
+    .modal-header { display: flex; align-items: center; gap: 20px; border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 20px; }
+    .modal-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); }
+    
+    .detail-section-title { font-size: 14px; font-weight: 600; color: var(--primary); margin: 20px 0 10px 0; border-left: 3px solid var(--primary); padding-left: 8px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px; background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+    .detail-item { display: flex; flex-direction: column; gap: 4px; }
+    .detail-label { color: var(--text-light); font-size: 12px; }
+    .detail-value { font-weight: 500; color: var(--text-main); }
   </style>
 </head>
 <body>
@@ -57,7 +74,7 @@
       
       <div class="filter-bar">
         <span class="material-symbols-outlined" style="color: var(--text-light);">search</span>
-        <input type="text" id="search-input" placeholder="搜尋姓名或電話..." style="flex-grow: 1;">
+        <input type="text" id="search-input" placeholder="搜尋姓名或員編..." style="flex-grow: 1;">
         <select id="role-filter">
           <option value="all">所有職務</option>
           <option value="admin">管理員</option>
@@ -73,10 +90,10 @@
         <thead>
           <tr>
             <th>教職員</th>
+            <th>人事編號</th>
             <th>職務</th>
             <th>所屬分校</th>
             <th>聯絡電話</th>
-            <th>薪資設定</th>
             <th>操作</th>
           </tr>
         </thead>
@@ -84,6 +101,47 @@
           <tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-content">
+      <span class="material-symbols-outlined modal-close" onclick="closeModal()">close</span>
+      
+      <div class="modal-header">
+        <img src="" id="modal-avatar" class="modal-avatar">
+        <div>
+          <h2 id="modal-name" style="margin: 0 0 8px 0; font-size: 24px;">-</h2>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span id="modal-role" class="role-badge">-</span>
+            <span id="modal-branch" style="background: #e5e7eb; color: #374151; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">-</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-section-title">基本身分資料</div>
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">人事編號</span><span class="detail-value" id="modal-staff-no">-</span></div>
+        <div class="detail-item"><span class="detail-label">身分證字號</span><span class="detail-value" id="modal-id-no">-</span></div>
+        <div class="detail-item"><span class="detail-label">生日</span><span class="detail-value" id="modal-birthday">-</span></div>
+        <div class="detail-item"><span class="detail-label">聯絡電話</span><span class="detail-value" id="modal-phone">-</span></div>
+      </div>
+
+      <div class="detail-section-title">薪資結構設定</div>
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">月結底薪</span><span class="detail-value" id="modal-base-salary" style="color: #059669;">-</span></div>
+        <div class="detail-item"><span class="detail-label">授課時薪</span><span class="detail-value" id="modal-hourly-rate" style="color: #059669;">-</span></div>
+      </div>
+
+      <div class="detail-section-title">保險與福利紀錄</div>
+      <div class="detail-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+        <div class="detail-item"><span class="detail-label">勞保加保日</span><span class="detail-value" id="modal-labor-date">-</span></div>
+        <div class="detail-item"><span class="detail-label">每月勞保扣款</span><span class="detail-value" id="modal-labor-amount" style="color: var(--danger);">-</span></div>
+        <div class="detail-item"></div> <div class="detail-item"><span class="detail-label">健保加保日</span><span class="detail-value" id="modal-health-date">-</span></div>
+        <div class="detail-item"><span class="detail-label">每月健保扣款</span><span class="detail-value" id="modal-health-amount" style="color: var(--danger);">-</span></div>
+        <div class="detail-item"></div> <div class="detail-item"><span class="detail-label">團保加保日</span><span class="detail-value" id="modal-group-date">-</span></div>
+      </div>
+
     </div>
   </div>
 
