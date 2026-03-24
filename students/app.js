@@ -1,93 +1,72 @@
 import { supabase } from '../config.js'
 
-// 綁定 UI 元素
-const loadBtn = document.getElementById('load-btn')
 const studentList = document.getElementById('student-list')
-const addForm = document.getElementById('add-student-form')
-const submitBtn = document.getElementById('submit-btn')
 
-// --- 功能 1：讀取學生名單 ---
+// 讀取名單
 async function fetchStudents() {
-  studentList.innerHTML = `
-    <tr>
-      <td colspan="4" style="text-align: center; color: #6b7280; padding: 30px 0;">
-        <span class="material-symbols-outlined" style="font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.5;">hourglass_empty</span>
-        資料載入中...
-      </td>
-    </tr>`
-
-  // 加上 .order() 讓最新的資料排在最上面
   const { data, error } = await supabase.from('students').select('*').order('created_at', { ascending: false })
 
   if (error) {
-    studentList.innerHTML = `<tr><td colspan="4" style="color:red; text-align: center;">載入失敗: ${error.message}</td></tr>`
+    studentList.innerHTML = `<tr><td colspan="7" style="color:red; text-align: center;">載入失敗: ${error.message}</td></tr>`
     return
   }
-
   studentList.innerHTML = ''
 
   if (data.length === 0) {
-    studentList.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #6b7280;">目前沒有學生資料</td></tr>'
+    studentList.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #6b7280;">目前沒有學生資料</td></tr>'
     return
   }
 
   data.forEach(student => {
+    // 若沒有照片，用 ui-avatars 產生姓名縮寫圖示
+    const avatarUrl = student.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=random&color=fff`
+    
     const row = document.createElement('tr')
     row.innerHTML = `
-      <td><strong>${student.name}</strong></td>
-      <td>${student.school_grade || '<span style="color:#9ca3af;">-</span>'}</td>
-      <td>${student.parent_name || '<span style="color:#9ca3af;">-</span>'}</td>
-      <td>${student.parent_phone || '<span style="color:#9ca3af;">-</span>'}</td>
+      <td>
+        <div class="student-info">
+          <img src="${avatarUrl}" alt="照片" class="avatar">
+          <strong>${student.name}</strong>
+        </div>
+      </td>
+      <td>${student.id_number || '-'}</td>
+      <td>${student.birthday || '-'}</td>
+      <td>${student.school || '-'}</td>
+      <td>${student.grade || '-'}</td>
+      <td>
+        ${student.parent_name || '未填寫'}<br>
+        <span style="font-size: 12px; color: #6b7280;">${student.parent_phone || ''}</span>
+      </td>
+      <td>
+        <div class="action-btns">
+          <a href="./edit.html?id=${student.id}" class="btn-icon" title="修改資料">
+            <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
+          </a>
+          <button class="btn-icon btn-delete" title="刪除學生" onclick="window.deleteStudent('${student.id}', '${student.name}')">
+            <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+          </button>
+        </div>
+      </td>
     `
     studentList.appendChild(row)
   })
 }
 
-// --- 功能 2：新增學生資料 ---
-async function addStudent(event) {
-  // 防止表單預設的重整頁面行為
-  event.preventDefault()
-  
-  // 讓按鈕變為讀取狀態，避免重複點擊
-  const originalBtnText = submitBtn.innerHTML
-  submitBtn.innerHTML = '<span class="material-symbols-outlined">sync</span> 儲存中...'
-  submitBtn.disabled = true
-
-  // 取得使用者輸入的值
-  const name = document.getElementById('name').value
-  const school_grade = document.getElementById('school_grade').value
-  const parent_name = document.getElementById('parent_name').value
-  const parent_phone = document.getElementById('parent_phone').value
-  
-  // 寫入資料庫
-  const { error } = await supabase.from('students').insert([
-    {
-      name: name,
-      school_grade: school_grade,
-      parent_name: parent_name,
-      parent_phone: parent_phone,
-      // 這裡填入我們測試資料中「台北站前總校」的 UUID
-      branch_id: '11111111-1111-1111-1111-111111111111' 
-    }
-  ])
-
-  // 恢復按鈕狀態
-  submitBtn.innerHTML = originalBtnText
-  submitBtn.disabled = false
-
-  if (error) {
-    alert('新增失敗：' + error.message)
+// 刪除學生功能 (掛載到 window 以便 HTML onClick 呼叫)
+window.deleteStudent = async (id, name) => {
+  // 跳出系統確認視窗
+  if (!confirm(`確定要刪除學生「${name}」的資料嗎？這項操作無法復原。`)) {
     return
   }
 
-  // 新增成功後：清空表單，並重新載入列表
-  addForm.reset()
-  fetchStudents()
+  const { error } = await supabase.from('students').delete().eq('id', id)
+  
+  if (error) {
+    alert('刪除失敗：' + error.message)
+  } else {
+    // 刪除成功後重新整理列表
+    fetchStudents()
+  }
 }
 
-// --- 初始化與事件綁定 ---
-loadBtn.addEventListener('click', fetchStudents)
-addForm.addEventListener('submit', addStudent)
-
-// 網頁載入時自動執行一次撈取資料
 fetchStudents()
