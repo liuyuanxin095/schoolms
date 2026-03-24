@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>學生管理</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background-color: #fff; }
+    h2 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+    .nav-bar { margin-bottom: 20px; }
+    .nav-bar a { text-decoration: none; color: #007bff; font-weight: bold; }
+    button { background-color: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+    button:hover { background-color: #218838; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background-color: #f4f6f8; }
+  </style>
+</head>
+<body>
+
+  <div class="nav-bar">
+    <a href="../index.html">⬅️ 回系統首頁</a>
+  </div>
+
+  <h2>學生名單管理</h2>
+  <button id="load-btn">重新載入資料</button>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>姓名</th>
+        <th>學校 / 年級</th>
+        <th>家長姓名</th>
+        <th>聯絡電話</th>
+      </tr>
+    </thead>
+    <tbody id="student-list">
+      <tr>
+        <td colspan="4" style="text-align: center; color: #666;">點擊上方按鈕載入資料</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <script type="module" src="./app.js"></script>
+
+</body>
+</html>
