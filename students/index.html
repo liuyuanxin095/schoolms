@@ -3,45 +3,130 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>學生管理</title>
+  <title>學生管理 - 補習班系統</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <style>
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background-color: #fff; }
-    h2 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
-    .nav-bar { margin-bottom: 20px; }
-    .nav-bar a { text-decoration: none; color: #007bff; font-weight: bold; }
-    button { background-color: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-    button:hover { background-color: #218838; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-    th { background-color: #f4f6f8; }
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-color: #f3f4f6;
+      --surface: #ffffff;
+      --text-main: #1f2937;
+      --border: #e5e7eb;
+      --input-bg: #f9fafb;
+    }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; }
+    
+    .header { background-color: var(--surface); padding: 15px 40px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .header h1 { margin: 0; font-size: 20px; }
+    .back-btn { text-decoration: none; color: var(--text-main); display: flex; align-items: center; gap: 5px; font-weight: 500; transition: 0.2s; }
+    .back-btn:hover { color: var(--primary); }
+    
+    /* 雙欄版面：左邊表單佔 1 份，右邊表格佔 2 份 */
+    .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 2fr; gap: 20px; align-items: start; }
+    
+    /* 卡片共用樣式 */
+    .card { background-color: var(--surface); border-radius: 8px; border: 1px solid var(--border); padding: 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .card-title { margin-top: 0; margin-bottom: 20px; font-size: 18px; display: flex; align-items: center; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    
+    /* 表單樣式 */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 14px; margin-bottom: 6px; font-weight: 500; }
+    .form-group input { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; background-color: var(--input-bg); font-family: inherit; font-size: 14px; transition: 0.2s; }
+    .form-group input:focus { outline: none; border-color: var(--primary); background-color: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    
+    .btn-primary { background-color: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 15px; display: flex; align-items: center; gap: 6px; justify-content: center; width: 100%; font-weight: 500; transition: 0.2s; }
+    .btn-primary:hover { background-color: var(--primary-hover); }
+    .btn-primary:disabled { background-color: #9ca3af; cursor: not-allowed; }
+    
+    /* 表格與小按鈕樣式 */
+    .table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .btn-icon { background: none; border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; color: var(--text-main); font-size: 14px; background-color: var(--surface); transition: 0.2s; }
+    .btn-icon:hover { background-color: var(--input-bg); }
+    
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid var(--border); padding: 12px 16px; text-align: left; font-size: 14px; }
+    th { background-color: var(--input-bg); font-weight: 600; color: #4b5563; }
+    tbody tr:hover { background-color: #f8fafc; }
   </style>
 </head>
 <body>
 
-  <div class="nav-bar">
-    <a href="../index.html">⬅️ 回系統首頁</a>
+  <div class="header">
+    <div class="header-left">
+      <span class="material-symbols-outlined" style="color: var(--primary);">school</span>
+      <h1>補習班管理系統</h1>
+    </div>
+    <a href="../index.html" class="back-btn">
+      <span class="material-symbols-outlined">arrow_back</span>
+      返回首頁
+    </a>
   </div>
 
-  <h2>學生名單管理</h2>
-  <button id="load-btn">重新載入資料</button>
-  
-  <table>
-    <thead>
-      <tr>
-        <th>姓名</th>
-        <th>學校 / 年級</th>
-        <th>家長姓名</th>
-        <th>聯絡電話</th>
-      </tr>
-    </thead>
-    <tbody id="student-list">
-      <tr>
-        <td colspan="4" style="text-align: center; color: #666;">點擊上方按鈕載入資料</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="container">
+    <div class="card">
+      <h2 class="card-title">
+        <span class="material-symbols-outlined">person_add</span>
+        新增學生
+      </h2>
+      <form id="add-student-form">
+        <div class="form-group">
+          <label for="name">學生姓名 <span style="color: red;">*</span></label>
+          <input type="text" id="name" required placeholder="例如：陳小明">
+        </div>
+        <div class="form-group">
+          <label for="school_grade">就讀學校與年級</label>
+          <input type="text" id="school_grade" placeholder="例如：建國中學 高二">
+        </div>
+        <div class="form-group">
+          <label for="parent_name">家長姓名</label>
+          <input type="text" id="parent_name" placeholder="例如：陳大文">
+        </div>
+        <div class="form-group">
+          <label for="parent_phone">家長電話</label>
+          <input type="text" id="parent_phone" placeholder="例如：0912-345-678">
+        </div>
+        <button type="submit" class="btn-primary" id="submit-btn">
+          <span class="material-symbols-outlined">save</span>
+          儲存學生資料
+        </button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="table-toolbar">
+        <h2 class="card-title" style="margin: 0; border: none; padding: 0;">
+          <span class="material-symbols-outlined">list_alt</span>
+          學生名單
+        </h2>
+        <button id="load-btn" class="btn-icon">
+          <span class="material-symbols-outlined">refresh</span>
+          重新載入
+        </button>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>姓名</th>
+            <th>學校 / 年級</th>
+            <th>家長姓名</th>
+            <th>聯絡電話</th>
+          </tr>
+        </thead>
+        <tbody id="student-list">
+          <tr>
+            <td colspan="4" style="text-align: center; color: #6b7280; padding: 30px 0;">
+              <span class="material-symbols-outlined" style="font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.5;">hourglass_empty</span>
+              載入中...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
   <script type="module" src="./app.js"></script>
-
 </body>
 </html>
