@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>新增教職員 - 補習班系統</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    :root { --primary: #2563eb; --primary-hover: #1d4ed8; --bg-color: #f3f4f6; --surface: #ffffff; --border: #e5e7eb; --text-main: #1f2937; --input-bg: #f9fafb;}
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px; }
+    
+    .container { max-width: 800px; margin: 0 auto; background: var(--surface); padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .header { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 25px; }
+    .header h2 { margin: 0; font-size: 22px; }
+    
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full-width { grid-column: span 2; }
+    
+    label { font-size: 14px; font-weight: 500; color: #4b5563; }
+    input, select { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background-color: var(--input-bg); font-family: inherit; transition: 0.2s; }
+    input:focus, select:focus { outline: none; border-color: var(--primary); background-color: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    input[type="file"] { background-color: #fff; padding: 8px; cursor: pointer; }
+    
+    .actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px; }
+    .btn { padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; text-decoration: none; border: none; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+    .btn-cancel { background-color: white; border: 1px solid var(--border); color: var(--text-main); }
+    .btn-cancel:hover { background-color: #f3f4f6; }
+    .btn-submit { background-color: var(--primary); color: white; }
+    .btn-submit:hover { background-color: var(--primary-hover); }
+    .btn-submit:disabled { background-color: #9ca3af; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span class="material-symbols-outlined" style="color: var(--primary); font-size: 28px;">person_add</span>
+      <h2>新增教職員資料</h2>
+    </div>
+
+    <form id="add-form">
+      <div class="form-grid">
+        
+        <div class="form-group full-width">
+          <label for="photo_file">上傳大頭照 <span style="font-weight: normal; color: #6b7280; font-size: 12px;">(點擊選擇圖片)</span></label>
+          <input type="file" id="photo_file" accept="image/jpeg, image/png, image/webp">
+        </div>
+
+        <div class="form-group">
+          <label for="name">姓名 <span style="color:red">*</span></label>
+          <input type="text" id="name" required placeholder="例：林老師">
+        </div>
+        
+        <div class="form-group">
+          <label for="phone">聯絡電話</label>
+          <input type="text" id="phone" placeholder="例：0987-654-321">
+        </div>
+
+        <div class="form-group">
+          <label for="role">職務角色 <span style="color:red">*</span></label>
+          <select id="role" required>
+            <option value="teacher" selected>教師</option>
+            <option value="manager">主任</option>
+            <option value="admin">管理員</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="branch_id">所屬分校 <span style="color:red">*</span></label>
+          <select id="branch_id" required>
+            <option value="" disabled selected>載入分校中...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="base_salary">月結底薪 (行政/專任適用)</label>
+          <input type="number" id="base_salary" value="0" min="0">
+        </div>
+
+        <div class="form-group">
+          <label for="hourly_rate">授課時薪 (兼職教師適用)</label>
+          <input type="number" id="hourly_rate" value="0" min="0">
+        </div>
+
+      </div>
+
+      <div class="actions">
+        <a href="./index.html" class="btn btn-cancel">
+          <span class="material-symbols-outlined" style="font-size: 18px;">close</span> 取消返回
+        </a>
+        <button type="submit" class="btn btn-submit" id="submit-btn">
+          <span class="material-symbols-outlined" style="font-size: 18px;">save</span> 儲存資料
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script type="module" src="./add.js"></script>
+</body>
+</html>
