@@ -1,85 +1,130 @@
 import { supabase } from '../config.js'
 
-// 1. 從網址列解析出學生 ID (例如抓取 edit.html?id=12345 中的 12345)
 const urlParams = new URLSearchParams(window.location.search)
 const studentId = urlParams.get('id')
 
-// UI 元素綁定
 const loadingState = document.getElementById('loading-state')
 const editForm = document.getElementById('edit-form')
 const submitBtn = document.getElementById('submit-btn')
+const branchSelect = document.getElementById('branch_id')
 
-// 如果網址沒有帶 ID，直接退回列表頁防呆
+let existingPhotoUrl = null // 儲存舊照片網址
+
 if (!studentId) {
   alert('無法取得指定的學生資料！')
   window.location.href = './index.html'
 }
 
-// 2. 載入該學生的現有資料
-async function loadStudentData() {
-  // 使用 .eq('id', studentId).single() 確保只精準抓出一筆資料
-  const { data, error } = await supabase
-    .from('students')
-    .select('*')
-    .eq('id', studentId)
-    .single()
+// 1. 同時載入「分校清單」與「學生舊資料」
+async function initEditPage() {
+  try {
+    // 抓取分校清單
+    const { data: branchesData, error: branchError } = await supabase.from('branches').select('id, name')
+    if (branchError) throw branchError
+    
+    branchSelect.innerHTML = '<option value="" disabled>請選擇分校</option>'
+    branchesData.forEach(b => {
+      const option = document.createElement('option')
+      option.value = b.id
+      option.textContent = b.name
+      branchSelect.appendChild(option)
+    })
 
-  if (error || !data) {
-    alert('讀取資料失敗，請確認該學生是否存在。')
+    // 抓取學生資料
+    const { data: studentData, error: studentError } = await supabase
+      .from('students')
+      .select('*')
+      .eq('id', studentId)
+      .single()
+
+    if (studentError || !studentData) throw new Error('讀取學生資料失敗')
+
+    // 填入資料
+    document.getElementById('name').value = studentData.name || ''
+    document.getElementById('student_number').value = studentData.student_number || ''
+    document.getElementById('id_number').value = studentData.id_number || ''
+    document.getElementById('birthday').value = studentData.birthday || ''
+    document.getElementById('school').value = studentData.school || ''
+    document.getElementById('grade').value = studentData.grade || ''
+    document.getElementById('parent_name').value = studentData.parent_name || ''
+    document.getElementById('parent_phone').value = studentData.parent_phone || ''
+    
+    // 設定下拉選單的值
+    if (studentData.branch_id) {
+      branchSelect.value = studentData.branch_id
+    }
+
+    // 處理舊照片預覽
+    existingPhotoUrl = studentData.photo_url
+    if (existingPhotoUrl) {
+      document.getElementById('current-photo-container').style.display = 'flex'
+      document.getElementById('current-photo-img').src = existingPhotoUrl
+    }
+
+    // 切換畫面顯示
+    loadingState.style.display = 'none'
+    editForm.style.display = 'block'
+
+  } catch (err) {
+    alert(err.message)
     window.location.href = './index.html'
-    return
   }
-
-  // 將資料庫撈回來的舊資料，填入對應的輸入框中
-  document.getElementById('name').value = data.name || ''
-  document.getElementById('id_number').value = data.id_number || ''
-  document.getElementById('birthday').value = data.birthday || ''
-  document.getElementById('school').value = data.school || ''
-  document.getElementById('grade').value = data.grade || ''
-  document.getElementById('parent_name').value = data.parent_name || ''
-  document.getElementById('parent_phone').value = data.parent_phone || ''
-  document.getElementById('photo_url').value = data.photo_url || ''
-
-  // 資料填妥後，隱藏載入提示，顯示表單
-  loadingState.style.display = 'none'
-  editForm.style.display = 'block'
 }
 
-// 3. 處理表單送出（更新資料）
+// 2. 處理表單送出
 editForm.addEventListener('submit', async (e) => {
-  e.preventDefault() // 防止重整頁面
+  e.preventDefault()
   
-  // 避免重複點擊
   submitBtn.innerHTML = '<span class="material-symbols-outlined">sync</span> 儲存中...'
   submitBtn.disabled = true
 
-  // 收集畫面上最新的值
-  const updatedData = {
-    name: document.getElementById('name').value,
-    id_number: document.getElementById('id_number').value || null,
-    birthday: document.getElementById('birthday').value || null,
-    school: document.getElementById('school').value,
-    grade: document.getElementById('grade').value,
-    parent_name: document.getElementById('parent_name').value,
-    parent_phone: document.getElementById('parent_phone').value,
-    photo_url: document.getElementById('photo_url').value || null,
-  }
+  try {
+    let finalPhotoUrl = existingPhotoUrl // 預設保留舊照片
+    const photoInput = document.getElementById('photo_file')
+    
+    // 如果有選新圖片，上傳並覆蓋網址
+    if (photoInput.files.length > 0) {
+      const file = photoInput.files[0]
+      const fileExt = file.name.split('.').pop()
+      const fileName = `student_${Date.now()}.${fileExt}`
 
-  // 發送更新請求 (使用 .update() 並指定該學生的 ID)
-  const { error } = await supabase
-    .from('students')
-    .update(updatedData)
-    .eq('id', studentId)
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file)
+      if (uploadError) throw new Error('圖片上傳失敗：' + uploadError.message)
 
-  if (error) {
-    alert('更新失敗：' + error.message)
+      const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName)
+      finalPhotoUrl = publicUrlData.publicUrl
+    }
+
+    // 準備更新資料
+    const updatedData = {
+      branch_id: branchSelect.value,
+      student_number: document.getElementById('student_number').value || null,
+      name: document.getElementById('name').value,
+      id_number: document.getElementById('id_number').value || null,
+      birthday: document.getElementById('birthday').value || null,
+      school: document.getElementById('school').value,
+      grade: document.getElementById('grade').value,
+      parent_name: document.getElementById('parent_name').value,
+      parent_phone: document.getElementById('parent_phone').value,
+      photo_url: finalPhotoUrl
+    }
+
+    // 寫入資料庫
+    const { error } = await supabase
+      .from('students')
+      .update(updatedData)
+      .eq('id', studentId)
+
+    if (error) throw new Error('更新失敗：' + error.message)
+
+    window.location.href = './index.html'
+
+  } catch (err) {
+    alert(err.message)
     submitBtn.innerHTML = '<span class="material-symbols-outlined">save</span> 儲存修改'
     submitBtn.disabled = false
-  } else {
-    // 更新成功，跳轉回列表頁
-    window.location.href = './index.html'
   }
 })
 
-// 網頁載入時自動執行讀取
-loadStudentData()
+// 啟動畫面初始化
+initEditPage()
