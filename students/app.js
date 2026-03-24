@@ -1,50 +1,67 @@
 import { supabase } from '../config.js'
 
 const studentList = document.getElementById('student-list')
+const searchInput = document.getElementById('search-input')
+const branchFilter = document.getElementById('branch-filter')
+let allStudents = [] // 儲存所有資料供篩選使用
 
-// 讀取名單
-async function fetchStudents() {
-  const { data, error } = await supabase.from('students').select('*').order('created_at', { ascending: false })
-
-  if (error) {
-    studentList.innerHTML = `<tr><td colspan="7" style="color:red; text-align: center;">載入失敗: ${error.message}</td></tr>`
-    return
+// 讀取分校清單供篩選器使用
+async function loadBranches() {
+  const { data } = await supabase.from('branches').select('id, name')
+  if (data) {
+    data.forEach(b => {
+      const option = document.createElement('option')
+      option.value = b.id
+      option.textContent = b.name
+      branchFilter.appendChild(option)
+    })
   }
-  studentList.innerHTML = ''
+}
 
+// 讀取學生名單 (包含關聯的分校名稱)
+async function fetchStudents() {
+  const { data, error } = await supabase
+    .from('students')
+    .select('*, branches(name)') // 關鍵：把分校名稱關聯進來
+    .order('created_at', { ascending: false })
+
+  if (error) return console.error(error)
+  allStudents = data || []
+  renderTable(allStudents)
+}
+
+// 渲染表格 (並處理篩選邏輯)
+function renderTable(data) {
+  studentList.innerHTML = ''
   if (data.length === 0) {
-    studentList.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #6b7280;">目前沒有學生資料</td></tr>'
+    studentList.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #6b7280;">沒有符合的學生資料</td></tr>'
     return
   }
 
   data.forEach(student => {
-    // 若沒有照片，用 ui-avatars 產生姓名縮寫圖示
     const avatarUrl = student.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=random&color=fff`
+    const branchName = student.branches ? student.branches.name : '未指定'
     
     const row = document.createElement('tr')
     row.innerHTML = `
       <td>
         <div class="student-info">
-          <img src="${avatarUrl}" alt="照片" class="avatar">
+          <img src="${avatarUrl}" class="avatar">
           <strong>${student.name}</strong>
         </div>
       </td>
-      <td>${student.id_number || '-'}</td>
-      <td>${student.birthday || '-'}</td>
+      <td>${student.student_number || '-'}</td>
+      <td>${branchName}</td>
       <td>${student.school || '-'}</td>
       <td>${student.grade || '-'}</td>
       <td>
-        ${student.parent_name || '未填寫'}<br>
-        <span style="font-size: 12px; color: #6b7280;">${student.parent_phone || ''}</span>
-      </td>
-      <td>
         <div class="action-btns">
+          <button class="btn-icon" title="查看詳細" onclick="window.viewStudent('${student.id}')">
+            <span class="material-symbols-outlined" style="font-size: 18px;">visibility</span>
+          </button>
           <a href="./edit.html?id=${student.id}" class="btn-icon" title="修改資料">
             <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
           </a>
-          <button class="btn-icon btn-delete" title="刪除學生" onclick="window.deleteStudent('${student.id}', '${student.name}')">
-            <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
-          </button>
         </div>
       </td>
     `
@@ -52,21 +69,44 @@ async function fetchStudents() {
   })
 }
 
-// 刪除學生功能 (掛載到 window 以便 HTML onClick 呼叫)
-window.deleteStudent = async (id, name) => {
-  // 跳出系統確認視窗
-  if (!confirm(`確定要刪除學生「${name}」的資料嗎？這項操作無法復原。`)) {
-    return
-  }
-
-  const { error } = await supabase.from('students').delete().eq('id', id)
+// 篩選功能綁定
+function filterData() {
+  const keyword = searchInput.value.toLowerCase()
+  const branchId = branchFilter.value
   
-  if (error) {
-    alert('刪除失敗：' + error.message)
-  } else {
-    // 刪除成功後重新整理列表
-    fetchStudents()
-  }
+  const filtered = allStudents.filter(s => {
+    const matchKeyword = s.name.toLowerCase().includes(keyword) || (s.student_number && s.student_number.toLowerCase().includes(keyword))
+    const matchBranch = branchId === 'all' || s.branch_id === branchId
+    return matchKeyword && matchBranch
+  })
+  renderTable(filtered)
 }
 
+searchInput.addEventListener('input', filterData)
+branchFilter.addEventListener('change', filterData)
+
+// 浮動視窗控制 (掛載到 window 供 HTML 呼叫)
+window.viewStudent = (id) => {
+  const s = allStudents.find(x => x.id === id)
+  if (!s) return
+  
+  document.getElementById('modal-avatar').src = s.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff`
+  document.getElementById('modal-name').textContent = s.name
+  document.getElementById('modal-branch').textContent = s.branches ? s.branches.name : '未指定分校'
+  document.getElementById('modal-student-no').textContent = s.student_number || '未填寫'
+  document.getElementById('modal-id-no').textContent = s.id_number || '未填寫'
+  document.getElementById('modal-birthday').textContent = s.birthday || '未填寫'
+  document.getElementById('modal-school').textContent = s.school || '未填寫'
+  document.getElementById('modal-grade').textContent = s.grade || '未填寫'
+  document.getElementById('modal-parent').textContent = s.parent_name || '未填寫'
+  document.getElementById('modal-phone').textContent = s.parent_phone || '未填寫'
+  
+  document.getElementById('detail-modal').style.display = 'flex'
+}
+
+window.closeModal = () => {
+  document.getElementById('detail-modal').style.display = 'none'
+}
+
+loadBranches()
 fetchStudents()
