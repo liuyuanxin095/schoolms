@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>教室空間管理 - 補習班系統</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    :root { --primary: #2563eb; --primary-hover: #1d4ed8; --danger: #dc2626; --bg-color: #f3f4f6; --surface: #ffffff; --text-main: #1f2937; --text-light: #6b7280; --border: #e5e7eb; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; }
+    .header { background-color: var(--surface); padding: 15px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .header h1 { margin: 0; font-size: 20px; }
+    .back-btn { text-decoration: none; color: var(--text-main); display: flex; align-items: center; gap: 5px; font-weight: 500; }
+    .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+    .card { background-color: var(--surface); border-radius: 8px; border: 1px solid var(--border); padding: 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .toolbar-title { margin: 0; font-size: 20px; display: flex; align-items: center; gap: 8px; }
+    .filter-bar { display: flex; gap: 10px; align-items: center; background: #f9fafb; padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; }
+    .filter-bar select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; }
+    .btn-primary { background-color: var(--primary); color: white; text-decoration: none; padding: 10px 16px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid var(--border); padding: 12px 16px; text-align: left; font-size: 14px; }
+    th { background-color: #f9fafb; font-weight: 600; color: var(--text-light); }
+    .action-btns { display: flex; gap: 8px; }
+    .btn-icon { background: none; border: 1px solid var(--border); padding: 6px; border-radius: 6px; cursor: pointer; color: var(--text-light); transition: 0.2s; display: flex; align-items: center; text-decoration: none; }
+    .btn-icon:hover { background-color: #f3f4f6; color: var(--primary); }
+    .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+    .status-active { background-color: #dcfce7; color: #15803d; }
+    .status-maintenance { background-color: #fee2e2; color: #b91c1c; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left"><span class="material-symbols-outlined" style="color: var(--primary);">school</span><h1>補習班管理系統</h1></div>
+    <a href="../index.html" class="back-btn"><span class="material-symbols-outlined">arrow_back</span>返回首頁</a>
+  </div>
+  <div class="container">
+    <div class="card">
+      <div class="toolbar">
+        <h2 class="toolbar-title"><span class="material-symbols-outlined">meeting_room</span>教室空間列表</h2>
+        <a href="./add.html" class="btn-primary"><span class="material-symbols-outlined">add</span>新增教室</a>
+      </div>
+      
+      <div class="filter-bar">
+        <span class="material-symbols-outlined" style="color: var(--text-light);">filter_list</span>
+        <select id="branch-filter">
+          <option value="all">所有分校</option>
+        </select>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>教室名稱</th>
+            <th>所屬分校</th>
+            <th>容納人數</th>
+            <th>設備清單</th>
+            <th>狀態</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="classroom-list">
+          <tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
