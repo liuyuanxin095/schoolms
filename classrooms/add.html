@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>新增教室 - 補習班系統</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    :root { --primary: #2563eb; --primary-hover: #1d4ed8; --bg-color: #f3f4f6; --surface: #ffffff; --border: #e5e7eb; --text-main: #1f2937; --input-bg: #f9fafb;}
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: var(--surface); padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .header { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 25px; }
+    .header h2 { margin: 0; font-size: 22px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; }
+    label { font-size: 14px; font-weight: 500; color: #4b5563; }
+    input, select { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background-color: var(--input-bg); font-family: inherit; }
+    input:focus, select:focus { outline: none; border-color: var(--primary); background-color: #fff; }
+    .actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px; }
+    .btn { padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; text-decoration: none; border: none; display: flex; align-items: center; gap: 6px; }
+    .btn-cancel { background-color: white; border: 1px solid var(--border); color: var(--text-main); }
+    .btn-submit { background-color: var(--primary); color: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span class="material-symbols-outlined" style="color: var(--primary); font-size: 28px;">meeting_room</span>
+      <h2>新增教室空間</h2>
+    </div>
+    <form id="add-form">
+      <div class="form-group">
+        <label for="branch_id">所屬分校 <span style="color:red">*</span></label>
+        <select id="branch_id" required>
+          <option value="" disabled selected>載入分校中...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="name">教室名稱 <span style="color:red">*</span></label>
+        <input type="text" id="name" required placeholder="例：301 視聽教室">
+      </div>
+      <div class="form-group">
+        <label for="capacity">容納人數</label>
+        <input type="number" id="capacity" value="0" min="0">
+      </div>
+      <div class="form-group">
+        <label for="facilities">設備清單</label>
+        <input type="text" id="facilities" placeholder="例：投影機、白板、麥克風">
+      </div>
+      <div class="form-group">
+        <label for="status">教室狀態</label>
+        <select id="status">
+          <option value="可用" selected>可用</option>
+          <option value="維修中">維修中</option>
+        </select>
+      </div>
+      <div class="actions">
+        <a href="./index.html" class="btn btn-cancel"><span class="material-symbols-outlined" style="font-size: 18px;">close</span> 取消返回</a>
+        <button type="submit" class="btn btn-submit" id="submit-btn"><span class="material-symbols-outlined" style="font-size: 18px;">save</span> 儲存教室</button>
+      </div>
+    </form>
+  </div>
+  <script type="module" src="./add.js"></script>
+</body>
+</html>
