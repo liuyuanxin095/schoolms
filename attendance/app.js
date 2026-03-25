@@ -138,7 +138,7 @@ window.fetchTodayAttendance = async () => {
       .from('attendance')
       .select('*, students(name), staff(name)')
       .eq('record_date', todayStr)
-      .order('updated_at', { ascending: false }) // 改用更新時間排序，剛打卡的會在最上面
+      .order('created_at', { ascending: false }) // 改用更新時間排序，剛打卡的會在最上面
 
     if (error) throw error
 
