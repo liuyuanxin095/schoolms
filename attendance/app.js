@@ -8,159 +8,154 @@ function updateClock() {
 setInterval(updateClock, 1000)
 updateClock()
 
-// 設定今日日期顯示
 const todayStr = new Date().toISOString().split('T')[0]
 document.getElementById('today-date').textContent = todayStr
 
-// --- UI 元素 ---
+// --- 介面元素 ---
 const searchForm = document.getElementById('search-form')
 const idInput = document.getElementById('id-input')
-const userCard = document.getElementById('user-card')
-const punchActions = document.getElementById('punch-actions')
 const attendanceList = document.getElementById('attendance-list')
+const toastContainer = document.getElementById('toast-container')
 
-let currentUser = null // 暫存查找到的人員資訊
+let todayAttendanceData = [] // 儲存今日資料供匯出報表使用
 
-// --- 1. 尋找人員邏輯 ---
+// 💡 1. 浮動提示框 (Toast) 控制函數
+function showToast(message, type = 'success') {
+  const toast = document.createElement('div')
+  toast.className = `toast ${type}`
+  
+  // 根據類型決定圖示
+  let icon = 'check_circle'
+  if (type === 'error') icon = 'error'
+  if (type === 'warning') icon = 'warning'
+
+  toast.innerHTML = `<span class="material-symbols-outlined">${icon}</span> <span>${message}</span>`
+  toastContainer.appendChild(toast)
+
+  // 觸發動畫
+  setTimeout(() => toast.classList.add('show'), 10)
+
+  // 3秒後自動消失並移除
+  setTimeout(() => {
+    toast.classList.remove('show')
+    setTimeout(() => toast.remove(), 300)
+  }, 3000)
+}
+
+// 💡 2. 智慧打卡核心邏輯
 searchForm.addEventListener('submit', async (e) => {
   e.preventDefault()
   const queryId = idInput.value.trim()
   if (!queryId) return
 
-  userCard.style.display = 'none'
-  punchActions.innerHTML = ''
-  currentUser = null
+  // 鎖定輸入框避免重複送出
+  idInput.disabled = true
 
   try {
-    // 同時在兩個表中搜尋該編號
+    // 步驟 A：尋找人員身分
     const [staffRes, studentRes] = await Promise.all([
-      supabase.from('staff').select('id, name, photo_url, staff_number, role').eq('staff_number', queryId).maybeSingle(),
-      supabase.from('students').select('id, name, photo_url, student_number').eq('student_number', queryId).maybeSingle()
+      supabase.from('staff').select('id, name, type:role').eq('staff_number', queryId).maybeSingle(),
+      supabase.from('students').select('id, name').eq('student_number', queryId).maybeSingle()
     ])
 
+    let user = null
+    let userType = ''
+    
     if (staffRes.data) {
-      currentUser = { ...staffRes.data, type: 'staff' }
+      user = staffRes.data
+      userType = 'staff'
     } else if (studentRes.data) {
-      currentUser = { ...studentRes.data, type: 'student' }
+      user = studentRes.data
+      userType = 'student'
     } else {
-      alert('找不到符合的學號或人事編號！')
+      showToast(`查無此編號：${queryId}，請確認後再試`, 'error')
       return
     }
 
-    renderUserCard()
+    // 步驟 B：尋找今日紀錄，決定打卡行為
+    const matchQuery = userType === 'staff' ? { staff_id: user.id, record_date: todayStr } : { student_id: user.id, record_date: todayStr }
+    const { data: record, error: fetchErr } = await supabase.from('attendance').select('*').match(matchQuery).maybeSingle()
+    if (fetchErr) throw fetchErr
+
+    const nowIso = new Date().toISOString()
+    const timeStr = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
+    let actionText = ''
+
+    if (!record) {
+      // 情況一：今天還沒打過卡 -> 執行 [進班/上班]
+      actionText = userType === 'staff' ? '上班' : '進班'
+      const insertData = { user_type: userType, record_date: todayStr, check_in: nowIso }
+      if (userType === 'staff') insertData.staff_id = user.id
+      else insertData.student_id = user.id
+      
+      await supabase.from('attendance').insert([insertData])
+      showToast(`✅ ${user.name} ${actionText}打卡成功 (${timeStr})`, 'success')
+
+    } else {
+      // 情況二：今天已經有紀錄 -> 自動尋找下一個空格
+      if (!record.check_out) {
+        actionText = userType === 'staff' ? '下班' : '離班'
+        await supabase.from('attendance').update({ check_out: nowIso }).eq('id', record.id)
+        showToast(`✅ ${user.name} ${actionText}打卡成功 (${timeStr})`, 'success')
+      } 
+      else {
+        // 如果基本進退班已經完成
+        if (userType === 'student') {
+          showToast(`⚠️ ${user.name} 今日已完成進離班，無法重複打卡`, 'warning')
+        } 
+        else if (userType === 'staff') {
+          // 教職員進入加班判斷邏輯
+          if (!record.overtime_in) {
+            await supabase.from('attendance').update({ overtime_in: nowIso }).eq('id', record.id)
+            showToast(`🌙 ${user.name} 加班上班打卡成功 (${timeStr})`, 'success')
+          } else if (!record.overtime_out) {
+            await supabase.from('attendance').update({ overtime_out: nowIso }).eq('id', record.id)
+            showToast(`🌙 ${user.name} 加班下班打卡成功 (${timeStr})`, 'success')
+          } else {
+            showToast(`⚠️ ${user.name} 今日所有打卡欄位已滿`, 'warning')
+          }
+        }
+      }
+    }
+
+    // 更新畫面列表
+    fetchTodayAttendance()
+
   } catch (err) {
-    alert('查詢發生錯誤：' + err.message)
+    showToast('系統發生錯誤：' + err.message, 'error')
+  } finally {
+    // 恢復輸入框狀態並清空，準備迎接下一個人
+    idInput.disabled = false
+    idInput.value = ''
+    idInput.focus()
   }
 })
 
-// --- 2. 渲染打卡介面 ---
-function renderUserCard() {
-  // 設定大頭照與姓名
-  document.getElementById('user-avatar').src = currentUser.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=random&color=fff`
-  document.getElementById('user-name').textContent = currentUser.name
-  
-  // 設定身分標籤與按鈕
-  const roleBadge = document.getElementById('user-role')
-  punchActions.innerHTML = ''
-
-  if (currentUser.type === 'student') {
-    roleBadge.textContent = '學生'
-    roleBadge.style.backgroundColor = '#2563eb'
-    
-    punchActions.innerHTML = `
-      <button class="btn btn-punch in" onclick="punchTime('check_in')"><span class="material-symbols-outlined">login</span>進班打卡</button>
-      <button class="btn btn-punch out" onclick="punchTime('check_out')"><span class="material-symbols-outlined">logout</span>離班打卡</button>
-    `
-  } else {
-    roleBadge.textContent = '教職員'
-    roleBadge.style.backgroundColor = '#059669'
-    
-    punchActions.innerHTML = `
-      <button class="btn btn-punch in" onclick="punchTime('check_in')"><span class="material-symbols-outlined">login</span>上班打卡</button>
-      <button class="btn btn-punch out" onclick="punchTime('check_out')"><span class="material-symbols-outlined">logout</span>下班打卡</button>
-      <button class="btn btn-punch overtime" onclick="punchTime('overtime_in')"><span class="material-symbols-outlined">more_time</span>加班上班</button>
-      <button class="btn btn-punch overtime" style="background-color: #b45309;" onclick="punchTime('overtime_out')"><span class="material-symbols-outlined">history_toggle_off</span>加班下班</button>
-    `
-  }
-
-  userCard.style.display = 'flex'
-}
-
-// --- 3. 寫入打卡時間邏輯 (掛載到 window 供按鈕呼叫) ---
-window.punchTime = async (columnName) => {
-  if (!currentUser) return
-
-  const nowIso = new Date().toISOString()
-  
-  // 準備查詢條件：找看看今天這個人是不是已經有紀錄了
-  const matchQuery = currentUser.type === 'staff' ? { staff_id: currentUser.id, record_date: todayStr } : { student_id: currentUser.id, record_date: todayStr }
-
-  try {
-    const { data: existingRecord } = await supabase.from('attendance').select('id').match(matchQuery).maybeSingle()
-
-    let error;
-    if (existingRecord) {
-      // 已經有今天的紀錄，就「更新」對應的欄位
-      const updateData = {}
-      updateData[columnName] = nowIso
-      const res = await supabase.from('attendance').update(updateData).eq('id', existingRecord.id)
-      error = res.error
-    } else {
-      // 今天第一次打卡，建立一筆新紀錄
-      const insertData = {
-        user_type: currentUser.type,
-        record_date: todayStr,
-        [columnName]: nowIso
-      }
-      if (currentUser.type === 'staff') insertData.staff_id = currentUser.id
-      else insertData.student_id = currentUser.id
-      
-      const res = await supabase.from('attendance').insert([insertData])
-      error = res.error
-    }
-
-    if (error) throw error
-
-    alert('打卡成功！')
-    idInput.value = ''
-    userCard.style.display = 'none'
-    fetchTodayAttendance() // 更新下方的表格
-
-  } catch (err) {
-    alert('打卡失敗：' + err.message)
-  }
-}
-
-// --- 4. 讀取今日考勤紀錄 ---
+// 💡 3. 讀取今日紀錄
 window.fetchTodayAttendance = async () => {
   try {
-    // 這裡運用 Supabase 的關聯查詢，把學生跟教職員的名字一起撈回來
     const { data, error } = await supabase
       .from('attendance')
-      .select(`
-        *,
-        students(name),
-        staff(name)
-      `)
+      .select('*, students(name), staff(name)')
       .eq('record_date', todayStr)
-      .order('created_at', { ascending: false })
+      .order('updated_at', { ascending: false }) // 改用更新時間排序，剛打卡的會在最上面
 
     if (error) throw error
 
+    todayAttendanceData = data || []
     attendanceList.innerHTML = ''
-    if (!data || data.length === 0) {
+    
+    if (todayAttendanceData.length === 0) {
       attendanceList.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #6b7280; padding: 30px;">今日尚無考勤紀錄</td></tr>'
       return
     }
 
-    data.forEach(record => {
-      // 判斷是學生還是員工
+    todayAttendanceData.forEach(record => {
       const isStudent = record.user_type === 'student'
       const name = isStudent ? (record.students ? record.students.name : '未知學生') : (record.staff ? record.staff.name : '未知教職員')
-      const badgeHtml = isStudent ? '<span class="role-badge" style="background:#dbeafe; color:#1e40af;">學生</span>' : '<span class="role-badge" style="background:#d1fae5; color:#065f46;">教職員</span>'
+      const badgeHtml = isStudent ? '<span class="role-badge" style="background:#dbeafe; color:#1e40af; padding:4px 8px; border-radius:4px; font-size:12px;">學生</span>' : '<span class="role-badge" style="background:#d1fae5; color:#065f46; padding:4px 8px; border-radius:4px; font-size:12px;">教職員</span>'
 
-      // 格式化時間 (如果為 null 顯示未打卡)
-      const formatTime = (isoString) => isoString ? new Date(isoString).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) : '<span style="color:#9ca3af;">-</span>'
+      const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) : '<span style="color:#9ca3af;">-</span>'
 
       const row = document.createElement('tr')
       row.innerHTML = `
@@ -173,10 +168,54 @@ window.fetchTodayAttendance = async () => {
       `
       attendanceList.appendChild(row)
     })
-
   } catch (err) {
     attendanceList.innerHTML = `<tr><td colspan="6" style="color:red; text-align: center;">無法載入紀錄：${err.message}</td></tr>`
   }
+}
+
+// 💡 4. 匯出 CSV 報表邏輯
+window.exportCSV = () => {
+  if (todayAttendanceData.length === 0) {
+    showToast('目前沒有考勤資料可以匯出！', 'warning')
+    return
+  }
+
+  // 加上 \uFEFF 讓 Excel 識別為 UTF-8，防止中文亂碼
+  let csvContent = '\uFEFF'
+  csvContent += '人員名稱,身分,進班/上班時間,離班/下班時間,加班上班時間,加班下班時間\n'
+
+  const formatCSVTime = (iso) => iso ? new Date(iso).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) : '未打卡'
+
+  todayAttendanceData.forEach(record => {
+    const isStudent = record.user_type === 'student'
+    const name = isStudent ? (record.students ? record.students.name : '未知') : (record.staff ? record.staff.name : '未知')
+    const role = isStudent ? '學生' : '教職員'
+    
+    // 組裝一列資料
+    const row = [
+      name,
+      role,
+      formatCSVTime(record.check_in),
+      formatCSVTime(record.check_out),
+      formatCSVTime(record.overtime_in),
+      formatCSVTime(record.overtime_out)
+    ].join(',')
+    
+    csvContent += row + '\n'
+  })
+
+  // 產生下載連結並觸發
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.setAttribute('href', url)
+  link.setAttribute('download', `考勤報表_${todayStr}.csv`)
+  link.style.visibility = 'hidden'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  
+  showToast('報表匯出成功！', 'success')
 }
 
 // 初始化執行
