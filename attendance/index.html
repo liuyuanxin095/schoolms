@@ -7,27 +7,25 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css" />
   <style>
-    /* 打卡機專屬樣式 */
-    .kiosk-container { background: var(--surface); border: 2px solid var(--primary); border-radius: 12px; padding: 30px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1); }
-    .kiosk-input-group { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
-    .kiosk-input-group input { font-size: 18px; padding: 12px 20px; text-align: center; max-width: 300px; border-width: 2px; }
+    .kiosk-container { background: var(--surface); border: 2px solid var(--primary); border-radius: 12px; padding: 40px 30px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1); }
+    .kiosk-input-group { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
+    .kiosk-input-group input { font-size: 20px; padding: 15px 25px; text-align: center; width: 100%; max-width: 350px; border: 2px solid var(--border); border-radius: 8px; transition: 0.2s; }
+    .kiosk-input-group input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
     
-    /* 身分確認卡片 */
-    .user-card { display: none; flex-direction: column; align-items: center; gap: 15px; padding: 20px; background: #eff6ff; border-radius: 8px; margin-top: 20px; }
-    .user-card img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .user-role-badge { background: var(--primary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .time-display { font-size: 48px; font-weight: bold; color: var(--primary); font-variant-numeric: tabular-nums; letter-spacing: 2px; margin: 15px 0; }
     
-    /* 打卡按鈕群 */
-    .punch-actions { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; width: 100%; margin-top: 15px; }
-    .btn-punch { flex: 1; min-width: 120px; padding: 15px; font-size: 16px; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-    .btn-punch.in { background-color: #059669; color: white; }
-    .btn-punch.out { background-color: #dc2626; color: white; }
-    .btn-punch.overtime { background-color: #d97706; color: white; }
-    
-    .time-display { font-size: 36px; font-weight: bold; color: var(--text-main); font-variant-numeric: tabular-nums; letter-spacing: 2px; }
+    /* 🎨 自訂浮動提示框 (Toast) */
+    .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 9999; pointer-events: none; }
+    .toast { padding: 16px 24px; border-radius: 8px; color: white; font-weight: 500; font-size: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); opacity: 0; transform: translateY(-20px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .toast.success { background-color: #059669; } /* 綠色 */
+    .toast.error { background-color: #dc2626; }   /* 紅色 */
+    .toast.warning { background-color: #d97706; } /* 橘色 */
   </style>
 </head>
 <body>
+
+  <div class="toast-container" id="toast-container"></div>
 
   <div class="header">
     <div class="header-left"><span class="material-symbols-outlined" style="color: var(--primary);">school</span><h1>補習班管理系統</h1></div>
@@ -37,30 +35,23 @@
   <div class="container">
     
     <div class="kiosk-container">
-      <span class="material-symbols-outlined" style="font-size: 48px; color: var(--primary);">how_to_reg</span>
-      <h2>電子考勤打卡機</h2>
+      <span class="material-symbols-outlined" style="font-size: 56px; color: var(--primary);">how_to_reg</span>
+      <h2 style="margin: 10px 0 0 0;">電子考勤打卡機</h2>
       <div class="time-display" id="clock">00:00:00</div>
+      <p style="color: var(--text-light); margin: 0;">請掃描條碼或直接輸入編號，系統將自動為您打卡</p>
       
       <form id="search-form" class="kiosk-input-group">
-        <input type="text" id="id-input" placeholder="請輸入學號或人事編號" required autocomplete="off">
-        <button type="submit" class="btn btn-primary" style="font-size: 16px;"><span class="material-symbols-outlined">search</span> 尋找人員</button>
+        <input type="text" id="id-input" placeholder="請輸入學號或人事編號" required autocomplete="off" autofocus>
       </form>
-
-      <div class="user-card" id="user-card">
-        <img src="" id="user-avatar">
-        <div>
-          <span id="user-role" class="user-role-badge">身分</span>
-          <h3 id="user-name" style="margin: 10px 0 0 0; font-size: 24px;">姓名</h3>
-        </div>
-        
-        <div class="punch-actions" id="punch-actions"></div>
-      </div>
     </div>
 
     <div class="card">
       <div class="toolbar">
         <h2 class="toolbar-title"><span class="material-symbols-outlined">list_alt</span>今日考勤紀錄 (<span id="today-date"></span>)</h2>
-        <button class="btn btn-primary" onclick="fetchTodayAttendance()"><span class="material-symbols-outlined">refresh</span>重整</button>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-cancel" onclick="window.fetchTodayAttendance()"><span class="material-symbols-outlined" style="font-size:18px;">refresh</span>重整</button>
+          <button class="btn btn-primary" onclick="window.exportCSV()"><span class="material-symbols-outlined" style="font-size:18px;">download</span>匯出 CSV 報表</button>
+        </div>
       </div>
       
       <div class="table-responsive">
