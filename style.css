@@ -86,3 +86,23 @@ tbody tr:hover { background-color: #f8fafc; }
   .modal-content { padding: 20px; }
   .detail-grid { grid-template-columns: 1fr; }
 }
+
+/* =========================================
+   9. 日曆與考勤紀錄元件 (新增)
+   ========================================= */
+.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 16px; font-weight: bold; color: var(--text-main); }
+.calendar-nav { cursor: pointer; padding: 6px; border-radius: 6px; transition: 0.2s; user-select: none; background: var(--bg-color); display: flex; align-items: center; justify-content: center; }
+.calendar-nav:hover { background-color: var(--border); color: var(--primary); }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; font-size: 14px; margin-bottom: 5px; }
+.calendar-day-header { color: var(--text-light); font-size: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.calendar-day { padding: 10px 0; border-radius: 6px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; font-weight: 500; position: relative; }
+.calendar-day:hover:not(.empty) { border-color: var(--primary); background-color: #eff6ff; color: var(--primary); }
+.calendar-day.active { background-color: var(--primary) !important; color: white !important; box-shadow: 0 2px 4px rgba(37,99,235,0.3); }
+.calendar-day.empty { cursor: default; }
+/* 紀錄小綠點 */
+.calendar-day.has-record::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background-color: #10b981; border-radius: 50%; }
+.calendar-day.active.has-record::after { background-color: white; }
+
+.attendance-detail-box { margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; }
+.att-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
+.att-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
