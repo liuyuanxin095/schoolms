@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>餐費管理 - 補習班系統</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .balance-badge { padding: 4px 10px; border-radius: 20px; font-weight: bold; font-family: monospace; font-size: 16px; }
+    .balance-safe { background-color: #dcfce7; color: #15803d; }
+    .balance-warning { background-color: #fee2e2; color: #b91c1c; } /* 餘額 < 100 顯示紅色 */
+    
+    .history-list { max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+    .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border); }
+    .history-item:last-child { border-bottom: none; }
+    .log-type-add { color: #15803d; font-weight: bold; }
+    .log-type-sub { color: #b91c1c; font-weight: bold; }
+
+    /* 批次操作區塊 */
+    .batch-bar { background: #eff6ff; border: 1px solid #bfdbfe; padding: 12px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .student-cb { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-left"><span class="material-symbols-outlined" style="color: var(--primary);">school</span><h1>補習班管理系統</h1></div>
+    <a href="../index.html" class="back-btn"><span class="material-symbols-outlined">arrow_back</span>返回首頁</a>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <div class="toolbar">
+        <h2 class="toolbar-title"><span class="material-symbols-outlined" style="color: #f59e0b;">restaurant</span>學生餐費帳戶</h2>
+      </div>
+      
+      <div class="filter-bar">
+        <span class="material-symbols-outlined" style="color: var(--text-light);">search</span>
+        <input type="text" id="search-input" placeholder="搜尋學生姓名或學號...">
+        <select id="branch-filter"><option value="all">所有分校</option></select>
+      </div>
+
+      <div class="batch-bar">
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+          <input type="checkbox" id="select-all" onchange="window.toggleSelectAll()"> 全選
+          <span style="color: var(--primary); font-size: 14px;">(已選 <span id="selected-count">0</span> 人)</span>
+        </label>
+        <button class="btn btn-primary" id="btn-batch-deduct" onclick="window.openBatchModal()" disabled style="background: #f59e0b; border: none;">
+          <span class="material-symbols-outlined">receipt_long</span> 批次扣餐費
+        </button>
+      </div>
+      
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th width="50">選取</th>
+              <th>學生姓名 (學號)</th>
+              <th>所屬分校</th>
+              <th>餐費餘額</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="student-list">
+            <tr><td colspan="5" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="transaction-modal">
+    <div class="modal-content" style="max-width: 450px;">
+      <span class="material-symbols-outlined modal-close" onclick="window.closeTransactionModal()">close</span>
+      <h2 id="trans-title" style="margin-top: 0; color: var(--primary);">餐費操作</h2>
+      
+      <div style="background: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+        <div style="color: var(--text-light); font-size: 13px;">目前餘額</div>
+        <div id="trans-current-balance" style="font-size: 28px; font-weight: bold; font-family: monospace;">$0</div>
+      </div>
+
+      <form id="transaction-form" class="form-grid" style="grid-template-columns: 1fr;">
+        <input type="hidden" id="trans-student-id">
+        <input type="hidden" id="trans-type"> <div class="form-group">
+          <label id="trans-amount-label">操作金額 <span style="color:red">*</span></label>
+          <input type="number" id="trans-amount" required min="1" placeholder="請輸入金額 (例如: 100)">
+        </div>
+        
+        <div class="form-group">
+          <label>備註說明 (選填)</label>
+          <input type="text" id="trans-note" placeholder="例：10/12 排骨便當、家長現金儲值...">
+        </div>
+        
+        <div class="actions" style="margin-top: 15px;">
+          <button type="button" class="btn btn-cancel" onclick="window.closeTransactionModal()">取消</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-trans">確認送出</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="batch-modal">
+    <div class="modal-content" style="max-width: 450px;">
+      <span class="material-symbols-outlined modal-close" onclick="window.closeBatchModal()">close</span>
+      <h2 style="margin-top: 0; color: #f59e0b;">批次扣除餐費</h2>
+      <div style="margin-bottom: 15px; color: var(--text-main);">
+        即將為 <strong id="batch-count" style="color: var(--primary); font-size: 18px;">0</strong> 位學生扣除餐費：
+      </div>
+
+      <form id="batch-form" class="form-grid" style="grid-template-columns: 1fr;">
+        <div class="form-group">
+          <label>每人扣除金額 <span style="color:red">*</span></label>
+          <input type="number" id="batch-amount" required min="1" value="100">
+        </div>
+        <div class="form-group">
+          <label>備註說明 <span style="color:red">*</span></label>
+          <input type="text" id="batch-note" required placeholder="例：代訂晚餐便當">
+        </div>
+        <div class="actions" style="margin-top: 15px;">
+          <button type="button" class="btn btn-cancel" onclick="window.closeBatchModal()">取消</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-batch" style="background: #f59e0b; border: none;">確認批次扣款</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="history-modal">
+    <div class="modal-content" style="max-width: 600px; background-color: #f9fafb;">
+      <span class="material-symbols-outlined modal-close" onclick="window.closeHistoryModal()">close</span>
+      <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid var(--border);">
+        <h2 id="history-name" style="margin: 0 0 5px 0; color: var(--primary);">學生姓名</h2>
+        <div style="color: var(--text-light); font-size: 14px;">餐費異動歷史明細</div>
+      </div>
+      <div class="history-list" id="history-list">
+        <div style="padding: 30px; text-align: center; color: var(--text-light);">載入中...</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
