@@ -9,7 +9,6 @@
   <style>
     .dashboard-layout { display: flex; flex-direction: column; gap: 20px; }
     
-    /* 上方：數據統計看板 */
     .stat-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
     .stat-icon { background: #eff6ff; color: var(--primary); width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
@@ -22,55 +21,58 @@
     .bottom-layout { display: grid; grid-template-columns: 350px 1fr; gap: 20px; align-items: start; }
     @media (max-width: 992px) { .bottom-layout { grid-template-columns: 1fr; } .stat-container { grid-template-columns: 1fr; } }
     
-    /* 💡 左下：功能選單 (縮小且改為橫向排列) */
     .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .menu-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 15px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-main); transition: 0.2s; }
     .menu-card:hover { border-color: var(--primary); box-shadow: 0 2px 4px rgba(37,99,235,0.1); transform: translateY(-1px); color: var(--primary); }
     .menu-card .material-symbols-outlined { font-size: 24px; color: var(--primary); }
     .menu-card span:not(.material-symbols-outlined) { font-weight: 600; font-size: 14px; }
 
-    /* 右下：今日課表清單 */
     .class-schedule-list { display: flex; flex-direction: column; gap: 10px; max-height: 500px; overflow-y: auto; padding-right: 5px; }
-    .schedule-item { border: 1px solid var(--border); border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+    .schedule-item { border: 1px solid var(--border); border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center; background: #fff; transition: 0.2s; }
+    .schedule-item:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(37,99,235,0.05); }
     .schedule-time { font-size: 16px; font-weight: bold; color: var(--primary); font-family: monospace; text-align: center; }
     .schedule-detail { flex-grow: 1; margin: 0 15px; }
     .schedule-name { font-weight: bold; font-size: 16px; color: var(--text-main); margin-bottom: 4px; }
     .schedule-sub { font-size: 12px; color: var(--text-light); }
     
-    .live-badge { background: #ef4444; color: white; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; animation: pulse 2s infinite; }
+    /* 💡 可點擊切換的狀態標籤按鈕 */
+    .status-btn, .att-status-btn {
+      border: none; cursor: pointer; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; 
+      display: inline-flex; align-items: center; gap: 4px; transition: 0.2s; font-family: inherit; user-select: none;
+    }
+    .status-btn:hover, .att-status-btn:hover { opacity: 0.8; transform: scale(1.05); }
+    .status-btn:active, .att-status-btn:active { transform: scale(0.95); }
+    
+    /* 課表專用顏色 */
+    .live-btn { background: #ef4444; color: white; animation: pulse 2s infinite; }
+    .ended-btn { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+    .auto-btn { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); } 70% { box-shadow: 0 0 0 6px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
 
-    /* 💡 點名表 Modal 樣式 */
+    /* 點名簿專用顏色 */
     .att-roster-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border); }
     .att-roster-item:last-child { border-bottom: none; }
-    .att-status { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
-    .status-in { background: #dcfce7; color: #15803d; }
-    .status-out { background: #f3f4f6; color: #4b5563; }
-    .status-leave { background: #fef3c7; color: #b45309; }
-    .status-none { background: #fee2e2; color: #b91c1c; }
+    .status-in { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .status-out { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+    .status-leave { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .status-none { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <div class="header-left"><span class="material-symbols-outlined" style="color: var(--primary);">school</span><h1>補習班管理系統 - 總部儀表板</h1></div>
+    <div class="header-left">
+      <span class="material-symbols-outlined" style="color: var(--primary);">school</span>
+      <h1>補習班管理系統</h1>
+    </div>
   </div>
   
   <div class="container dashboard-layout">
     
     <div class="stat-container">
-      <div class="stat-box">
-        <div class="stat-icon"><span class="material-symbols-outlined" style="font-size: 32px;">groups</span></div>
-        <div class="stat-info"><span class="stat-label">系統建檔學生總數</span><span class="stat-number" id="stat-total-students">-</span></div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-icon success"><span class="material-symbols-outlined" style="font-size: 32px;">how_to_reg</span></div>
-        <div class="stat-info"><span class="stat-label">今日目前在班人數 (學生)</span><span class="stat-number" id="stat-checked-in">-</span></div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-icon warning"><span class="material-symbols-outlined" style="font-size: 32px;">warning</span></div>
-        <div class="stat-info"><span class="stat-label">待繳費未結清單據</span><span class="stat-number" id="stat-unpaid">-</span></div>
-      </div>
+      <div class="stat-box"><div class="stat-icon"><span class="material-symbols-outlined" style="font-size: 32px;">groups</span></div><div class="stat-info"><span class="stat-label">系統建檔學生總數</span><span class="stat-number" id="stat-total-students">-</span></div></div>
+      <div class="stat-box"><div class="stat-icon success"><span class="material-symbols-outlined" style="font-size: 32px;">how_to_reg</span></div><div class="stat-info"><span class="stat-label">今日目前在班人數 (學生)</span><span class="stat-number" id="stat-checked-in">-</span></div></div>
+      <div class="stat-box"><div class="stat-icon warning"><span class="material-symbols-outlined" style="font-size: 32px;">warning</span></div><div class="stat-info"><span class="stat-label">待繳費未結清單據</span><span class="stat-number" id="stat-unpaid">-</span></div></div>
     </div>
 
     <div class="bottom-layout">
@@ -106,7 +108,7 @@
         <div style="color: var(--text-light); font-size: 14px;">班級專屬點名簿 (今日狀態)</div>
       </div>
       
-      <div style="background: white; border: 1px solid var(--border); border-radius: 8px; max-height: 400px; overflow-y: auto;">
+      <div style="background: white; border: 1px solid var(--border); border-radius: 8px; max-height: 450px; overflow-y: auto;">
         <div id="att-student-list"><div style="padding: 30px; text-align: center; color: var(--text-light);">載入名單中...</div></div>
       </div>
     </div>
@@ -117,15 +119,12 @@
 
     const todayStr = new Date().toISOString().split('T')[0]
 
-    // ==========================================
     // 1. 取得上方三大數據
-    // ==========================================
     window.fetchDashboardStats = async () => {
       try {
         const { count: studentCount } = await supabase.from('students').select('*', { count: 'exact', head: true })
         document.getElementById('stat-total-students').textContent = studentCount || 0
 
-        // 在班人數：有進班、沒離班、且不是請假
         const { count: checkedInCount } = await supabase.from('attendance')
           .select('*', { count: 'exact', head: true })
           .eq('record_date', todayStr).eq('user_type', 'student')
@@ -138,9 +137,7 @@
       } catch (err) { console.error('數據抓取失敗:', err) }
     }
 
-    // ==========================================
     // 2. 獲取並解析今日課表
-    // ==========================================
     window.fetchTodayClasses = async () => {
       const listContainer = document.getElementById('today-classes-list')
       const daysMap = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']
@@ -149,7 +146,6 @@
       document.getElementById('today-display').textContent = `今天是 ${todayName}`
 
       try {
-        // 同時抓取班級資料 與 今日的手動狀態
         const [classesRes, sessionsRes] = await Promise.all([
           supabase.from('classes').select('id, name, schedule, classrooms(name), teacher:staff!classes_teacher_id_fkey(name)'),
           supabase.from('class_sessions').select('class_id, status').eq('session_date', todayStr)
@@ -166,13 +162,11 @@
           slots.forEach(slot => {
             if (slot.includes(todayName) || slot.includes(`星期${todayName.charAt(1)}`)) {
               const timeMatch = slot.match(/(\d{2}:\d{2})~(\d{2}:\d{2})/)
-              if (timeMatch) {
-                todayClasses.push({
-                  id: c.id, name: c.name, startTime: timeMatch[1], endTime: timeMatch[2],
-                  teacher: c.teacher ? c.teacher.name : '未指派', room: c.classrooms ? c.classrooms.name : '未定教室',
-                  manualStatus: manualStatusMap[c.id] || 'auto'
-                })
-              }
+              if (timeMatch) todayClasses.push({
+                id: c.id, name: c.name, startTime: timeMatch[1], endTime: timeMatch[2],
+                teacher: c.teacher ? c.teacher.name : '未指派', room: c.classrooms ? c.classrooms.name : '未定教室',
+                manualStatus: manualStatusMap[c.id] || 'auto'
+              })
             }
           })
         })
@@ -191,17 +185,16 @@
           const [startH, startM] = tc.startTime.split(':').map(Number); const [endH, endM] = tc.endTime.split(':').map(Number)
           const startMin = startH * 60 + startM; const endMin = endH * 60 + endM
 
-          let statusHtml = ''
-          
-          // 💡 狀態判斷：手動優先，否則依時間
+          // 💡 計算按鈕狀態與點擊事件
+          let displayStatus = '', badgeClass = '', iconHtml = ''
           if (tc.manualStatus === 'live') {
-            statusHtml = `<div class="live-badge"><span class="material-symbols-outlined" style="font-size:14px;">sensors</span> 上課中</div>`
+            displayStatus = '上課中'; badgeClass = 'live-btn'; iconHtml = '<span class="material-symbols-outlined" style="font-size:14px;">sensors</span> '
           } else if (tc.manualStatus === 'ended') {
-            statusHtml = `<span style="font-size:12px; color:var(--text-light); border: 1px solid var(--border); padding: 4px 8px; border-radius:20px;">已下課</span>`
+            displayStatus = '已下課'; badgeClass = 'ended-btn'
           } else {
-            if (currentMinutes >= startMin && currentMinutes <= endMin) statusHtml = `<div class="live-badge"><span class="material-symbols-outlined" style="font-size:14px;">sensors</span> 上課中</div>`
-            else if (currentMinutes > endMin) statusHtml = `<span style="font-size:12px; color:var(--text-light); border: 1px solid var(--border); padding: 4px 8px; border-radius:20px;">已下課</span>`
-            else statusHtml = `<span style="font-size:12px; color:var(--text-light); border: 1px solid var(--border); padding: 4px 8px; border-radius:20px;">尚未開始</span>`
+            if (currentMinutes >= startMin && currentMinutes <= endMin) { displayStatus = '上課中'; badgeClass = 'live-btn'; iconHtml = '<span class="material-symbols-outlined" style="font-size:14px;">sensors</span> ' }
+            else if (currentMinutes > endMin) { displayStatus = '已下課'; badgeClass = 'ended-btn' }
+            else { displayStatus = '尚未開始'; badgeClass = 'auto-btn' }
           }
 
           listContainer.innerHTML += `
@@ -211,13 +204,9 @@
                 <div class="schedule-name">${tc.name}</div>
                 <div class="schedule-sub"><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">school</span> ${tc.teacher} &nbsp;|&nbsp; <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">meeting_room</span> ${tc.room}</div>
               </div>
-              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
-                ${statusHtml}
-                <div style="display:flex; gap:5px;">
-                  <button class="btn-icon" title="手動上課" onclick="window.setManualStatus('${tc.id}', 'live')"><span class="material-symbols-outlined" style="font-size:16px;">play_arrow</span></button>
-                  <button class="btn-icon" title="手動下課" onclick="window.setManualStatus('${tc.id}', 'ended')"><span class="material-symbols-outlined" style="font-size:16px;">stop</span></button>
-                  <button class="btn-icon" title="學生點名" onclick="window.openAttendance('${tc.id}', '${tc.name}')"><span class="material-symbols-outlined" style="font-size:16px; color:var(--primary);">checklist</span></button>
-                </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button class="status-btn ${badgeClass}" onclick="window.toggleClassStatus('${tc.id}', '${tc.manualStatus}')" title="點擊切換狀態">${iconHtml}${displayStatus}</button>
+                <button class="btn-icon" title="學生點名簿" onclick="window.openAttendance('${tc.id}', '${tc.name}')" style="background:#eff6ff; padding:6px; border-radius:6px;"><span class="material-symbols-outlined" style="font-size:20px; color:var(--primary);">checklist</span></button>
               </div>
             </div>
           `
@@ -225,39 +214,40 @@
       } catch (err) { listContainer.innerHTML = `<div style="text-align:center; color:red; padding:20px;">課表載入失敗</div>` }
     }
 
-    // 💡 3. 手動設定班級上下課狀態
-    window.setManualStatus = async (classId, status) => {
+    // 💡 3. 一鍵切換班級上下課狀態 (輪迴切換：自動 -> 手動上課 -> 手動下課 -> 自動)
+    window.toggleClassStatus = async (classId, currentManualStatus) => {
+      let nextStatus = 'live'
+      if (currentManualStatus === 'live') nextStatus = 'ended'
+      else if (currentManualStatus === 'ended') nextStatus = 'auto'
+
       try {
-        const payload = { class_id: classId, session_date: todayStr, status: status }
-        // 使用 upsert，有則更新，無則新增 (依賴 SQL 的 UNIQUE 限制)
-        await supabase.from('class_sessions').upsert([payload], { onConflict: 'class_id, session_date' })
-        window.fetchTodayClasses() // 刷新課表
-      } catch (err) { alert('設定狀態失敗：' + err.message) }
+        if (nextStatus === 'auto') {
+          await supabase.from('class_sessions').delete().match({ class_id: classId, session_date: todayStr })
+        } else {
+          await supabase.from('class_sessions').upsert([{ class_id: classId, session_date: todayStr, status: nextStatus }], { onConflict: 'class_id, session_date' })
+        }
+        window.fetchTodayClasses()
+      } catch (err) { alert('切換狀態失敗：' + err.message) }
     }
 
     // ==========================================
-    // 💡 4. 班級專屬點名簿邏輯
+    // 💡 4. 班級專屬點名簿與請假邏輯
     // ==========================================
     let currentAttClassId = null
     const attModal = document.getElementById('attendance-modal')
 
     window.openAttendance = async (classId, className) => {
-      currentAttClassId = classId
-      document.getElementById('att-class-name').textContent = className
+      currentAttClassId = classId; document.getElementById('att-class-name').textContent = className
       document.getElementById('att-student-list').innerHTML = '<div style="padding: 30px; text-align: center; color: var(--text-light);">載入名單中...</div>'
-      attModal.style.display = 'flex'
-      await window.reloadAttendanceList()
+      attModal.style.display = 'flex'; await window.reloadAttendanceList()
     }
-
     window.closeAttendanceModal = () => { attModal.style.display = 'none' }
 
     window.reloadAttendanceList = async () => {
       try {
-        // 抓取該班學生
         const { data: roster } = await supabase.from('class_students').select('student_id, students(name, student_number)').eq('class_id', currentAttClassId)
         if (!roster || roster.length === 0) { document.getElementById('att-student-list').innerHTML = '<div style="padding: 20px; text-align: center;">班上尚無學生</div>'; return }
 
-        // 抓取這些學生今天的考勤紀錄
         const studentIds = roster.map(r => r.student_id)
         const { data: todayAtt } = await supabase.from('attendance').select('*').eq('record_date', todayStr).in('student_id', studentIds)
         const attMap = {}
@@ -265,40 +255,38 @@
 
         const listContainer = document.getElementById('att-student-list')
         listContainer.innerHTML = ''
-
-        // 排序：學號小到大
         roster.sort((a, b) => (a.students?.student_number || '').localeCompare(b.students?.student_number || '', 'zh-TW', { numeric: true }))
 
         roster.forEach(r => {
           const s = r.students; if (!s) return
           const att = attMap[r.student_id]
           
-          // 判斷狀態
-          let statusText = '未到班', statusClass = 'status-none'
+          let statusText = '未到班', statusClass = 'status-none', currentStatusMode = 'none'
           if (att) {
-            if (att.status === '請假') { statusText = '已請假'; statusClass = 'status-leave' }
-            else if (att.check_out) { statusText = '已離班'; statusClass = 'status-out' }
-            else if (att.check_in) { statusText = '在班上'; statusClass = 'status-in' }
+            if (att.status === '請假') { statusText = '已請假'; statusClass = 'status-leave'; currentStatusMode = 'leave' }
+            else if (att.check_out) { statusText = '已離班'; statusClass = 'status-out'; currentStatusMode = 'out' }
+            else if (att.check_in) { statusText = '在班上'; statusClass = 'status-in'; currentStatusMode = 'in' }
           }
 
-          // 時間格式化
           const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) : '-'
-          const inTime = att && att.check_in ? formatTime(att.check_in) : '-'
-          const outTime = att && att.check_out ? formatTime(att.check_out) : '-'
+          const inTime = att && att.check_in ? formatTime(att.check_in) : '-'; const outTime = att && att.check_out ? formatTime(att.check_out) : '-'
+          
+          // 若為請假則顯示事由，否則顯示打卡時間
+          const timeOrReasonHtml = att && att.status === '請假' 
+            ? `事由：<span style="color:#b45309;">${att.leave_reason || '無'}</span>` 
+            : `進：${inTime} | 離：${outTime}`
 
           listContainer.innerHTML += `
             <div class="att-roster-item">
               <div>
                 <div style="font-weight: 600;">${s.name} <span style="font-size:12px; font-weight:normal; color:var(--text-light);">${s.student_number || ''}</span></div>
-                <div style="font-size: 12px; color: var(--text-light); margin-top:4px;">進：${inTime} | 離：${outTime}</div>
+                <div style="font-size: 12px; color: var(--text-light); margin-top:4px;">${timeOrReasonHtml}</div>
               </div>
-              <div style="display:flex; align-items:center; gap:10px;">
-                <span class="att-status ${statusClass}">${statusText}</span>
-                <div style="display:flex; gap:4px; border-left: 1px solid var(--border); padding-left: 10px;">
-                  <button class="btn-icon" title="打卡進班" onclick="window.markStudentAtt('${r.student_id}', 'in')"><span class="material-symbols-outlined" style="font-size:18px;">login</span></button>
-                  <button class="btn-icon" title="打卡離班" onclick="window.markStudentAtt('${r.student_id}', 'out')"><span class="material-symbols-outlined" style="font-size:18px;">logout</span></button>
-                  <button class="btn-icon" title="設為請假" onclick="window.markStudentAtt('${r.student_id}', 'leave')"><span class="material-symbols-outlined" style="font-size:18px; color:#b45309;">medical_information</span></button>
-                </div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <button class="att-status-btn ${statusClass}" onclick="window.toggleAttendance('${r.student_id}', '${currentStatusMode}')">${statusText}</button>
+                <button class="btn-icon" title="請假登記" onclick="window.markLeave('${r.student_id}')" style="background:#fffbeb; padding:6px; border-radius:6px; border:1px solid #fde68a;">
+                  <span class="material-symbols-outlined" style="font-size:18px; color:#b45309;">medical_information</span>
+                </button>
               </div>
             </div>
           `
@@ -306,30 +294,41 @@
       } catch (err) { console.error('點名表載入失敗', err) }
     }
 
-    // 💡 5. 手動幫學生刷卡/請假
-    window.markStudentAtt = async (studentId, action) => {
+    // 💡 5. 一鍵切換學生出缺勤狀態 (未到班 -> 在班上 -> 已離班 -> 刪除紀錄變未到班)
+    window.toggleAttendance = async (studentId, currentStatusMode) => {
       try {
         const nowIso = new Date().toISOString()
         const { data: existing } = await supabase.from('attendance').select('id').match({ student_id: studentId, record_date: todayStr }).maybeSingle()
 
-        if (action === 'in') {
-          if (existing) await supabase.from('attendance').update({ check_in: nowIso, status: '正常' }).eq('id', existing.id)
-          else await supabase.from('attendance').insert([{ user_type: 'student', student_id: studentId, record_date: todayStr, check_in: nowIso }])
+        if (currentStatusMode === 'none' || currentStatusMode === 'leave') {
+          // 變成進班
+          if (existing) await supabase.from('attendance').update({ check_in: nowIso, check_out: null, status: '正常', leave_reason: null }).eq('id', existing.id)
+          else await supabase.from('attendance').insert([{ user_type: 'student', student_id: studentId, record_date: todayStr, check_in: nowIso, status: '正常' }])
         } 
-        else if (action === 'out') {
-          if (existing) await supabase.from('attendance').update({ check_out: nowIso, status: '正常' }).eq('id', existing.id)
-          else await supabase.from('attendance').insert([{ user_type: 'student', student_id: studentId, record_date: todayStr, check_out: nowIso }])
+        else if (currentStatusMode === 'in') {
+          // 變成離班
+          await supabase.from('attendance').update({ check_out: nowIso, status: '正常' }).eq('id', existing.id)
         } 
-        else if (action === 'leave') {
-          if (existing) await supabase.from('attendance').update({ status: '請假' }).eq('id', existing.id)
-          else await supabase.from('attendance').insert([{ user_type: 'student', student_id: studentId, record_date: todayStr, status: '請假' }])
+        else if (currentStatusMode === 'out') {
+          // 清除紀錄回到未到班
+          await supabase.from('attendance').delete().eq('id', existing.id)
         }
-
-        // 重新載入名單並更新首頁人數
-        await window.reloadAttendanceList()
-        window.fetchDashboardStats()
-
+        await window.reloadAttendanceList(); window.fetchDashboardStats()
       } catch (err) { alert('操作失敗：' + err.message) }
+    }
+
+    // 💡 6. 填寫請假事由
+    window.markLeave = async (studentId) => {
+      const reason = prompt('📝 請輸入請假事由：\n(若不填寫可直接按確定留空，或按取消放棄)')
+      if (reason === null) return // 使用者按了取消
+      
+      try {
+        const { data: existing } = await supabase.from('attendance').select('id').match({ student_id: studentId, record_date: todayStr }).maybeSingle()
+        if (existing) await supabase.from('attendance').update({ status: '請假', leave_reason: reason, check_in: null, check_out: null }).eq('id', existing.id)
+        else await supabase.from('attendance').insert([{ user_type: 'student', student_id: studentId, record_date: todayStr, status: '請假', leave_reason: reason }])
+        
+        await window.reloadAttendanceList(); window.fetchDashboardStats()
+      } catch (err) { alert('請假登記失敗：' + err.message) }
     }
 
     // 初始化執行
