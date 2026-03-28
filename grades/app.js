@@ -1,11 +1,9 @@
 import { supabase } from '../config.js'
 
-// 畫面視圖
 const viewClasses = document.getElementById('view-classes')
 const viewExams = document.getElementById('view-exams')
 const viewEditor = document.getElementById('view-editor')
 
-// 元素
 const classGrid = document.getElementById('class-grid')
 const examList = document.getElementById('exam-list')
 const rosterList = document.getElementById('roster-list')
@@ -15,15 +13,11 @@ const subjectModal = document.getElementById('subject-modal')
 let allSubjects = []
 let currentClassId = null
 let currentExams = []
-
-// 💡 優化 5：防呆機制變數
 let isFormDirty = false
 
-// 監聽輸入變更，標記為已修改
 document.getElementById('exam-form').addEventListener('input', () => isFormDirty = true)
 document.getElementById('roster-list').addEventListener('input', () => isFormDirty = true)
 
-// 1. 畫面切換器
 window.switchView = (viewName) => {
   document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'))
   if (viewName === 'classes') viewClasses.classList.add('active')
@@ -32,24 +26,18 @@ window.switchView = (viewName) => {
   window.scrollTo(0, 0)
 }
 
-// 💡 返回按鈕防呆攔截
 window.handleBackFromEditor = async () => {
   if (isFormDirty) {
     const wantToSave = confirm('⚠️ 您的成績尚未儲存！\n\n按下「確定」：系統會為您自動暫存成績並返回\n按下「取消」：直接放棄修改並返回')
-    if (wantToSave) {
-      await window.saveExamData()
-      return
-    }
+    if (wantToSave) { await window.saveExamData(); return }
   }
-  isFormDirty = false // 放棄修改，重置狀態
+  isFormDirty = false
   window.switchView('exams')
 }
 
-// 2. 科目管理邏輯
 async function fetchSubjects() {
   const { data } = await supabase.from('subjects').select('*').order('created_at', { ascending: true })
   allSubjects = data || []
-  
   subjectSelect.innerHTML = '<option value="" disabled selected>請選擇科目</option>'
   allSubjects.forEach(s => subjectSelect.appendChild(new Option(s.name, s.name)))
   
@@ -77,14 +65,11 @@ window.deleteSubject = async (id) => {
   await supabase.from('subjects').delete().eq('id', id); await fetchSubjects()
 }
 
-// 3. 載入班級網格
 async function loadClasses() {
   const { data, error } = await supabase.from('classes').select('id, name, semester, branches(name), staff!classes_teacher_id_fkey(name)').order('created_at', { ascending: false })
   if (error) { classGrid.innerHTML = '載入失敗'; return }
-  
   classGrid.innerHTML = ''
   if (data.length === 0) { classGrid.innerHTML = '<div style="grid-column:span 3; text-align:center; color:var(--text-light);">請先至班級管理建立班級</div>'; return }
-  
   data.forEach(c => {
     const branch = c.branches ? c.branches.name : '無分校'
     const teacher = c.staff ? c.staff.name : '未指派老師'
@@ -102,7 +87,6 @@ async function loadClasses() {
   })
 }
 
-// 4. 進入班級成績列表
 window.enterClassManage = async (classId, className, branchName, teacherName) => {
   currentClassId = classId
   document.getElementById('manage-class-title').textContent = className
@@ -139,9 +123,8 @@ async function fetchExams() {
   })
 }
 
-// 5. 獨立編輯頁面與 Excel 解析引擎
 window.openExamEditor = async (examId = null) => {
-  isFormDirty = false // 進入時重置髒標記
+  isFormDirty = false
   rosterList.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:30px;">載入學生名冊中...</td></tr>'
   document.getElementById('stat-avg').textContent = '-'; document.getElementById('stat-high').textContent = '-'; document.getElementById('stat-low').textContent = '-'
   document.getElementById('exam-id').value = examId || ''
@@ -159,19 +142,17 @@ window.openExamEditor = async (examId = null) => {
   
   window.switchView('editor')
 
-  // 載入名冊
   const { data: rosterData } = await supabase.from('class_students').select('student_id, students(name, student_number)').eq('class_id', currentClassId)
   if (!rosterData || rosterData.length === 0) {
     rosterList.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--danger); padding:30px;">這個班級目前沒有學生，請先至班級管理加入學生。</td></tr>'
     return
   }
 
-  // 💡 優化 3：照序號降冪排列
+  // 💡 關鍵修復：改為「升冪」排列 (小到大 A to Z)
   rosterData.sort((a, b) => {
     const numA = a.students?.student_number || ''
     const numB = b.students?.student_number || ''
-    // 降冪 (Z to A / 大到小)
-    return numB.localeCompare(numA, 'zh-TW', { numeric: true })
+    return numA.localeCompare(numB, 'zh-TW', { numeric: true })
   })
 
   let existingGrades = []
@@ -202,13 +183,12 @@ window.openExamEditor = async (examId = null) => {
   window.calculateLiveStats()
 }
 
-// Excel 貼上魔法
 function bindExcelPasteEvent() {
   const inputs = document.querySelectorAll('.score-input')
   inputs.forEach(input => {
     input.addEventListener('paste', (e) => {
       e.preventDefault()
-      isFormDirty = true // 貼上時也要標記髒
+      isFormDirty = true
       const pasteData = (e.clipboardData || window.clipboardData).getData('text')
       const lines = pasteData.split(/\r\n|\n|\r/)
       
@@ -218,7 +198,7 @@ function bindExcelPasteEvent() {
       for (let i = startIndex; i < inputs.length && lineIdx < lines.length; i++) {
         let val = lines[lineIdx].trim()
         if (val !== '' && !isNaN(parseFloat(val))) { inputs[i].value = parseFloat(val) }
-        else if (val === '') { inputs[i].value = '' } // 支援貼上空白(缺考)
+        else if (val === '') { inputs[i].value = '' }
         lineIdx++
       }
       window.calculateLiveStats()
@@ -226,7 +206,6 @@ function bindExcelPasteEvent() {
   })
 }
 
-// 6. 即時計算高均低標
 window.calculateLiveStats = () => {
   const inputs = document.querySelectorAll('.score-input')
   let total = 0, count = 0, max = -Infinity, min = Infinity
@@ -241,7 +220,6 @@ window.calculateLiveStats = () => {
   document.getElementById('stat-low').textContent = count > 0 ? min : '-'
 }
 
-// 7. 儲存成績
 window.saveExamData = async () => {
   const examName = document.getElementById('exam_name').value; const examDate = document.getElementById('exam_date').value; const subject = document.getElementById('subject').value
   if (!examName || !examDate || !subject) { alert('測驗名稱、科目與日期為必填！'); return }
@@ -262,15 +240,13 @@ window.saveExamData = async () => {
     const inputs = document.querySelectorAll('.score-input'); const gradePayloads = []
     inputs.forEach(inp => {
       const sid = inp.getAttribute('data-sid'); const scoreStr = inp.value; const noteStr = document.querySelector(`.note-input[data-sid="${sid}"]`).value
-      // 💡 缺考空白不寫入資料庫
       if (scoreStr !== '') gradePayloads.push({ exam_id: examId, student_id: sid, score: parseFloat(scoreStr), note: noteStr || null })
     })
 
-    // 先刪除該次考試全班成績，再寫入有效成績 (完美處理老師將原本分數清空為缺考的狀況)
     await supabase.from('grades').delete().eq('exam_id', examId)
     if (gradePayloads.length > 0) await supabase.from('grades').insert(gradePayloads)
 
-    isFormDirty = false // 儲存成功，清除髒標記
+    isFormDirty = false
     window.switchView('exams'); fetchExams()
   } catch (err) { alert('儲存失敗：' + err.message) } finally { btn.disabled = false; btn.innerHTML = '<span class="material-symbols-outlined">save</span> 儲存成績與發布' }
 }
@@ -280,5 +256,4 @@ window.deleteExam = async (id, name) => {
   await supabase.from('class_exams').delete().eq('id', id); fetchExams()
 }
 
-// 啟動
 fetchSubjects().then(loadClasses)
