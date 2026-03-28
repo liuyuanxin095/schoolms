@@ -7,7 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="./style.css" />
   <style>
-    /* 首頁儀表板專屬版面配置 */
     .dashboard-layout { display: flex; flex-direction: column; gap: 20px; }
     
     /* 上方：數據統計看板 */
@@ -20,36 +19,41 @@
     .stat-label { font-size: 14px; color: var(--text-light); font-weight: 500; margin-bottom: 4px; }
     .stat-number { font-size: 28px; font-weight: bold; color: var(--text-main); font-family: monospace; }
 
-    /* 下方：左右雙欄 (功能選單 + 今日課表) */
-    .bottom-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+    .bottom-layout { display: grid; grid-template-columns: 350px 1fr; gap: 20px; align-items: start; }
     @media (max-width: 992px) { .bottom-layout { grid-template-columns: 1fr; } .stat-container { grid-template-columns: 1fr; } }
     
-    /* 左下：功能選單 (統一主色調) */
-    .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-    .menu-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none; color: var(--text-main); transition: 0.2s; }
-    .menu-card:hover { border-color: var(--primary); box-shadow: 0 4px 6px rgba(37,99,235,0.1); transform: translateY(-2px); color: var(--primary); }
-    .menu-card .material-symbols-outlined { font-size: 36px; color: var(--primary); } /* 統一按鈕顏色 */
+    /* 💡 左下：功能選單 (縮小且改為橫向排列) */
+    .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .menu-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 15px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-main); transition: 0.2s; }
+    .menu-card:hover { border-color: var(--primary); box-shadow: 0 2px 4px rgba(37,99,235,0.1); transform: translateY(-1px); color: var(--primary); }
+    .menu-card .material-symbols-outlined { font-size: 24px; color: var(--primary); }
+    .menu-card span:not(.material-symbols-outlined) { font-weight: 600; font-size: 14px; }
 
     /* 右下：今日課表清單 */
-    .class-schedule-list { display: flex; flex-direction: column; gap: 10px; max-height: 450px; overflow-y: auto; padding-right: 5px; }
+    .class-schedule-list { display: flex; flex-direction: column; gap: 10px; max-height: 500px; overflow-y: auto; padding-right: 5px; }
     .schedule-item { border: 1px solid var(--border); border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center; background: #fff; }
-    .schedule-time { font-size: 18px; font-weight: bold; color: var(--primary); font-family: monospace; }
+    .schedule-time { font-size: 16px; font-weight: bold; color: var(--primary); font-family: monospace; text-align: center; }
     .schedule-detail { flex-grow: 1; margin: 0 15px; }
     .schedule-name { font-weight: bold; font-size: 16px; color: var(--text-main); margin-bottom: 4px; }
     .schedule-sub { font-size: 12px; color: var(--text-light); }
     
-    /* 正在上課的呼吸燈標示 */
     .live-badge { background: #ef4444; color: white; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; animation: pulse 2s infinite; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); } 70% { box-shadow: 0 0 0 6px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
+
+    /* 💡 點名表 Modal 樣式 */
+    .att-roster-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border); }
+    .att-roster-item:last-child { border-bottom: none; }
+    .att-status { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+    .status-in { background: #dcfce7; color: #15803d; }
+    .status-out { background: #f3f4f6; color: #4b5563; }
+    .status-leave { background: #fef3c7; color: #b45309; }
+    .status-none { background: #fee2e2; color: #b91c1c; }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <div class="header-left">
-      <span class="material-symbols-outlined" style="color: var(--primary);">school</span>
-      <h1>補習班管理系統 - 總部儀表板</h1>
-    </div>
+    <div class="header-left"><span class="material-symbols-outlined" style="color: var(--primary);">school</span><h1>補習班管理系統 - 總部儀表板</h1></div>
   </div>
   
   <div class="container dashboard-layout">
@@ -57,199 +61,281 @@
     <div class="stat-container">
       <div class="stat-box">
         <div class="stat-icon"><span class="material-symbols-outlined" style="font-size: 32px;">groups</span></div>
-        <div class="stat-info">
-          <span class="stat-label">系統建檔學生總數</span>
-          <span class="stat-number" id="stat-total-students">-</span>
-        </div>
+        <div class="stat-info"><span class="stat-label">系統建檔學生總數</span><span class="stat-number" id="stat-total-students">-</span></div>
       </div>
-      
       <div class="stat-box">
         <div class="stat-icon success"><span class="material-symbols-outlined" style="font-size: 32px;">how_to_reg</span></div>
-        <div class="stat-info">
-          <span class="stat-label">今日目前在班人數 (學生)</span>
-          <span class="stat-number" id="stat-checked-in">-</span>
-        </div>
+        <div class="stat-info"><span class="stat-label">今日目前在班人數 (學生)</span><span class="stat-number" id="stat-checked-in">-</span></div>
       </div>
-      
       <div class="stat-box">
         <div class="stat-icon warning"><span class="material-symbols-outlined" style="font-size: 32px;">warning</span></div>
-        <div class="stat-info">
-          <span class="stat-label">待繳費未結清單據</span>
-          <span class="stat-number" id="stat-unpaid">-</span>
-        </div>
+        <div class="stat-info"><span class="stat-label">待繳費未結清單據</span><span class="stat-number" id="stat-unpaid">-</span></div>
       </div>
     </div>
 
     <div class="bottom-layout">
-      
       <div class="card" style="padding: 20px;">
-        <h2 style="font-size: 18px; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px;">
-          <span class="material-symbols-outlined">grid_view</span> 系統功能模組
-        </h2>
+        <h2 style="font-size: 16px; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined">grid_view</span> 系統功能模組</h2>
         <div class="menu-grid">
-          <a href="./students/index.html" class="menu-card"><span class="material-symbols-outlined">group</span><span style="font-weight: 600;">學生管理</span></a>
-          <a href="./staff/index.html" class="menu-card"><span class="material-symbols-outlined">badge</span><span style="font-weight: 600;">教職員管理</span></a>
-          <a href="./classes/index.html" class="menu-card"><span class="material-symbols-outlined">class</span><span style="font-weight: 600;">班級與排課</span></a>
-          <a href="./attendance/index.html" class="menu-card"><span class="material-symbols-outlined">how_to_reg</span><span style="font-weight: 600;">考勤打卡</span></a>
-          <a href="./grades/index.html" class="menu-card"><span class="material-symbols-outlined">quiz</span><span style="font-weight: 600;">成績管理</span></a>
-          <a href="./payments/index.html" class="menu-card"><span class="material-symbols-outlined">payments</span><span style="font-weight: 600;">繳費管理</span></a>
-          <a href="./notifications/index.html" class="menu-card"><span class="material-symbols-outlined">campaign</span><span style="font-weight: 600;">班級通知</span></a>
-          <a href="./classrooms/index.html" class="menu-card"><span class="material-symbols-outlined">meeting_room</span><span style="font-weight: 600;">教室管理</span></a>
+          <a href="./students/index.html" class="menu-card"><span class="material-symbols-outlined">group</span><span>學生管理</span></a>
+          <a href="./staff/index.html" class="menu-card"><span class="material-symbols-outlined">badge</span><span>教職員管理</span></a>
+          <a href="./classes/index.html" class="menu-card"><span class="material-symbols-outlined">class</span><span>班級與排課</span></a>
+          <a href="./attendance/index.html" class="menu-card"><span class="material-symbols-outlined">how_to_reg</span><span>考勤打卡</span></a>
+          <a href="./grades/index.html" class="menu-card"><span class="material-symbols-outlined">quiz</span><span>成績管理</span></a>
+          <a href="./payments/index.html" class="menu-card"><span class="material-symbols-outlined">payments</span><span>繳費管理</span></a>
+          <a href="./notifications/index.html" class="menu-card"><span class="material-symbols-outlined">campaign</span><span>班級通知</span></a>
+          <a href="./classrooms/index.html" class="menu-card"><span class="material-symbols-outlined">meeting_room</span><span>教室管理</span></a>
         </div>
       </div>
 
       <div class="card" style="padding: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-          <h2 style="font-size: 18px; margin: 0; display: flex; align-items: center; gap: 8px;">
-            <span class="material-symbols-outlined">event_note</span> 今日所有課程 
-          </h2>
-          <span id="today-display" style="font-size: 14px; font-weight: 600; color: var(--primary); background: #eff6ff; padding: 4px 10px; border-radius: 20px;">-</span>
+          <h2 style="font-size: 16px; margin: 0; display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined">event_note</span> 今日排定課程 </h2>
+          <span id="today-display" style="font-size: 13px; font-weight: 600; color: var(--primary); background: #eff6ff; padding: 4px 10px; border-radius: 20px;">-</span>
         </div>
-        
-        <div class="class-schedule-list" id="today-classes-list">
-          <div style="text-align: center; padding: 30px; color: var(--text-light);">搜尋今日課程中...</div>
-        </div>
+        <div class="class-schedule-list" id="today-classes-list"><div style="text-align: center; padding: 30px; color: var(--text-light);">搜尋今日課程中...</div></div>
       </div>
+    </div>
+  </div>
 
+  <div class="modal-overlay" id="attendance-modal">
+    <div class="modal-content" style="max-width: 650px; background-color: #f9fafb;">
+      <span class="material-symbols-outlined modal-close" onclick="window.closeAttendanceModal()">close</span>
+      <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid var(--border);">
+        <h2 id="att-class-name" style="margin: 0 0 5px 0; color: var(--primary);">班級名稱</h2>
+        <div style="color: var(--text-light); font-size: 14px;">班級專屬點名簿 (今日狀態)</div>
+      </div>
+      
+      <div style="background: white; border: 1px solid var(--border); border-radius: 8px; max-height: 400px; overflow-y: auto;">
+        <div id="att-student-list"><div style="padding: 30px; text-align: center; color: var(--text-light);">載入名單中...</div></div>
+      </div>
     </div>
   </div>
 
   <script type="module">
     import { supabase } from './config.js'
 
+    const todayStr = new Date().toISOString().split('T')[0]
+
     // ==========================================
     // 1. 取得上方三大數據
     // ==========================================
-    async function fetchDashboardStats() {
+    window.fetchDashboardStats = async () => {
       try {
-        // A. 學生總數
         const { count: studentCount } = await supabase.from('students').select('*', { count: 'exact', head: true })
         document.getElementById('stat-total-students').textContent = studentCount || 0
 
-        // B. 今日目前在班人數 (有進班打卡，且無離班紀錄)
-        const todayStr = new Date().toISOString().split('T')[0]
+        // 在班人數：有進班、沒離班、且不是請假
         const { count: checkedInCount } = await supabase.from('attendance')
           .select('*', { count: 'exact', head: true })
-          .eq('record_date', todayStr)
-          .eq('user_type', 'student')
-          .not('check_in', 'is', null)
-          .is('check_out', null)
+          .eq('record_date', todayStr).eq('user_type', 'student')
+          .not('check_in', 'is', null).is('check_out', null)
+          .neq('status', '請假')
         document.getElementById('stat-checked-in').textContent = checkedInCount || 0
 
-        // C. 待繳費未結清單據
-        const { count: unpaidCount } = await supabase.from('payments')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', '未繳')
+        const { count: unpaidCount } = await supabase.from('payments').select('*', { count: 'exact', head: true }).eq('status', '未繳')
         document.getElementById('stat-unpaid').textContent = unpaidCount || 0
-
-      } catch (err) {
-        console.error('數據抓取失敗:', err)
-      }
+      } catch (err) { console.error('數據抓取失敗:', err) }
     }
 
     // ==========================================
     // 2. 獲取並解析今日課表
     // ==========================================
-    async function fetchTodayClasses() {
+    window.fetchTodayClasses = async () => {
       const listContainer = document.getElementById('today-classes-list')
       const daysMap = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']
       const now = new Date()
-      const todayName = daysMap[now.getDay()] // 取得今天是星期幾 (例如: 週六)
-      
+      const todayName = daysMap[now.getDay()]
       document.getElementById('today-display').textContent = `今天是 ${todayName}`
 
       try {
-        // 抓出所有班級 (包含老師與教室資訊)
-        const { data: classes, error } = await supabase
-          .from('classes')
-          .select('id, name, schedule, classrooms(name), teacher:staff!classes_teacher_id_fkey(name)')
-        
-        if (error) throw error
+        // 同時抓取班級資料 與 今日的手動狀態
+        const [classesRes, sessionsRes] = await Promise.all([
+          supabase.from('classes').select('id, name, schedule, classrooms(name), teacher:staff!classes_teacher_id_fkey(name)'),
+          supabase.from('class_sessions').select('class_id, status').eq('session_date', todayStr)
+        ])
+
+        if (classesRes.error) throw classesRes.error
+        const manualStatusMap = {}
+        if (sessionsRes.data) sessionsRes.data.forEach(s => manualStatusMap[s.class_id] = s.status)
 
         const todayClasses = []
-
-        // 篩選出上課時段包含「今天」的班級，並解析出時間
-        classes.forEach(c => {
+        classesRes.data.forEach(c => {
           if (!c.schedule) return
-          // schedule 格式範例："週一 18:30~21:30, 週六 09:00~12:00"
           const slots = c.schedule.split(', ')
           slots.forEach(slot => {
             if (slot.includes(todayName) || slot.includes(`星期${todayName.charAt(1)}`)) {
-              // 擷取時間部分 (例如: 18:30~21:30)
               const timeMatch = slot.match(/(\d{2}:\d{2})~(\d{2}:\d{2})/)
               if (timeMatch) {
                 todayClasses.push({
-                  id: c.id,
-                  name: c.name,
-                  startTime: timeMatch[1],
-                  endTime: timeMatch[2],
-                  teacher: c.teacher ? c.teacher.name : '未指派',
-                  room: c.classrooms ? c.classrooms.name : '未定教室'
+                  id: c.id, name: c.name, startTime: timeMatch[1], endTime: timeMatch[2],
+                  teacher: c.teacher ? c.teacher.name : '未指派', room: c.classrooms ? c.classrooms.name : '未定教室',
+                  manualStatus: manualStatusMap[c.id] || 'auto'
                 })
               }
             }
           })
         })
 
-        // 依據開始時間排序
         todayClasses.sort((a, b) => a.startTime.localeCompare(b.startTime))
-
         listContainer.innerHTML = ''
+        
         if (todayClasses.length === 0) {
           listContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-light);">今日無排定課程 🎉</div>'
           return
         }
 
-        // 渲染課表與「上課中」狀態判斷
         const currentMinutes = now.getHours() * 60 + now.getMinutes()
 
         todayClasses.forEach(tc => {
-          // 將時間字串轉為分鐘數來比對
-          const [startH, startM] = tc.startTime.split(':').map(Number)
-          const [endH, endM] = tc.endTime.split(':').map(Number)
-          const startMin = startH * 60 + startM
-          const endMin = endH * 60 + endM
+          const [startH, startM] = tc.startTime.split(':').map(Number); const [endH, endM] = tc.endTime.split(':').map(Number)
+          const startMin = startH * 60 + startM; const endMin = endH * 60 + endM
 
           let statusHtml = ''
-          // 如果目前時間介於開始與結束之間，顯示呼吸燈
-          if (currentMinutes >= startMin && currentMinutes <= endMin) {
+          
+          // 💡 狀態判斷：手動優先，否則依時間
+          if (tc.manualStatus === 'live') {
             statusHtml = `<div class="live-badge"><span class="material-symbols-outlined" style="font-size:14px;">sensors</span> 上課中</div>`
-          } else if (currentMinutes > endMin) {
+          } else if (tc.manualStatus === 'ended') {
             statusHtml = `<span style="font-size:12px; color:var(--text-light); border: 1px solid var(--border); padding: 4px 8px; border-radius:20px;">已下課</span>`
+          } else {
+            if (currentMinutes >= startMin && currentMinutes <= endMin) statusHtml = `<div class="live-badge"><span class="material-symbols-outlined" style="font-size:14px;">sensors</span> 上課中</div>`
+            else if (currentMinutes > endMin) statusHtml = `<span style="font-size:12px; color:var(--text-light); border: 1px solid var(--border); padding: 4px 8px; border-radius:20px;">已下課</span>`
+            else statusHtml = `<span style="font-size:12px; color:var(--text-light); border: 1px solid var(--border); padding: 4px 8px; border-radius:20px;">尚未開始</span>`
           }
 
           listContainer.innerHTML += `
             <div class="schedule-item">
-              <div class="schedule-time">
-                <div style="font-size:14px; color:var(--text-light); text-align:center; margin-bottom:2px;">${tc.startTime}</div>
-                <div style="font-size:14px; color:var(--text-light); text-align:center;">${tc.endTime}</div>
-              </div>
+              <div class="schedule-time"><div>${tc.startTime}</div><div style="font-size:12px; color:var(--text-light); font-weight:normal;">${tc.endTime}</div></div>
               <div class="schedule-detail">
                 <div class="schedule-name">${tc.name}</div>
-                <div class="schedule-sub">
-                  <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">school</span> ${tc.teacher} &nbsp;|&nbsp; 
-                  <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">meeting_room</span> ${tc.room}
+                <div class="schedule-sub"><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">school</span> ${tc.teacher} &nbsp;|&nbsp; <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">meeting_room</span> ${tc.room}</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+                ${statusHtml}
+                <div style="display:flex; gap:5px;">
+                  <button class="btn-icon" title="手動上課" onclick="window.setManualStatus('${tc.id}', 'live')"><span class="material-symbols-outlined" style="font-size:16px;">play_arrow</span></button>
+                  <button class="btn-icon" title="手動下課" onclick="window.setManualStatus('${tc.id}', 'ended')"><span class="material-symbols-outlined" style="font-size:16px;">stop</span></button>
+                  <button class="btn-icon" title="學生點名" onclick="window.openAttendance('${tc.id}', '${tc.name}')"><span class="material-symbols-outlined" style="font-size:16px; color:var(--primary);">checklist</span></button>
                 </div>
               </div>
-              <div>${statusHtml}</div>
             </div>
           `
         })
-
-      } catch (err) {
-        listContainer.innerHTML = `<div style="text-align:center; color:red; padding:20px;">課表載入失敗: ${err.message}</div>`
-      }
+      } catch (err) { listContainer.innerHTML = `<div style="text-align:center; color:red; padding:20px;">課表載入失敗</div>` }
     }
 
-    // 執行
+    // 💡 3. 手動設定班級上下課狀態
+    window.setManualStatus = async (classId, status) => {
+      try {
+        const payload = { class_id: classId, session_date: todayStr, status: status }
+        // 使用 upsert，有則更新，無則新增 (依賴 SQL 的 UNIQUE 限制)
+        await supabase.from('class_sessions').upsert([payload], { onConflict: 'class_id, session_date' })
+        window.fetchTodayClasses() // 刷新課表
+      } catch (err) { alert('設定狀態失敗：' + err.message) }
+    }
+
+    // ==========================================
+    // 💡 4. 班級專屬點名簿邏輯
+    // ==========================================
+    let currentAttClassId = null
+    const attModal = document.getElementById('attendance-modal')
+
+    window.openAttendance = async (classId, className) => {
+      currentAttClassId = classId
+      document.getElementById('att-class-name').textContent = className
+      document.getElementById('att-student-list').innerHTML = '<div style="padding: 30px; text-align: center; color: var(--text-light);">載入名單中...</div>'
+      attModal.style.display = 'flex'
+      await window.reloadAttendanceList()
+    }
+
+    window.closeAttendanceModal = () => { attModal.style.display = 'none' }
+
+    window.reloadAttendanceList = async () => {
+      try {
+        // 抓取該班學生
+        const { data: roster } = await supabase.from('class_students').select('student_id, students(name, student_number)').eq('class_id', currentAttClassId)
+        if (!roster || roster.length === 0) { document.getElementById('att-student-list').innerHTML = '<div style="padding: 20px; text-align: center;">班上尚無學生</div>'; return }
+
+        // 抓取這些學生今天的考勤紀錄
+        const studentIds = roster.map(r => r.student_id)
+        const { data: todayAtt } = await supabase.from('attendance').select('*').eq('record_date', todayStr).in('student_id', studentIds)
+        const attMap = {}
+        if (todayAtt) todayAtt.forEach(a => attMap[a.student_id] = a)
+
+        const listContainer = document.getElementById('att-student-list')
+        listContainer.innerHTML = ''
+
+        // 排序：學號小到大
+        roster.sort((a, b) => (a.students?.student_number || '').localeCompare(b.students?.student_number || '', 'zh-TW', { numeric: true }))
+
+        roster.forEach(r => {
+          const s = r.students; if (!s) return
+          const att = attMap[r.student_id]
+          
+          // 判斷狀態
+          let statusText = '未到班', statusClass = 'status-none'
+          if (att) {
+            if (att.status === '請假') { statusText = '已請假'; statusClass = 'status-leave' }
+            else if (att.check_out) { statusText = '已離班'; statusClass = 'status-out' }
+            else if (att.check_in) { statusText = '在班上'; statusClass = 'status-in' }
+          }
+
+          // 時間格式化
+          const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) : '-'
+          const inTime = att && att.check_in ? formatTime(att.check_in) : '-'
+          const outTime = att && att.check_out ? formatTime(att.check_out) : '-'
+
+          listContainer.innerHTML += `
+            <div class="att-roster-item">
+              <div>
+                <div style="font-weight: 600;">${s.name} <span style="font-size:12px; font-weight:normal; color:var(--text-light);">${s.student_number || ''}</span></div>
+                <div style="font-size: 12px; color: var(--text-light); margin-top:4px;">進：${inTime} | 離：${outTime}</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="att-status ${statusClass}">${statusText}</span>
+                <div style="display:flex; gap:4px; border-left: 1px solid var(--border); padding-left: 10px;">
+                  <button class="btn-icon" title="打卡進班" onclick="window.markStudentAtt('${r.student_id}', 'in')"><span class="material-symbols-outlined" style="font-size:18px;">login</span></button>
+                  <button class="btn-icon" title="打卡離班" onclick="window.markStudentAtt('${r.student_id}', 'out')"><span class="material-symbols-outlined" style="font-size:18px;">logout</span></button>
+                  <button class="btn-icon" title="設為請假" onclick="window.markStudentAtt('${r.student_id}', 'leave')"><span class="material-symbols-outlined" style="font-size:18px; color:#b45309;">medical_information</span></button>
+                </div>
+              </div>
+            </div>
+          `
+        })
+      } catch (err) { console.error('點名表載入失敗', err) }
+    }
+
+    // 💡 5. 手動幫學生刷卡/請假
+    window.markStudentAtt = async (studentId, action) => {
+      try {
+        const nowIso = new Date().toISOString()
+        const { data: existing } = await supabase.from('attendance').select('id').match({ student_id: studentId, record_date: todayStr }).maybeSingle()
+
+        if (action === 'in') {
+          if (existing) await supabase.from('attendance').update({ check_in: nowIso, status: '正常' }).eq('id', existing.id)
+          else await supabase.from('attendance').insert([{ user_type: 'student', student_id: studentId, record_date: todayStr, check_in: nowIso }])
+        } 
+        else if (action === 'out') {
+          if (existing) await supabase.from('attendance').update({ check_out: nowIso, status: '正常' }).eq('id', existing.id)
+          else await supabase.from('attendance').insert([{ user_type: 'student', student_id: studentId, record_date: todayStr, check_out: nowIso }])
+        } 
+        else if (action === 'leave') {
+          if (existing) await supabase.from('attendance').update({ status: '請假' }).eq('id', existing.id)
+          else await supabase.from('attendance').insert([{ user_type: 'student', student_id: studentId, record_date: todayStr, status: '請假' }])
+        }
+
+        // 重新載入名單並更新首頁人數
+        await window.reloadAttendanceList()
+        window.fetchDashboardStats()
+
+      } catch (err) { alert('操作失敗：' + err.message) }
+    }
+
+    // 初始化執行
     fetchDashboardStats()
     fetchTodayClasses()
-    
-    // 每分鐘自動更新一次課表狀態與人數
-    setInterval(() => {
-      fetchDashboardStats()
-      fetchTodayClasses()
-    }, 60000)
+    setInterval(() => { fetchDashboardStats(); fetchTodayClasses() }, 60000)
   </script>
 </body>
 </html>
