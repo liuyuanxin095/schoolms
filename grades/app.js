@@ -97,7 +97,8 @@ window.enterClassManage = async (classId, className, branchName, teacherName) =>
 
 async function fetchExams() {
   examList.innerHTML = '<tr><td colspan="6" style="text-align:center;">載入測驗紀錄中...</td></tr>'
-  const { data, error } = await supabase.from('class_exams').select('*').eq('class_id', currentClassId).order('exam_date', { ascending: false })
+  // 💡 1. 考試日期改為「升冪」排序 (ascending: true)
+  const { data, error } = await supabase.from('class_exams').select('*').eq('class_id', currentClassId).order('exam_date', { ascending: true })
   if (error) { examList.innerHTML = `<tr><td colspan="6" style="color:red;">錯誤: ${error.message}</td></tr>`; return }
   currentExams = data || []
   
@@ -105,17 +106,28 @@ async function fetchExams() {
 
   examList.innerHTML = ''
   currentExams.forEach(ex => {
-    const notice = ex.teacher_notice ? `<div style="background:#fffbeb; color:#92400e; padding:4px 8px; border-radius:4px; font-size:12px; margin-top:4px;">通知：${ex.teacher_notice}</div>` : ''
+    const notice = ex.teacher_notice ? `<div style="background:#fffbeb; color:#92400e; padding:4px 8px; border-radius:4px; font-size:12px; margin-top:6px;">通知：${ex.teacher_notice}</div>` : ''
+    
+    // 💡 2. 科目改為獨立的底色小方框標籤
+    const subjectBadge = ex.subject ? `<span style="background:#eff6ff; color:var(--primary); padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600;">${ex.subject}</span>` : ''
+
     examList.innerHTML += `
       <tr>
         <td>${ex.exam_date || '-'}</td>
-        <td><strong>${ex.exam_name}</strong> <span style="font-size:12px; color:var(--text-light);">(${ex.subject || '-'})</span>${notice}</td>
+        <td>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <strong>${ex.exam_name}</strong>
+            ${subjectBadge}
+          </div>
+          ${notice}
+        </td>
         <td style="color:#0369a1; font-weight:bold;">${ex.avg_score || 0}</td>
         <td style="color:#15803d; font-weight:bold;">${ex.high_score || 0}</td>
         <td style="color:#b91c1c; font-weight:bold;">${ex.low_score || 0}</td>
         <td>
           <div class="action-btns">
-            <button class="btn-icon" title="下載成績單" onclick="window.downloadExamReport('${ex.id}')"><span class="material-symbols-outlined" style="font-size:18px;">download</span></button>
+            <button class="btn-icon" title="列印成 PDF" onclick="window.printExamReport('${ex.id}')"><span class="material-symbols-outlined" style="font-size:18px;">print</span></button>
+            <button class="btn-icon" title="下載 CSV" onclick="window.downloadExamReport('${ex.id}')"><span class="material-symbols-outlined" style="font-size:18px;">download</span></button>
             <button class="btn-icon" title="編輯" onclick="window.openExamEditor('${ex.id}')"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
             <button class="btn-icon" title="刪除" style="color:var(--danger);" onclick="window.deleteExam('${ex.id}', '${ex.exam_name}')"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
           </div>
@@ -124,62 +136,147 @@ async function fetchExams() {
   })
 }
 
-// 💡 新增：下載成績單功能
-window.downloadExamReport = async (examId) => {
+// 💡 3. 全新：列印/匯出 PDF 報表功能
+window.printExamReport = async (examId) => {
   try {
     const ex = currentExams.find(x => x.id === examId)
     if (!ex) return
 
-    // 抓取該場考試的所有學生成績
+    // 抓取成績明細
     const { data: gradesData, error } = await supabase.from('grades').select('score, note, students(name, student_number)').eq('exam_id', examId)
     if (error) throw error
-    if (!gradesData || gradesData.length === 0) { alert('這場考試目前沒有成績資料可以下載。'); return }
+    if (!gradesData || gradesData.length === 0) { alert('這場考試目前沒有成績資料可以列印。'); return }
 
-    // 依照學號升冪排列，讓報表跟畫面長一樣
+    // 依照學號升冪排列
     gradesData.sort((a, b) => {
       const numA = a.students?.student_number || ''
       const numB = b.students?.student_number || ''
       return numA.localeCompare(numB, 'zh-TW', { numeric: true })
     })
 
-    // 組裝 CSV (加入 BOM 防止 Excel 中文亂碼)
+    // 產生一個乾淨的隱藏網頁供列印使用
+    const printWindow = window.open('', '_blank')
+    const html = `
+      <!DOCTYPE html>
+      <html lang="zh-TW">
+        <head>
+          <meta charset="UTF-8">
+          <title>${ex.exam_date}_${ex.exam_name}_成績單</title>
+          <style>
+            body { font-family: "Microsoft JhengHei", sans-serif; padding: 20px; color: #333; line-height: 1.5; }
+            h1 { text-align: center; margin-bottom: 5px; color: #111; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+            .info-bar { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 20px; color: #555; }
+            .stats { display: flex; justify-content: space-around; margin-bottom: 20px; padding: 15px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; }
+            .stat-item { text-align: center; }
+            .stat-value { font-size: 24px; font-weight: bold; margin-top: 5px; }
+            .notice { background: #fffbeb; padding: 12px; border-left: 4px solid #f59e0b; margin-bottom: 20px; font-size: 14px; border-radius: 4px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #d1d5db; padding: 10px 12px; text-align: center; }
+            th { background-color: #f3f4f6; color: #374151; font-weight: 600; }
+            .student-name { font-weight: bold; color: #111; font-size: 16px; }
+            .student-no { font-size: 12px; color: #6b7280; }
+            .score-cell { font-size: 18px; font-weight: bold; }
+            @media print {
+              body { padding: 0; }
+              .stats { border: 1px solid #000; }
+              table { page-break-inside: auto; }
+              tr { page-break-inside: avoid; page-break-after: auto; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${ex.exam_name} 成績單</h1>
+          <div class="info-bar">
+            <span><b>考試日期：</b>${ex.exam_date}</span>
+            <span><b>測驗科目：</b>${ex.subject || '無'}</span>
+          </div>
+          
+          ${ex.teacher_notice ? `<div class="notice"><b>老師班級通知：</b><br>${ex.teacher_notice.replace(/\n/g, '<br>')}</div>` : ''}
+          
+          <div class="stats">
+            <div class="stat-item"><div style="color:#666; font-size:12px;">班級平均</div><div class="stat-value" style="color:#0369a1;">${ex.avg_score || 0}</div></div>
+            <div class="stat-item"><div style="color:#666; font-size:12px;">最高分</div><div class="stat-value" style="color:#15803d;">${ex.high_score || 0}</div></div>
+            <div class="stat-item"><div style="color:#666; font-size:12px;">最低分</div><div class="stat-value" style="color:#b91c1c;">${ex.low_score || 0}</div></div>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th width="15%">學號</th>
+                <th width="20%">學生姓名</th>
+                <th width="15%">分數</th>
+                <th width="50%">個人評語/備註</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${gradesData.map(g => `
+                <tr>
+                  <td class="student-no">${g.students?.student_number || ''}</td>
+                  <td class="student-name">${g.students?.name || '未知'}</td>
+                  <td class="score-cell" style="color: ${g.score === null ? '#9ca3af' : '#111'}">${g.score !== null ? g.score : '缺考'}</td>
+                  <td style="text-align: left;">${g.note || ''}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <script>
+            // 載入完成後自動跳出列印視窗，列印完自動關閉分頁
+            window.onload = () => { 
+              setTimeout(() => {
+                window.print(); 
+                // 若不想自動關閉分頁，可將下一行註解掉
+                window.close(); 
+              }, 500);
+            }
+          </script>
+        </body>
+      </html>
+    `
+    printWindow.document.write(html)
+    printWindow.document.close()
+
+  } catch (err) {
+    alert('列印報表失敗：' + err.message)
+  }
+}
+
+// 既有的 CSV 下載功能保留
+window.downloadExamReport = async (examId) => {
+  try {
+    const ex = currentExams.find(x => x.id === examId)
+    if (!ex) return
+    const { data: gradesData, error } = await supabase.from('grades').select('score, note, students(name, student_number)').eq('exam_id', examId)
+    if (error) throw error
+    if (!gradesData || gradesData.length === 0) { alert('這場考試目前沒有成績資料可以下載。'); return }
+    gradesData.sort((a, b) => {
+      const numA = a.students?.student_number || ''
+      const numB = b.students?.student_number || ''
+      return numA.localeCompare(numB, 'zh-TW', { numeric: true })
+    })
+
     let csvContent = '\uFEFF'
-    csvContent += `測驗名稱,${ex.exam_name}\n`
-    csvContent += `考試日期,${ex.exam_date}\n`
-    csvContent += `科目,${ex.subject || ''}\n`
+    csvContent += `測驗名稱,${ex.exam_name}\n考試日期,${ex.exam_date}\n科目,${ex.subject || ''}\n`
     csvContent += `班級平均,${ex.avg_score || 0},最高分,${ex.high_score || 0},最低分,${ex.low_score || 0}\n`
-    
-    // 處理老師叮嚀裡的換行符號
     const safeNotice = ex.teacher_notice ? `"${ex.teacher_notice.replace(/"/g, '""')}"` : ''
-    csvContent += `班級通知,${safeNotice}\n\n`
-    
-    csvContent += `學號,學生姓名,測驗分數,個人評語/備註\n`
+    csvContent += `班級通知,${safeNotice}\n\n學號,學生姓名,測驗分數,個人評語/備註\n`
 
     gradesData.forEach(g => {
       const sName = g.students?.name || '未知'
       const sNum = g.students?.student_number || ''
       const score = g.score !== null ? g.score : '缺考'
       const note = g.note || ''
-      // 若評語內有逗號或換行，用雙引號包起來以符合 CSV 規範
       const safeNote = note.includes(',') || note.includes('\n') ? `"${note.replace(/"/g, '""')}"` : note
-      
       csvContent += `${sNum},${sName},${score},${safeNote}\n`
     })
 
-    // 觸發下載
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
     link.download = `${ex.exam_date}_${ex.exam_name}_成績單.csv`
-    link.style.visibility = 'hidden'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-
-  } catch (err) {
-    alert('下載失敗：' + err.message)
-  }
+    link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link)
+  } catch (err) { alert('下載失敗：' + err.message) }
 }
 
 window.openExamEditor = async (examId = null) => {
