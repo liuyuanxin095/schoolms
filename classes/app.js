@@ -16,7 +16,7 @@ const enrolledList = document.getElementById('enrolled-list')
 
 const branchSelect = document.getElementById('branch_id')
 const teacherSelect = document.getElementById('teacher_id')
-const tutorSelect = document.getElementById('tutor_id') // 💡 新增導師
+const tutorSelect = document.getElementById('tutor_id')
 const classroomSelect = document.getElementById('classroom_id')
 
 let allClasses = []
@@ -44,18 +44,13 @@ window.handleBranchChange = async (selectedTeacherId = null, selectedTutorId = n
   classroomSelect.innerHTML = '<option value="">載入中...</option>'
   if (!branchId) return
 
-  // 💡 一次把該分校的教職員全部抓回來
   const { data: staffList } = await supabase.from('staff').select('id, name, role').eq('branch_id', branchId)
   teacherSelect.innerHTML = '<option value="">請選擇授課教師 (選填)</option>'
   tutorSelect.innerHTML = '<option value="">請選擇班級導師 (選填)</option>'
   
   if (staffList) {
     staffList.forEach(s => {
-      // 授課教師只列出 role 為 teacher 的人
-      if (s.role === 'teacher') {
-        teacherSelect.appendChild(new Option(s.name, s.id, false, s.id === selectedTeacherId))
-      }
-      // 導師開放給所有教職員(含主任、行政等)選擇
+      if (s.role === 'teacher') teacherSelect.appendChild(new Option(s.name, s.id, false, s.id === selectedTeacherId))
       tutorSelect.appendChild(new Option(s.name, s.id, false, s.id === selectedTutorId))
     })
   }
@@ -65,21 +60,26 @@ window.handleBranchChange = async (selectedTeacherId = null, selectedTutorId = n
   if (rooms) rooms.forEach(r => classroomSelect.appendChild(new Option(r.name, r.id, false, r.id === selectedRoomId)))
 }
 
-// 3. 載入班級列表 (精準關聯兩次 staff 表，分別代表 teacher 和 tutor)
+// 💡 3. 載入班級列表 (修正：明確告訴資料庫要用哪一個外鍵去抓人)
 async function fetchClasses() {
   const { data, error } = await supabase
     .from('classes')
     .select(`
       *, 
       branches(name), 
-      teacher:staff!classes_teacher_id_fkey(name), 
-      tutor:staff!classes_tutor_id_fkey(name), 
+      teacher:staff!teacher_id(name), 
+      tutor:staff!tutor_id(name), 
       classrooms(name), 
       class_students(count)
     `)
     .order('created_at', { ascending: false })
 
-  if (error) { classList.innerHTML = `<tr><td colspan="6" style="color:red; text-align: center;">載入失敗: ${error.message}</td></tr>`; return }
+  if (error) { 
+    console.error('讀取班級錯誤:', error)
+    classList.innerHTML = `<tr><td colspan="6" style="color:red; text-align: center;">載入失敗: ${error.message}</td></tr>`
+    return 
+  }
+  
   allClasses = data || []
   renderTable(allClasses)
 }
@@ -95,7 +95,6 @@ function renderTable(data) {
     const roomName = c.classrooms ? c.classrooms.name : '未安排'
     const studentCount = c.class_students[0].count || 0
 
-    // 排版整理，節省畫面空間
     const row = document.createElement('tr')
     row.innerHTML = `
       <td>
@@ -144,8 +143,6 @@ window.openFormModal = async (id = null) => {
   teacherSelect.innerHTML = '<option value="">請先選擇分校</option>'
   tutorSelect.innerHTML = '<option value="">請先選擇分校</option>'
   classroomSelect.innerHTML = '<option value="">請先選擇分校</option>'
-  
-  // 清空所有打勾的時段
   document.querySelectorAll('input[name="schedule"]').forEach(cb => cb.checked = false)
   
   if (id) {
@@ -158,7 +155,6 @@ window.openFormModal = async (id = null) => {
       document.getElementById('start_date').value = c.start_date || ''
       document.getElementById('end_date').value = c.end_date || ''
       
-      // 💡 還原儲存的打勾時段
       if (c.schedule) {
         const slots = c.schedule.split(', ')
         slots.forEach(slot => {
@@ -166,7 +162,6 @@ window.openFormModal = async (id = null) => {
           if (cb) cb.checked = true
         })
       }
-      
       if (c.branch_id) await window.handleBranchChange(c.teacher_id, c.tutor_id, c.classroom_id)
     }
   } else { formTitle.textContent = '開立新班級' }
@@ -176,23 +171,14 @@ window.closeFormModal = () => formModal.style.display = 'none'
 
 classForm.addEventListener('submit', async (e) => {
   e.preventDefault(); submitBtn.disabled = true; submitBtn.textContent = '處理中...'
-  
-  // 💡 蒐集所有打勾的時段，組合成字串 (例如："週一晚, 週三晚")
-  const checkedSlots = Array.from(document.querySelectorAll('input[name="schedule"]:checked'))
-                            .map(cb => cb.value).join(', ')
+  const checkedSlots = Array.from(document.querySelectorAll('input[name="schedule"]:checked')).map(cb => cb.value).join(', ')
                             
   try {
     const id = document.getElementById('class-id').value
     const classData = {
-      semester: document.getElementById('semester').value,
-      branch_id: document.getElementById('branch_id').value, 
-      name: document.getElementById('name').value,
-      schedule: checkedSlots || null, 
-      start_date: document.getElementById('start_date').value || null, 
-      end_date: document.getElementById('end_date').value || null,
-      teacher_id: document.getElementById('teacher_id').value || null, 
-      tutor_id: document.getElementById('tutor_id').value || null,
-      classroom_id: document.getElementById('classroom_id').value || null
+      semester: document.getElementById('semester').value, branch_id: document.getElementById('branch_id').value, name: document.getElementById('name').value,
+      schedule: checkedSlots || null, start_date: document.getElementById('start_date').value || null, end_date: document.getElementById('end_date').value || null,
+      teacher_id: document.getElementById('teacher_id').value || null, tutor_id: document.getElementById('tutor_id').value || null, classroom_id: document.getElementById('classroom_id').value || null
     }
     const { error } = id ? await supabase.from('classes').update(classData).eq('id', id) : await supabase.from('classes').insert([classData])
     if (error) throw new Error(error.message)
