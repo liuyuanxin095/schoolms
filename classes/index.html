@@ -8,23 +8,24 @@
   <link rel="stylesheet" href="../style.css" />
   <style>
     .enrollment-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border); }
-    .add-student-bar { display: flex; gap: 10px; background: var(--input-bg); padding: 15px; border-radius: 8px; margin-bottom: 20px; align-items: center; border: 1px solid var(--border); }
-    .add-student-bar select { flex-grow: 1; }
-    .enrolled-list { max-height: 350px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+    .enrolled-list { max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 20px; }
     .enrolled-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border); background: #fff; }
     .enrolled-item:last-child { border-bottom: none; }
-    .enrolled-item:hover { background-color: #f8fafc; }
     .student-info-mini { display: flex; align-items: center; gap: 10px; }
     .student-info-mini img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
     .student-number-badge { font-size: 12px; color: var(--text-light); background: var(--bg-color); padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
     
-    /* 💡 複選標籤樣式設計 (免打字，直接點擊) */
-    .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
-    .checkbox-group label { background: white; border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; user-select: none; transition: 0.2s; color: var(--text-main); }
-    .checkbox-group label:has(input:checked) { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 2px 4px rgba(37,99,235,0.2); }
-    .checkbox-group input { display: none; }
+    /* 💡 動態時段列表樣式 */
+    .schedule-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .schedule-row select, .schedule-row input { flex: 1; padding: 8px; }
     
-    /* 表格內縮減排版，將多個資訊整併在一起防擁擠 */
+    /* 💡 視覺化多選學生卡片樣式 */
+    .student-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-height: 300px; overflow-y: auto; padding-right: 5px; }
+    .student-select-card { border: 1px solid var(--border); padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; background: white; user-select: none; }
+    .student-select-card:hover { border-color: var(--primary); }
+    .student-select-card:has(input:checked) { border-color: var(--primary); background: #eff6ff; box-shadow: 0 2px 4px rgba(37,99,235,0.1); }
+    .student-select-card input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+    
     .table-info-stack { display: flex; flex-direction: column; gap: 4px; }
     .table-info-stack .sub-text { font-size: 12px; color: var(--text-light); }
   </style>
@@ -40,7 +41,10 @@
     <div class="card">
       <div class="toolbar">
         <h2 class="toolbar-title"><span class="material-symbols-outlined">class</span>班級列表</h2>
-        <button class="btn btn-primary" onclick="window.openFormModal()"><span class="material-symbols-outlined">add</span>開立新班級</button>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-cancel" onclick="window.openSemesterModal()"><span class="material-symbols-outlined">date_range</span>管理學期</button>
+          <button class="btn btn-primary" onclick="window.openFormModal()"><span class="material-symbols-outlined">add</span>開立新班級</button>
+        </div>
       </div>
       
       <div class="filter-bar">
@@ -55,17 +59,28 @@
             <tr>
               <th>學期 / 班級名稱</th>
               <th>所屬分校</th>
-              <th>師資 (授課/導師)</th>
-              <th>上課時間 / 教室</th>
+              <th>師資</th> <th>上課時間 / 教室</th>
               <th>學生人數</th>
               <th>操作</th>
             </tr>
           </thead>
-          <tbody id="class-list">
-            <tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr>
-          </tbody>
+          <tbody id="class-list"><tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr></tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="semester-modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <span class="material-symbols-outlined modal-close" onclick="window.closeSemesterModal()">close</span>
+      <h2 style="margin-top: 0; color: var(--primary);">學期別管理</h2>
+      <form id="semester-form" style="display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end;">
+        <div style="flex: 2;"><label style="font-size:12px;">學期名稱</label><input type="text" id="sem-name" required placeholder="例: 113上學期"></div>
+        <div style="flex: 1.5;"><label style="font-size:12px;">預設開課日</label><input type="date" id="sem-start" required></div>
+        <div style="flex: 1.5;"><label style="font-size:12px;">預設結業日</label><input type="date" id="sem-end" required></div>
+        <button type="submit" class="btn btn-primary" style="padding: 10px;"><span class="material-symbols-outlined">add</span></button>
+      </form>
+      <div class="enrolled-list" id="semester-list"></div>
     </div>
   </div>
 
@@ -76,42 +91,22 @@
       <form id="class-form">
         <input type="hidden" id="class-id">
         <div class="form-grid">
-          
           <div class="form-group">
             <label for="semester">學期別 <span style="color:red">*</span></label>
-            <select id="semester" required>
-              <option value="" disabled selected>請選擇學期</option>
-              <option value="113上學期">113 上學期</option>
-              <option value="113下學期">113 下學期</option>
-              <option value="114上學期">114 上學期</option>
-              <option value="暑期班">暑期班</option>
-              <option value="寒假班">寒假班</option>
-            </select>
+            <select id="semester" required onchange="window.handleSemesterChange()"><option value="" disabled selected>載入中...</option></select>
           </div>
-          
           <div class="form-group"><label for="branch_id">開課分校 <span style="color:red">*</span></label><select id="branch_id" required onchange="window.handleBranchChange()"><option value="" disabled selected>載入中...</option></select></div>
           <div class="form-group full-width"><label for="name">班級名稱 <span style="color:red">*</span></label><input type="text" id="name" required placeholder="例：高二數學秋季衝刺班"></div>
           
           <div class="form-group"><label for="teacher_id">授課教師</label><select id="teacher_id"><option value="">請先選擇分校</option></select></div>
-          
           <div class="form-group"><label for="tutor_id">班級導師</label><select id="tutor_id"><option value="">請先選擇分校</option></select></div>
-          
           <div class="form-group full-width"><label for="classroom_id">上課教室</label><select id="classroom_id"><option value="">請先選擇分校</option></select></div>
           
           <div class="form-group full-width">
-            <label>上課時段 (可點擊多選)</label>
-            <div class="checkbox-group">
-              <label><input type="checkbox" name="schedule" value="週一晚">週一晚</label>
-              <label><input type="checkbox" name="schedule" value="週二晚">週二晚</label>
-              <label><input type="checkbox" name="schedule" value="週三晚">週三晚</label>
-              <label><input type="checkbox" name="schedule" value="週四晚">週四晚</label>
-              <label><input type="checkbox" name="schedule" value="週五晚">週五晚</label>
-              <label><input type="checkbox" name="schedule" value="週六早">週六早</label>
-              <label><input type="checkbox" name="schedule" value="週六午">週六午</label>
-              <label><input type="checkbox" name="schedule" value="週六晚">週六晚</label>
-              <label><input type="checkbox" name="schedule" value="週日早">週日早</label>
-              <label><input type="checkbox" name="schedule" value="週日午">週日午</label>
-            </div>
+            <label>上課時段 (可新增多筆)</label>
+            <div id="schedule-container" style="background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+              </div>
+            <button type="button" class="btn btn-cancel" style="margin-top:10px; width:fit-content;" onclick="window.addScheduleRow()"><span class="material-symbols-outlined" style="font-size:16px;">add</span> 新增時段</button>
           </div>
 
           <div class="form-group"><label for="start_date">開課日期</label><input type="date" id="start_date"></div>
@@ -123,7 +118,7 @@
   </div>
 
   <div class="modal-overlay" id="enrollment-modal">
-    <div class="modal-content" style="max-width: 600px; background-color: #f9fafb;">
+    <div class="modal-content" style="max-width: 650px; background-color: #f9fafb;">
       <span class="material-symbols-outlined modal-close" onclick="window.closeEnrollmentModal()">close</span>
       <div class="enrollment-header">
         <div>
@@ -131,9 +126,19 @@
           <div style="color: var(--text-light); font-size: 14px;"><span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">domain</span> <span id="enrollment-branch-name">分校</span> | <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">group</span> 目前人數：<strong id="enrollment-count" style="color: var(--primary);">0</strong> 人</div>
         </div>
       </div>
-      <form id="add-student-form" class="add-student-bar"><select id="enroll-student-select" required><option value="" disabled selected>載入學生名單中...</option></select><button type="submit" class="btn btn-primary"><span class="material-symbols-outlined" style="font-size: 18px;">person_add</span> 加入班級</button></form>
+      
       <div style="font-weight: 600; margin-bottom: 10px; color: var(--text-main);">目前班級名單</div>
       <div class="enrolled-list" id="enrolled-list"><div style="padding: 30px; text-align: center; color: var(--text-light);">載入中...</div></div>
+      
+      <div style="font-weight: 600; margin-bottom: 10px; color: var(--text-main);">➕ 選擇學生加入班級 (可多選)</div>
+      <form id="add-student-form">
+        <div class="student-grid" id="available-students-grid">
+          <div style="grid-column: span 2; padding: 20px; text-align: center; color: var(--text-light);">載入中...</div>
+        </div>
+        <div style="margin-top: 15px; text-align: right;">
+          <button type="submit" class="btn btn-primary" id="batch-add-btn"><span class="material-symbols-outlined" style="font-size: 18px;">playlist_add_check</span> 批次加入勾選的學生</button>
+        </div>
+      </form>
     </div>
   </div>
 
