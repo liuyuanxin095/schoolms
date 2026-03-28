@@ -115,12 +115,71 @@ async function fetchExams() {
         <td style="color:#b91c1c; font-weight:bold;">${ex.low_score || 0}</td>
         <td>
           <div class="action-btns">
-            <button class="btn-icon" onclick="window.openExamEditor('${ex.id}')"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
-            <button class="btn-icon" style="color:var(--danger);" onclick="window.deleteExam('${ex.id}', '${ex.exam_name}')"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+            <button class="btn-icon" title="下載成績單" onclick="window.downloadExamReport('${ex.id}')"><span class="material-symbols-outlined" style="font-size:18px;">download</span></button>
+            <button class="btn-icon" title="編輯" onclick="window.openExamEditor('${ex.id}')"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
+            <button class="btn-icon" title="刪除" style="color:var(--danger);" onclick="window.deleteExam('${ex.id}', '${ex.exam_name}')"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
           </div>
         </td>
       </tr>`
   })
+}
+
+// 💡 新增：下載成績單功能
+window.downloadExamReport = async (examId) => {
+  try {
+    const ex = currentExams.find(x => x.id === examId)
+    if (!ex) return
+
+    // 抓取該場考試的所有學生成績
+    const { data: gradesData, error } = await supabase.from('grades').select('score, note, students(name, student_number)').eq('exam_id', examId)
+    if (error) throw error
+    if (!gradesData || gradesData.length === 0) { alert('這場考試目前沒有成績資料可以下載。'); return }
+
+    // 依照學號升冪排列，讓報表跟畫面長一樣
+    gradesData.sort((a, b) => {
+      const numA = a.students?.student_number || ''
+      const numB = b.students?.student_number || ''
+      return numA.localeCompare(numB, 'zh-TW', { numeric: true })
+    })
+
+    // 組裝 CSV (加入 BOM 防止 Excel 中文亂碼)
+    let csvContent = '\uFEFF'
+    csvContent += `測驗名稱,${ex.exam_name}\n`
+    csvContent += `考試日期,${ex.exam_date}\n`
+    csvContent += `科目,${ex.subject || ''}\n`
+    csvContent += `班級平均,${ex.avg_score || 0},最高分,${ex.high_score || 0},最低分,${ex.low_score || 0}\n`
+    
+    // 處理老師叮嚀裡的換行符號
+    const safeNotice = ex.teacher_notice ? `"${ex.teacher_notice.replace(/"/g, '""')}"` : ''
+    csvContent += `班級通知,${safeNotice}\n\n`
+    
+    csvContent += `學號,學生姓名,測驗分數,個人評語/備註\n`
+
+    gradesData.forEach(g => {
+      const sName = g.students?.name || '未知'
+      const sNum = g.students?.student_number || ''
+      const score = g.score !== null ? g.score : '缺考'
+      const note = g.note || ''
+      // 若評語內有逗號或換行，用雙引號包起來以符合 CSV 規範
+      const safeNote = note.includes(',') || note.includes('\n') ? `"${note.replace(/"/g, '""')}"` : note
+      
+      csvContent += `${sNum},${sName},${score},${safeNote}\n`
+    })
+
+    // 觸發下載
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${ex.exam_date}_${ex.exam_name}_成績單.csv`
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+  } catch (err) {
+    alert('下載失敗：' + err.message)
+  }
 }
 
 window.openExamEditor = async (examId = null) => {
@@ -148,7 +207,6 @@ window.openExamEditor = async (examId = null) => {
     return
   }
 
-  // 💡 關鍵修復：改為「升冪」排列 (小到大 A to Z)
   rosterData.sort((a, b) => {
     const numA = a.students?.student_number || ''
     const numB = b.students?.student_number || ''
@@ -172,7 +230,7 @@ window.openExamEditor = async (examId = null) => {
       <tr>
         <td>
           <div style="font-weight:600;">${s.name}</div>
-          <div style="font-size:12px; color:var(--text-light);">序號: ${s.student_number || '無'}</div>
+          <div style="font-size:12px; color:var(--text-light);">${s.student_number || ''}</div>
         </td>
         <td><input type="number" class="score-input" data-index="${index}" data-sid="${r.student_id}" step="0.1" value="${scoreVal}" placeholder="缺考"></td>
         <td><input type="text" class="note-input" data-sid="${r.student_id}" value="${noteVal}" placeholder="選填評語"></td>
