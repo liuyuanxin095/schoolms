@@ -11,187 +11,195 @@ const submitBtn = document.getElementById('submit-btn')
 
 const enrollmentModal = document.getElementById('enrollment-modal')
 const addStudentForm = document.getElementById('add-student-form')
-const enrollStudentSelect = document.getElementById('enroll-student-select')
+const availableGrid = document.getElementById('available-students-grid')
 const enrolledList = document.getElementById('enrolled-list')
 
+const semesterModal = document.getElementById('semester-modal')
+const semesterForm = document.getElementById('semester-form')
+const semesterList = document.getElementById('semester-list')
+
 const branchSelect = document.getElementById('branch_id')
-const teacherSelect = document.getElementById('teacher_id')
-const tutorSelect = document.getElementById('tutor_id')
-const classroomSelect = document.getElementById('classroom_id')
+const semesterSelect = document.getElementById('semester')
+const scheduleContainer = document.getElementById('schedule-container')
 
-let allClasses = []
-let currentManageClassId = null
-let currentManageBranchId = null
+let allClasses = []; let allSemesters = []
+let currentManageClassId = null; let currentManageBranchId = null
 
-// 1. 載入分校
-async function loadBranches() {
-  const { data } = await supabase.from('branches').select('id, name')
-  if (data) {
-    branchFilter.innerHTML = '<option value="all">所有分校</option>'
-    branchSelect.innerHTML = '<option value="" disabled selected>請選擇分校</option>'
-    data.forEach(b => {
-      branchFilter.appendChild(new Option(b.name, b.id))
-      branchSelect.appendChild(new Option(b.name, b.id))
-    })
+// 1. 初始化資料 (分校與學期)
+async function initData() {
+  const { data: bData } = await supabase.from('branches').select('id, name')
+  if (bData) {
+    branchFilter.innerHTML = '<option value="all">所有分校</option>'; branchSelect.innerHTML = '<option value="" disabled selected>請選擇分校</option>'
+    bData.forEach(b => { branchFilter.appendChild(new Option(b.name, b.id)); branchSelect.appendChild(new Option(b.name, b.id)) })
+  }
+  await fetchSemesters()
+}
+
+// ================= 學期管理邏輯 =================
+async function fetchSemesters() {
+  const { data } = await supabase.from('semesters').select('*').order('start_date', { ascending: false })
+  allSemesters = data || []
+  
+  // 更新表單下拉選單
+  semesterSelect.innerHTML = '<option value="" disabled selected>請選擇學期</option>'
+  allSemesters.forEach(s => semesterSelect.appendChild(new Option(s.name, s.name)))
+  
+  // 更新管理列表
+  semesterList.innerHTML = ''
+  allSemesters.forEach(s => {
+    const item = document.createElement('div')
+    item.className = 'enrolled-item'
+    item.innerHTML = `<div><strong>${s.name}</strong> <span style="font-size:12px; color:var(--text-light);">(${s.start_date} ~ ${s.end_date})</span></div>
+                      <button class="btn-icon" style="color:var(--danger);" onclick="window.deleteSemester('${s.id}')"><span class="material-symbols-outlined">delete</span></button>`
+    semesterList.appendChild(item)
+  })
+}
+
+window.openSemesterModal = () => semesterModal.style.display = 'flex'
+window.closeSemesterModal = () => semesterModal.style.display = 'none'
+
+semesterForm.addEventListener('submit', async (e) => {
+  e.preventDefault()
+  const sData = { name: document.getElementById('sem-name').value, start_date: document.getElementById('sem-start').value, end_date: document.getElementById('sem-end').value }
+  await supabase.from('semesters').insert([sData])
+  semesterForm.reset(); await fetchSemesters()
+})
+
+window.deleteSemester = async (id) => {
+  if(!confirm('確定刪除這個學期嗎？')) return
+  await supabase.from('semesters').delete().eq('id', id); await fetchSemesters()
+}
+
+// 學期連動日期
+window.handleSemesterChange = () => {
+  const selected = allSemesters.find(s => s.name === semesterSelect.value)
+  if (selected) {
+    document.getElementById('start_date').value = selected.start_date
+    document.getElementById('end_date').value = selected.end_date
   }
 }
 
-// 2. 動態載入老師與教室
-window.handleBranchChange = async (selectedTeacherId = null, selectedTutorId = null, selectedRoomId = null) => {
-  const branchId = branchSelect.value
-  teacherSelect.innerHTML = '<option value="">載入中...</option>'
-  tutorSelect.innerHTML = '<option value="">載入中...</option>'
-  classroomSelect.innerHTML = '<option value="">載入中...</option>'
-  if (!branchId) return
+// ================= 動態時段邏輯 =================
+window.addScheduleRow = (day = '星期一', start = '18:30', end = '21:30') => {
+  const row = document.createElement('div')
+  row.className = 'schedule-row'
+  row.innerHTML = `
+    <select class="sch-day">
+      ${['星期一','星期二','星期三','星期四','星期五','星期六','星期日'].map(d => `<option value="${d}" ${d===day?'selected':''}>${d}</option>`).join('')}
+    </select>
+    <input type="time" class="sch-start" value="${start}">
+    <span style="color:var(--text-light);">~</span>
+    <input type="time" class="sch-end" value="${end}">
+    <button type="button" class="btn-icon" style="color:var(--danger);" onclick="this.parentElement.remove()"><span class="material-symbols-outlined">close</span></button>
+  `
+  scheduleContainer.appendChild(row)
+}
 
-  const { data: staffList } = await supabase.from('staff').select('id, name, role').eq('branch_id', branchId)
-  teacherSelect.innerHTML = '<option value="">請選擇授課教師 (選填)</option>'
-  tutorSelect.innerHTML = '<option value="">請選擇班級導師 (選填)</option>'
+function getCompiledSchedule() {
+  const rows = Array.from(scheduleContainer.querySelectorAll('.schedule-row'))
+  return rows.map(r => {
+    const day = r.querySelector('.sch-day').value
+    const start = r.querySelector('.sch-start').value
+    const end = r.querySelector('.sch-end').value
+    if(start && end) return `${day} ${start}~${end}`
+    return null
+  }).filter(Boolean).join(', ')
+}
+
+// ================= 班級主檔邏輯 =================
+window.handleBranchChange = async (selTeacher = null, selTutor = null, selRoom = null) => {
+  const branchId = branchSelect.value; const ts = document.getElementById('teacher_id'); const tus = document.getElementById('tutor_id'); const rs = document.getElementById('classroom_id')
+  ts.innerHTML='<option value="">載入中...</option>'; tus.innerHTML='<option value="">載入中...</option>'; rs.innerHTML='<option value="">載入中...</option>'
+  if (!branchId) return
   
-  if (staffList) {
-    staffList.forEach(s => {
-      if (s.role === 'teacher') teacherSelect.appendChild(new Option(s.name, s.id, false, s.id === selectedTeacherId))
-      tutorSelect.appendChild(new Option(s.name, s.id, false, s.id === selectedTutorId))
-    })
-  }
+  const { data: staff } = await supabase.from('staff').select('id, name, role').eq('branch_id', branchId)
+  ts.innerHTML='<option value="">請選擇授課教師 (選填)</option>'; tus.innerHTML='<option value="">請選擇班級導師 (選填)</option>'
+  if (staff) staff.forEach(s => {
+    if (s.role === 'teacher') ts.appendChild(new Option(s.name, s.id, false, s.id === selTeacher))
+    tus.appendChild(new Option(s.name, s.id, false, s.id === selTutor))
+  })
 
   const { data: rooms } = await supabase.from('classrooms').select('id, name').eq('branch_id', branchId).eq('status', '可用')
-  classroomSelect.innerHTML = '<option value="">請選擇上課教室 (選填)</option>'
-  if (rooms) rooms.forEach(r => classroomSelect.appendChild(new Option(r.name, r.id, false, r.id === selectedRoomId)))
+  rs.innerHTML='<option value="">請選擇上課教室 (選填)</option>'
+  if (rooms) rooms.forEach(r => rs.appendChild(new Option(r.name, r.id, false, r.id === selRoom)))
 }
 
-// 💡 3. 載入班級列表 (修正：明確告訴資料庫要用哪一個外鍵去抓人)
 async function fetchClasses() {
-  const { data, error } = await supabase
-    .from('classes')
-    .select(`
-      *, 
-      branches(name), 
-      teacher:staff!teacher_id(name), 
-      tutor:staff!tutor_id(name), 
-      classrooms(name), 
-      class_students(count)
-    `)
+  const { data, error } = await supabase.from('classes')
+    .select('*, branches(name), teacher:staff!teacher_id(name), tutor:staff!tutor_id(name), classrooms(name), class_students(count)')
     .order('created_at', { ascending: false })
-
-  if (error) { 
-    console.error('讀取班級錯誤:', error)
-    classList.innerHTML = `<tr><td colspan="6" style="color:red; text-align: center;">載入失敗: ${error.message}</td></tr>`
-    return 
-  }
-  
-  allClasses = data || []
-  renderTable(allClasses)
+  if (!error) { allClasses = data; renderTable(data) }
 }
 
 function renderTable(data) {
   classList.innerHTML = ''
-  if (data.length === 0) { classList.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #6b7280; padding: 30px;">目前沒有班級資料</td></tr>'; return }
-
+  if (data.length === 0) { classList.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #6b7280; padding: 30px;">目前沒有班級</td></tr>'; return }
   data.forEach(c => {
-    const branchName = c.branches ? c.branches.name : '<span style="color:red;">未綁定</span>'
-    const teacherName = c.teacher ? c.teacher.name : '未安排'
-    const tutorName = c.tutor ? c.tutor.name : '未安排'
-    const roomName = c.classrooms ? c.classrooms.name : '未安排'
-    const studentCount = c.class_students[0].count || 0
-
     const row = document.createElement('tr')
     row.innerHTML = `
-      <td>
-        <div class="table-info-stack">
-          <strong>${c.name}</strong>
-          <span class="sub-text">${c.semester || '未設定學期'}</span>
-        </div>
-      </td>
-      <td>${branchName}</td>
-      <td>
-        <div class="table-info-stack">
-          <span><span class="material-symbols-outlined" style="font-size:14px; vertical-align:text-bottom; color:var(--primary);">school</span> ${teacherName}</span>
-          <span class="sub-text"><span class="material-symbols-outlined" style="font-size:14px; vertical-align:text-bottom;">support_agent</span> 導師: ${tutorName}</span>
-        </div>
-      </td>
-      <td>
-        <div class="table-info-stack">
-          <span>${c.schedule || '-'}</span>
-          <span class="sub-text">${roomName}</span>
-        </div>
-      </td>
-      <td style="font-weight: 600; color: ${studentCount > 0 ? 'var(--primary)' : 'var(--text-light)'};">${studentCount} 人</td>
+      <td><div class="table-info-stack"><strong>${c.name}</strong><span class="sub-text">${c.semester || '-'}</span></div></td>
+      <td>${c.branches ? c.branches.name : '-'}</td>
+      <td><div class="table-info-stack"><span><span class="material-symbols-outlined" style="font-size:14px; color:var(--primary);">school</span> ${c.teacher?.name || '未指派'}</span><span class="sub-text"><span class="material-symbols-outlined" style="font-size:14px;">support_agent</span> 導師: ${c.tutor?.name || '未指派'}</span></div></td>
+      <td><div class="table-info-stack"><span>${c.schedule || '-'}</span><span class="sub-text">${c.classrooms?.name || '未指派'}</span></div></td>
+      <td style="font-weight: 600; color: ${c.class_students[0].count > 0 ? 'var(--primary)' : 'var(--text-light)'};">${c.class_students[0].count} 人</td>
       <td>
         <div class="action-btns">
-          <button class="btn-icon" title="管理學生名單" onclick="window.openEnrollmentModal('${c.id}', '${c.name}', '${c.branch_id}', '${branchName}')"><span class="material-symbols-outlined" style="font-size:18px;">group_add</span></button>
-          <button class="btn-icon" title="修改" onclick="window.openFormModal('${c.id}')"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
-          <button class="btn-icon" style="color:var(--danger);" title="刪除" onclick="window.deleteClass('${c.id}', '${c.name}')"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+          <button class="btn-icon" onclick="window.openEnrollmentModal('${c.id}', '${c.name}', '${c.branch_id}', '${c.branches?.name}')"><span class="material-symbols-outlined" style="font-size:18px;">group_add</span></button>
+          <button class="btn-icon" onclick="window.openFormModal('${c.id}')"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
+          <button class="btn-icon" style="color:var(--danger);" onclick="window.deleteClass('${c.id}', '${c.name}')"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
         </div>
-      </td>
-    `
+      </td>`
     classList.appendChild(row)
   })
 }
 
-// 4. 搜尋與篩選
-function filterData() {
-  const keyword = searchInput.value.toLowerCase(); const branchId = branchFilter.value
-  const filtered = allClasses.filter(c => c.name.toLowerCase().includes(keyword) && (branchId === 'all' || c.branch_id === branchId))
-  renderTable(filtered)
-}
-searchInput.addEventListener('input', filterData); branchFilter.addEventListener('change', filterData)
+searchInput.addEventListener('input', () => { const k = searchInput.value.toLowerCase(); const b = branchFilter.value; renderTable(allClasses.filter(c => c.name.toLowerCase().includes(k) && (b === 'all' || c.branch_id === b))) })
+branchFilter.addEventListener('change', () => { searchInput.dispatchEvent(new Event('input')) })
 
-// 5. 新增/修改班級表單
 window.openFormModal = async (id = null) => {
-  classForm.reset(); document.getElementById('class-id').value = id || ''
-  teacherSelect.innerHTML = '<option value="">請先選擇分校</option>'
-  tutorSelect.innerHTML = '<option value="">請先選擇分校</option>'
-  classroomSelect.innerHTML = '<option value="">請先選擇分校</option>'
-  document.querySelectorAll('input[name="schedule"]').forEach(cb => cb.checked = false)
-  
+  classForm.reset(); document.getElementById('class-id').value = id || ''; scheduleContainer.innerHTML = ''
   if (id) {
-    formTitle.textContent = '修改班級資料'
-    const c = allClasses.find(x => x.id === id)
+    formTitle.textContent = '修改班級資料'; const c = allClasses.find(x => x.id === id)
     if (c) {
-      document.getElementById('semester').value = c.semester || ''
-      document.getElementById('name').value = c.name || ''
-      document.getElementById('branch_id').value = c.branch_id || ''
-      document.getElementById('start_date').value = c.start_date || ''
-      document.getElementById('end_date').value = c.end_date || ''
+      semesterSelect.value = c.semester || ''; document.getElementById('name').value = c.name || ''; branchSelect.value = c.branch_id || ''
+      document.getElementById('start_date').value = c.start_date || ''; document.getElementById('end_date').value = c.end_date || ''
       
+      // 解析字串還原時段列 (例如: "星期一 18:30~21:30, 星期三 18:30~21:30")
       if (c.schedule) {
-        const slots = c.schedule.split(', ')
-        slots.forEach(slot => {
-          const cb = document.querySelector(`input[name="schedule"][value="${slot}"]`)
-          if (cb) cb.checked = true
+        c.schedule.split(', ').forEach(slot => {
+          const [day, time] = slot.split(' '); if(time) { const [st, ed] = time.split('~'); window.addScheduleRow(day, st, ed) }
         })
-      }
+      } else { window.addScheduleRow() }
+      
       if (c.branch_id) await window.handleBranchChange(c.teacher_id, c.tutor_id, c.classroom_id)
     }
-  } else { formTitle.textContent = '開立新班級' }
+  } else { 
+    formTitle.textContent = '開立新班級'; window.addScheduleRow() // 預設給一列
+  }
   formModal.style.display = 'flex'
 }
 window.closeFormModal = () => formModal.style.display = 'none'
 
 classForm.addEventListener('submit', async (e) => {
   e.preventDefault(); submitBtn.disabled = true; submitBtn.textContent = '處理中...'
-  const checkedSlots = Array.from(document.querySelectorAll('input[name="schedule"]:checked')).map(cb => cb.value).join(', ')
-                            
   try {
     const id = document.getElementById('class-id').value
     const classData = {
-      semester: document.getElementById('semester').value, branch_id: document.getElementById('branch_id').value, name: document.getElementById('name').value,
-      schedule: checkedSlots || null, start_date: document.getElementById('start_date').value || null, end_date: document.getElementById('end_date').value || null,
+      semester: semesterSelect.value, branch_id: branchSelect.value, name: document.getElementById('name').value,
+      schedule: getCompiledSchedule() || null, start_date: document.getElementById('start_date').value || null, end_date: document.getElementById('end_date').value || null,
       teacher_id: document.getElementById('teacher_id').value || null, tutor_id: document.getElementById('tutor_id').value || null, classroom_id: document.getElementById('classroom_id').value || null
     }
     const { error } = id ? await supabase.from('classes').update(classData).eq('id', id) : await supabase.from('classes').insert([classData])
-    if (error) throw new Error(error.message)
-    window.closeFormModal(); fetchClasses()
+    if (error) throw error; window.closeFormModal(); fetchClasses()
   } catch (err) { alert('儲存失敗：' + err.message) } finally { submitBtn.disabled = false; submitBtn.textContent = '儲存班級' }
 })
 
 window.deleteClass = async (id, name) => {
-  if (!confirm(`確定要刪除班級「${name}」嗎？這會連同移除學生的選課紀錄喔！`)) return
+  if (!confirm(`確定刪除「${name}」？`)) return
   await supabase.from('classes').delete().eq('id', id); fetchClasses()
 }
 
-// 6. 學生入班/選課管理邏輯
+// ================= 視覺化多選入班邏輯 =================
 window.openEnrollmentModal = async (classId, className, branchId, branchName) => {
   currentManageClassId = classId; currentManageBranchId = branchId
   document.getElementById('enrollment-class-name').textContent = className; document.getElementById('enrollment-branch-name').textContent = branchName
@@ -201,43 +209,55 @@ window.closeEnrollmentModal = () => { enrollmentModal.style.display = 'none'; fe
 
 async function reloadEnrollmentData() {
   enrolledList.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-light);">讀取資料中...</div>'
-  enrollStudentSelect.innerHTML = '<option value="" disabled selected>載入學生名單中...</option>'
+  availableGrid.innerHTML = '<div style="grid-column: span 2; padding: 20px; text-align: center; color: var(--text-light);">載入可選名單中...</div>'
   try {
     const { data: enrolledRecords } = await supabase.from('class_students').select('id, student_id, students(name, student_number, photo_url)').eq('class_id', currentManageClassId)
-    const enrolledStudentIds = enrolledRecords ? enrolledRecords.map(r => r.student_id) : []
-    document.getElementById('enrollment-count').textContent = enrolledStudentIds.length
+    const enrolledIds = enrolledRecords ? enrolledRecords.map(r => r.student_id) : []
+    document.getElementById('enrollment-count').textContent = enrolledIds.length
 
     enrolledList.innerHTML = ''
     if (enrolledRecords && enrolledRecords.length > 0) {
-      enrolledRecords.forEach(record => {
-        const s = record.students; const avatarUrl = s.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff`
-        const numberBadge = s.student_number ? `<span class="student-number-badge">${s.student_number}</span>` : ''
-        const item = document.createElement('div'); item.className = 'enrolled-item'
-        item.innerHTML = `<div class="student-info-mini"><img src="${avatarUrl}"><div><strong>${s.name}</strong> ${numberBadge}</div></div><button class="btn-icon" style="color: var(--danger); border: none;" onclick="window.removeStudent('${record.id}')"><span class="material-symbols-outlined">person_remove</span> 移除</button>`
-        enrolledList.appendChild(item)
+      enrolledRecords.forEach(r => {
+        const s = r.students; const av = s.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff`
+        enrolledList.innerHTML += `<div class="enrolled-item"><div class="student-info-mini"><img src="${av}"><div><strong>${s.name}</strong> ${s.student_number?`<span class="student-number-badge">${s.student_number}</span>`:''}</div></div><button class="btn-icon" style="color: var(--danger); border: none;" onclick="window.removeStudent('${r.id}')"><span class="material-symbols-outlined">person_remove</span> 移除</button></div>`
       })
     } else { enrolledList.innerHTML = '<div style="padding: 30px; text-align: center; color: var(--text-light);">目前班上沒有學生</div>' }
 
-    const { data: allBranchStudents } = await supabase.from('students').select('id, name, student_number').eq('branch_id', currentManageBranchId).order('name', { ascending: true })
-    enrollStudentSelect.innerHTML = '<option value="" disabled selected>請選擇要加入的學生...</option>'
-    if (allBranchStudents) {
-      const availableStudents = allBranchStudents.filter(s => !enrolledStudentIds.includes(s.id))
-      if (availableStudents.length === 0) enrollStudentSelect.innerHTML = '<option value="" disabled selected>該分校所有學生皆已入班</option>'
-      else availableStudents.forEach(s => enrollStudentSelect.appendChild(new Option(s.student_number ? `${s.name} (${s.student_number})` : s.name, s.id)))
+    const { data: allStudents } = await supabase.from('students').select('id, name, student_number, photo_url').eq('branch_id', currentManageBranchId).order('name', { ascending: true })
+    availableGrid.innerHTML = ''
+    if (allStudents) {
+      const available = allStudents.filter(s => !enrolledIds.includes(s.id))
+      if (available.length === 0) availableGrid.innerHTML = '<div style="grid-column: span 2; text-align: center; color: var(--text-light);">分校所有學生皆已入班</div>'
+      else available.forEach(s => {
+        const av = s.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff`
+        availableGrid.innerHTML += `
+          <label class="student-select-card">
+            <input type="checkbox" name="enroll-student" value="${s.id}">
+            <img src="${av}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
+            <div><div style="font-weight:600; font-size:14px; color:var(--text-main);">${s.name}</div><div style="font-size:11px; color:var(--text-light);">${s.student_number||'無學號'}</div></div>
+          </label>`
+      })
     }
-  } catch (err) { console.error('讀取名單失敗:', err) }
+  } catch (err) { console.error(err) }
 }
 
 addStudentForm.addEventListener('submit', async (e) => {
-  e.preventDefault(); const studentId = enrollStudentSelect.value; if (!studentId) return
-  try { await supabase.from('class_students').insert([{ class_id: currentManageClassId, student_id: studentId }]); await reloadEnrollmentData() } 
-  catch (err) { alert('加入學生失敗：' + err.message) }
+  e.preventDefault(); const btn = document.getElementById('batch-add-btn'); btn.disabled = true; btn.textContent = '加入中...'
+  const selectedIds = Array.from(document.querySelectorAll('input[name="enroll-student"]:checked')).map(cb => cb.value)
+  if (selectedIds.length === 0) { alert('請先勾選要加入的學生'); btn.disabled = false; btn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">playlist_add_check</span> 批次加入勾選的學生'; return }
+  
+  try {
+    // 💡 批次寫入資料庫
+    const inserts = selectedIds.map(sid => ({ class_id: currentManageClassId, student_id: sid }))
+    const { error } = await supabase.from('class_students').insert(inserts)
+    if (error) throw error; await reloadEnrollmentData()
+  } catch (err) { alert('加入失敗：' + err.message) } 
+  finally { btn.disabled = false; btn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">playlist_add_check</span> 批次加入勾選的學生' }
 })
 
 window.removeStudent = async (recordId) => {
   if (!confirm('確定要把這位學生移出班級嗎？')) return
-  try { await supabase.from('class_students').delete().eq('id', recordId); await reloadEnrollmentData() } 
-  catch (err) { alert('移除失敗：' + err.message) }
+  await supabase.from('class_students').delete().eq('id', recordId); await reloadEnrollmentData()
 }
 
-loadBranches().then(fetchClasses)
+initData().then(fetchClasses)
