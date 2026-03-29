@@ -11,19 +11,16 @@
     .view-section.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* 頂部雙切換標籤 */
     .module-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 15px; }
     .tab-btn { background: transparent; border: 2px solid transparent; color: var(--text-light); font-size: 18px; font-weight: bold; padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
     .tab-btn:hover { background: var(--bg-color); color: var(--text-main); }
     .tab-btn.active { background: #eff6ff; color: var(--primary); border-color: #bfdbfe; }
 
-    /* 繳費狀態專屬標籤 */
-    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
     .status-unpaid { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; } 
     .status-paid { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }   
     .amount-text { font-family: monospace; font-size: 18px; font-weight: bold; }
     
-    /* 學生個人帳單總覽卡片 */
     .billing-summary-card { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(37,99,235,0.2); }
     .billing-total-label { font-size: 14px; opacity: 0.8; margin-bottom: 5px; }
     .billing-total-amount { font-size: 42px; font-weight: bold; font-family: monospace; }
@@ -37,7 +34,6 @@
   </div>
 
   <div class="container">
-    
     <div class="module-tabs">
       <button class="tab-btn active" onclick="window.switchTab('all-payments')"><span class="material-symbols-outlined">receipt_long</span> 所有繳費單總覽</button>
       <button class="tab-btn" onclick="window.switchTab('student-billing')"><span class="material-symbols-outlined">person_search</span> 查看學生個人帳單</button>
@@ -48,6 +44,9 @@
         <div class="toolbar">
           <h2 class="toolbar-title"><span class="material-symbols-outlined" style="color: #d97706;">payments</span>單據列表</h2>
           <div style="display: flex; gap: 10px;">
+            <button class="btn btn-cancel" onclick="window.openBranchSettingsModal()" style="color: var(--text-main);">
+              <span class="material-symbols-outlined">settings</span>分校收據設定
+            </button>
             <button class="btn btn-cancel" onclick="window.openBatchModal()" style="color: #d97706; border-color: #fcd34d; background: #fefce8;">
               <span class="material-symbols-outlined">library_add</span>班級批次開單
             </button>
@@ -60,8 +59,8 @@
           <input type="text" id="search-input" placeholder="搜尋學生、項目或班級...">
           <select id="status-filter">
             <option value="all">所有狀態</option>
-            <option value="未繳">🔴 未繳款</option>
-            <option value="已繳款">🟢 已繳款</option>
+            <option value="未繳">未繳款</option>
+            <option value="已繳款">已繳款</option>
           </select>
         </div>
         
@@ -101,7 +100,9 @@
             </button>
           </div>
 
-          <h3 style="color: #b91c1c; border-bottom: 2px solid #fecaca; padding-bottom: 10px;">🔴 待繳費項目</h3>
+          <h3 style="color: #b91c1c; border-bottom: 2px solid #fecaca; padding-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <span class="material-symbols-outlined">error</span> 待繳費項目
+          </h3>
           <div class="table-responsive" style="margin-bottom: 30px;">
             <table>
               <thead><tr><th>建立日期</th><th>收費項目</th><th>關聯班級</th><th style="text-align: right;">金額</th><th>操作</th></tr></thead>
@@ -109,7 +110,9 @@
             </table>
           </div>
 
-          <h3 style="color: #15803d; border-bottom: 2px solid #bbf7d0; padding-bottom: 10px;">🟢 近期已繳款項目</h3>
+          <h3 style="color: #15803d; border-bottom: 2px solid #bbf7d0; padding-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <span class="material-symbols-outlined">check_circle</span> 近期已繳款項目
+          </h3>
           <div class="table-responsive">
             <table>
               <thead><tr><th>繳款日期</th><th>收費項目</th><th>繳款方式</th><th style="text-align: right;">實繳金額</th><th>收據</th></tr></thead>
@@ -124,7 +127,6 @@
         </div>
       </div>
     </div>
-
   </div>
 
   <div class="modal-overlay" id="form-modal">
@@ -158,27 +160,50 @@
       <span class="material-symbols-outlined modal-close" onclick="window.closeBatchModal()">close</span>
       <h2 style="margin-top: 0; color: #b45309;"><span class="material-symbols-outlined" style="vertical-align: middle;">library_add</span> 班級批次開立單據</h2>
       <p style="color: #92400e; font-size: 14px; margin-bottom: 20px;">系統將會自動為該班級的「每一位學生」建立一筆相同的待繳費帳單。</p>
-      
       <form id="batch-form">
         <div class="form-grid">
-          <div class="form-group full-width">
-            <label>選擇目標班級 <span style="color:red">*</span></label>
-            <select id="batch-class-id" required><option value="" disabled selected>載入中...</option></select>
-          </div>
-          <div class="form-group full-width">
-            <label>統一收費項目名稱 <span style="color:red">*</span></label>
-            <input type="text" id="batch-title" required placeholder="例：秋季班學費、教材費...">
-          </div>
-          <div class="form-group full-width">
-            <label>每人應繳金額 (NT$) <span style="color:red">*</span></label>
-            <input type="number" id="batch-amount" required min="0" placeholder="請輸入金額">
-          </div>
+          <div class="form-group full-width"><label>選擇目標班級 <span style="color:red">*</span></label><select id="batch-class-id" required><option value="" disabled selected>載入中...</option></select></div>
+          <div class="form-group full-width"><label>統一收費項目名稱 <span style="color:red">*</span></label><input type="text" id="batch-title" required placeholder="例：秋季班學費、教材費..."></div>
+          <div class="form-group full-width"><label>每人應繳金額 (NT$) <span style="color:red">*</span></label><input type="number" id="batch-amount" required min="0" placeholder="請輸入金額"></div>
         </div>
-        <div class="actions" style="margin-top: 25px;">
-          <button type="button" class="btn btn-cancel" onclick="window.closeBatchModal()">取消</button>
-          <button type="submit" class="btn btn-primary" id="submit-batch-btn" style="background: #d97706; border: none;">確認批次開單</button>
-        </div>
+        <div class="actions" style="margin-top: 25px;"><button type="button" class="btn btn-cancel" onclick="window.closeBatchModal()">取消</button><button type="submit" class="btn btn-primary" id="submit-batch-btn" style="background: #d97706; border: none;">確認批次開單</button></div>
       </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="branch-settings-modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <span class="material-symbols-outlined modal-close" onclick="window.closeBranchSettingsModal()">close</span>
+      <h2 style="margin-top: 0; color: var(--text-main);"><span class="material-symbols-outlined" style="vertical-align: middle;">settings</span> 分校收據版面設定</h2>
+      <form id="branch-settings-form">
+        <div class="form-grid" style="grid-template-columns: 1fr;">
+          <div class="form-group">
+            <label>選擇分校</label>
+            <select id="setting-branch-id" onchange="window.loadBranchSettings()"><option value="" disabled selected>載入中...</option></select>
+          </div>
+          <div class="form-group">
+            <label>自訂收據抬頭 <span style="color:red">*</span></label>
+            <input type="text" id="setting-header" required placeholder="例：立志文理補習班站前校 繳費憑單">
+          </div>
+          <div class="form-group">
+            <label>自訂退費須知 (顯示於收據底部) <span style="color:red">*</span></label>
+            <textarea id="setting-footer" rows="4" required style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; resize: vertical;"></textarea>
+          </div>
+        </div>
+        <div class="actions" style="margin-top: 25px;"><button type="button" class="btn btn-cancel" onclick="window.closeBranchSettingsModal()">取消</button><button type="submit" class="btn btn-primary" id="submit-settings-btn">儲存設定</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="custom-dialog" style="z-index: 9999;">
+    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
+      <div id="dialog-icon" style="margin-bottom: 15px;"></div>
+      <h3 id="dialog-title" style="margin-top: 0; color: var(--text-main); font-size: 20px;">提示</h3>
+      <p id="dialog-message" style="color: var(--text-light); margin-bottom: 25px; line-height: 1.5; font-size: 15px;"></p>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button class="btn btn-cancel" id="dialog-btn-cancel" style="display: none;">取消</button>
+        <button class="btn btn-primary" id="dialog-btn-confirm">確定</button>
+      </div>
     </div>
   </div>
 
