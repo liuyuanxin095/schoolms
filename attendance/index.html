@@ -3,77 +3,70 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>考勤打卡系統 - 補習班管理</title>
+  <title>考勤打卡機 - 補習班系統</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css" />
   <style>
-    .kiosk-container { background: var(--surface); border: 2px solid var(--primary); border-radius: 12px; padding: 40px 30px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1); }
-    .kiosk-input-group { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
-    .kiosk-input-group input { font-size: 20px; padding: 15px 25px; text-align: center; width: 100%; max-width: 350px; border: 2px solid var(--border); border-radius: 8px; transition: 0.2s; }
-    .kiosk-input-group input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
-    
-    .time-display { font-size: 48px; font-weight: bold; color: var(--primary); font-variant-numeric: tabular-nums; letter-spacing: 2px; margin: 15px 0; }
-    
-    /* 🎨 自訂浮動提示框 (Toast) */
-    .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 9999; pointer-events: none; }
-    .toast { padding: 16px 24px; border-radius: 8px; color: white; font-weight: 500; font-size: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); opacity: 0; transform: translateY(-20px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
-    .toast.success { background-color: #059669; } /* 綠色 */
-    .toast.error { background-color: #dc2626; }   /* 紅色 */
-    .toast.warning { background-color: #d97706; } /* 橘色 */
+    /* 考勤專屬樣式 */
+    .clock-display { font-size: 48px; font-weight: bold; font-family: monospace; color: var(--primary); text-align: center; margin: 10px 0 30px 0; letter-spacing: 2px; }
+    .punch-card { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; text-align: center; border: 1px solid var(--border); }
+    .status-alert { padding: 15px; border-radius: 8px; margin-top: 20px; font-weight: bold; display: none; font-size: 16px; animation: fadeIn 0.3s ease; }
+    .status-success { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; display: block; }
+    .status-error { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; display: block; }
+    .status-warning { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; display: block; }
   </style>
 </head>
 <body>
 
-  <div class="toast-container" id="toast-container"></div>
+  <main class="main-wrapper">
+    <header class="header">
+      <div class="header-left">
+        <span class="material-symbols-outlined" style="font-size: 28px; color: var(--primary);">how_to_reg</span>
+        <h1>考勤打卡終端機</h1>
+      </div>
+      <div class="header-right">
+        <span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span>
+      </div>
+    </header>
 
-  <div class="header">
-    <div class="header-left"><span class="material-symbols-outlined" style="color: var(--primary);">school</span><h1>補習班管理系統</h1></div>
-    <a href="../index.html" class="back-btn"><span class="material-symbols-outlined">arrow_back</span>返回首頁</a>
-  </div>
-
-  <div class="container">
-    
-    <div class="kiosk-container">
-      <span class="material-symbols-outlined" style="font-size: 56px; color: var(--primary);">how_to_reg</span>
-      <h2 style="margin: 10px 0 0 0;">電子考勤打卡機</h2>
-      <div class="time-display" id="clock">00:00:00</div>
-      <p style="color: var(--text-light); margin: 0;">請掃描條碼或直接輸入編號，系統將自動為您打卡</p>
+    <div class="container" style="display: flex; justify-content: center; align-items: center; min-height: calc(100vh - 120px);">
       
-      <form id="search-form" class="kiosk-input-group">
-        <input type="text" id="id-input" placeholder="請輸入學號或人事編號" required autocomplete="off" autofocus>
-      </form>
+      <div class="punch-card">
+        <span class="material-symbols-outlined" style="font-size: 48px; color: var(--text-light); opacity: 0.5;">qr_code_scanner</span>
+        <h2 style="margin: 10px 0 0 0; color: var(--text-main);">學生/教職員 刷卡系統</h2>
+        
+        <div class="clock-display" id="clock">00:00:00</div>
+        
+        <form id="punch-form">
+          <div style="position: relative; max-width: 300px; margin: 0 auto;">
+            <span class="material-symbols-outlined" style="position: absolute; left: 15px; top: 14px; color: var(--text-light);">badge</span>
+            <input type="text" id="user_number" required placeholder="請掃描條碼或輸入學號/員工編號" autocomplete="off" autofocus
+                   style="width: 100%; padding: 15px 15px 15px 45px; font-size: 18px; border: 2px solid var(--border); border-radius: 8px; box-sizing: border-box; text-align: center; letter-spacing: 1px;">
+          </div>
+          <p style="font-size: 13px; color: var(--text-light); margin-top: 15px;">※ 輸入後請按 Enter 鍵確認打卡</p>
+          <button type="submit" style="display: none;">隱藏的送出按鈕</button>
+        </form>
+
+        <div id="status-message" class="status-alert"></div>
+      </div>
+
     </div>
+  </main>
 
-    <div class="card">
-      <div class="toolbar">
-        <h2 class="toolbar-title"><span class="material-symbols-outlined">list_alt</span>今日考勤紀錄 (<span id="today-date"></span>)</h2>
-        <div style="display: flex; gap: 10px;">
-          <button class="btn btn-cancel" onclick="window.fetchTodayAttendance()"><span class="material-symbols-outlined" style="font-size:18px;">refresh</span>重整</button>
-          <button class="btn btn-primary" onclick="window.exportCSV()"><span class="material-symbols-outlined" style="font-size:18px;">download</span>匯出 CSV 報表</button>
-        </div>
-      </div>
-      
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>人員</th>
-              <th>身分</th>
-              <th>進班/上班</th>
-              <th>離班/下班</th>
-              <th>加班上班</th>
-              <th>加班下班</th>
-            </tr>
-          </thead>
-          <tbody id="attendance-list">
-            <tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr>
-          </tbody>
-        </table>
-      </div>
+  <div class="modal-overlay" id="custom-dialog" style="z-index: 9999;">
+    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
+      <div id="dialog-icon" style="margin-bottom: 15px;"></div>
+      <h3 id="dialog-title" style="margin-top: 0; color: var(--text-main); font-size: 20px;">提示</h3>
+      <p id="dialog-message" style="color: var(--text-light); margin-bottom: 25px; line-height: 1.5; font-size: 15px;"></p>
+      <div style="display: flex; gap: 10px; justify-content: center;"><button class="btn btn-cancel" id="dialog-btn-cancel" style="display: none;">取消</button><button class="btn btn-primary" id="dialog-btn-confirm">確定</button></div>
     </div>
   </div>
 
   <script type="module" src="./app.js"></script>
+  <script>
+    document.getElementById('header-date').textContent = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    function updateClock() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('zh-TW', { hour12: false }); }
+    setInterval(updateClock, 1000); updateClock();
+  </script>
 </body>
 </html>
