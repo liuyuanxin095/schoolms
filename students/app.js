@@ -1,232 +1,187 @@
 import { supabase } from '../config.js'
 
-// 綁定 UI 元素
 const studentList = document.getElementById('student-list')
 const searchInput = document.getElementById('search-input')
 const branchFilter = document.getElementById('branch-filter')
-const detailModal = document.getElementById('detail-modal')
+
 const formModal = document.getElementById('form-modal')
-const attendanceModal = document.getElementById('attendance-modal')
 const studentForm = document.getElementById('student-form')
-const formTitle = document.getElementById('form-title')
-const submitBtn = document.getElementById('submit-btn')
 const branchSelect = document.getElementById('branch_id')
 
-let allStudents = []
-let existingPhotoUrl = null
-let currentCalDate = new Date()
-let attUserId = null
+const attModal = document.getElementById('attendance-modal')
+const attHistoryList = document.getElementById('att-history-list')
 
-// 載入分校
-async function loadBranches() {
-  const { data } = await supabase.from('branches').select('id, name')
-  if (data) {
-    branchFilter.innerHTML = '<option value="all">所有分校</option>'
-    branchSelect.innerHTML = '<option value="" disabled selected>請選擇分校</option>'
-    data.forEach(b => {
-      branchFilter.appendChild(new Option(b.name, b.id))
-      branchSelect.appendChild(new Option(b.name, b.id))
-    })
-  }
+const leaveModal = document.getElementById('leave-modal')
+const leaveForm = document.getElementById('leave-form')
+
+let allStudents = []
+let currentViewStudentId = null
+
+// 💡 0. 全域客製化視窗系統
+window.showCustomDialog = (title, message, type = 'alert', icon = 'info') => {
+  return new Promise((resolve) => {
+    const dialog = document.getElementById('custom-dialog')
+    document.getElementById('dialog-title').textContent = title
+    document.getElementById('dialog-message').innerHTML = message.replace(/\n/g, '<br>')
+    const iconColor = type === 'confirm' ? '#f59e0b' : (type === 'error' ? '#dc2626' : '#3b82f6')
+    document.getElementById('dialog-icon').innerHTML = `<span class="material-symbols-outlined" style="font-size: 48px; color: ${iconColor};">${icon}</span>`
+    const btnCancel = document.getElementById('dialog-btn-cancel'); const btnConfirm = document.getElementById('dialog-btn-confirm')
+    btnCancel.style.display = type === 'confirm' ? 'block' : 'none'
+    const cleanup = () => { dialog.style.display = 'none'; btnConfirm.onclick = null; btnCancel.onclick = null }
+    btnConfirm.onclick = () => { cleanup(); resolve(true) }
+    btnCancel.onclick = () => { cleanup(); resolve(false) }
+    dialog.style.display = 'flex'
+  })
 }
 
-// 載入學生
+async function initData() {
+  const { data: bData } = await supabase.from('branches').select('id, name')
+  if (bData) {
+    bData.forEach(b => { branchFilter.appendChild(new Option(b.name, b.id)); branchSelect.appendChild(new Option(b.name, b.id)) })
+  }
+  await fetchStudents()
+}
+
 async function fetchStudents() {
-  const { data, error } = await supabase.from('students').select('*, branches(name)').order('created_at', { ascending: false })
-  if (error) return
-  allStudents = data || []
-  renderTable(allStudents)
+  const { data, error } = await supabase.from('students').select('*, branches(name)').order('name', { ascending: true })
+  if (error) { studentList.innerHTML = `<tr><td colspan="5" style="color:red; text-align: center;">載入失敗</td></tr>`; return }
+  allStudents = data || []; renderTable(allStudents)
 }
 
 function renderTable(data) {
   studentList.innerHTML = ''
-  if (data.length === 0) {
-    studentList.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #6b7280; padding: 30px;">目前沒有資料</td></tr>'
-    return
-  }
+  if (data.length === 0) { studentList.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-light); padding: 30px;">查無資料</td></tr>'; return }
   data.forEach(s => {
-    const avatarUrl = s.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff`
-    const branchName = s.branches ? s.branches.name : '<span style="color:#dc2626;">未指定</span>'
+    const branchName = s.branches ? s.branches.name : '-'
     const row = document.createElement('tr')
     row.innerHTML = `
-      <td><div style="display:flex; align-items:center; gap:10px;"><img src="${avatarUrl}" class="avatar"><strong>${s.name}</strong></div></td>
-      <td>${s.student_number || '-'}</td>
+      <td><strong>${s.name}</strong> <span style="font-size:12px; color:var(--text-light);">${s.student_number || ''}</span></td>
       <td>${branchName}</td>
-      <td>${s.school || '-'}</td>
-      <td>${s.grade || '-'}</td>
+      <td>${s.contact_person || '-'}</td>
+      <td>${s.contact_phone || '-'}</td>
       <td>
         <div class="action-btns">
-          <button class="btn-icon" title="查看考勤" onclick="window.openAttendanceModal('${s.id}', '${s.name}')"><span class="material-symbols-outlined" style="font-size:18px;">calendar_month</span></button>
-          <button class="btn-icon" title="詳細資料" onclick="window.viewStudent('${s.id}')"><span class="material-symbols-outlined" style="font-size:18px;">visibility</span></button>
-          <button class="btn-icon" title="修改" onclick="window.openFormModal('${s.id}')"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
-          <button class="btn-icon" style="color:var(--danger);" onclick="window.deleteStudent('${s.id}', '${s.name}')"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+          <button class="btn-icon" title="查看考勤與請假" onclick="window.openAttendanceModal('${s.id}', '${s.name}')"><span class="material-symbols-outlined" style="font-size:18px; color:var(--primary);">calendar_month</span></button>
+          <button class="btn-icon" title="修改資料" onclick="window.openFormModal('${s.id}')"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
+          <button class="btn-icon" style="color:var(--danger);" title="刪除學生" onclick="window.deleteStudent('${s.id}', '${s.name}')"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
         </div>
-      </td>
-    `
+      </td>`
     studentList.appendChild(row)
   })
 }
 
-// 篩選邏輯
 function filterData() {
-  const keyword = searchInput.value.toLowerCase()
-  const branchId = branchFilter.value
+  const keyword = searchInput.value.toLowerCase(); const branchId = branchFilter.value
   const filtered = allStudents.filter(s => {
-    const matchKeyword = s.name.toLowerCase().includes(keyword) || (s.student_number && s.student_number.toLowerCase().includes(keyword))
+    const matchKey = s.name.toLowerCase().includes(keyword) || (s.student_number && s.student_number.toLowerCase().includes(keyword))
     const matchBranch = branchId === 'all' || s.branch_id === branchId
-    return matchKeyword && matchBranch
+    return matchKey && matchBranch
   })
   renderTable(filtered)
 }
-searchInput.addEventListener('input', filterData)
-branchFilter.addEventListener('change', filterData)
+searchInput.addEventListener('input', filterData); branchFilter.addEventListener('change', filterData)
 
-// 【視窗一】詳細資料
-window.viewStudent = (id) => {
-  const s = allStudents.find(x => x.id === id)
-  if (!s) return
-  document.getElementById('modal-avatar').src = s.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff`
-  document.getElementById('modal-name').textContent = s.name
-  document.getElementById('modal-branch').textContent = s.branches ? s.branches.name : '未指定'
-  document.getElementById('modal-student-no').textContent = s.student_number || '-'
-  document.getElementById('modal-id-no').textContent = s.id_number || '-'
-  document.getElementById('modal-birthday').textContent = s.birthday || '-'
-  document.getElementById('modal-school').textContent = s.school || '-'
-  document.getElementById('modal-grade').textContent = s.grade || '-'
-  document.getElementById('modal-parent-name').textContent = s.parent_name || '-'
-  document.getElementById('modal-phone').textContent = s.parent_phone || '-'
-  detailModal.style.display = 'flex'
-}
-window.closeDetailModal = () => detailModal.style.display = 'none'
-
-// 【視窗二】新增/修改
 window.openFormModal = (id = null) => {
-  studentForm.reset(); document.getElementById('student-id').value = id || ''; existingPhotoUrl = null; document.getElementById('current-photo-container').style.display = 'none'
+  studentForm.reset(); document.getElementById('student-id').value = id || ''
   if (id) {
-    formTitle.textContent = '修改學生資料'
+    document.getElementById('form-title').textContent = '修改學生資料'
     const s = allStudents.find(x => x.id === id)
     if (s) {
-      document.getElementById('name').value = s.name || ''
-      document.getElementById('branch_id').value = s.branch_id || ''
-      document.getElementById('student_number').value = s.student_number || ''
-      document.getElementById('id_number').value = s.id_number || ''
-      document.getElementById('birthday').value = s.birthday || ''
-      document.getElementById('school').value = s.school || ''
-      document.getElementById('grade').value = s.grade || ''
-      document.getElementById('parent_name').value = s.parent_name || ''
-      document.getElementById('parent_phone').value = s.parent_phone || ''
-      if (s.photo_url) { existingPhotoUrl = s.photo_url; document.getElementById('current-photo-container').style.display = 'flex'; document.getElementById('current-photo-img').src = existingPhotoUrl }
+      document.getElementById('name').value = s.name || ''; document.getElementById('student_number').value = s.student_number || ''
+      document.getElementById('branch_id').value = s.branch_id || ''; document.getElementById('contact_person').value = s.contact_person || ''
+      document.getElementById('contact_phone').value = s.contact_phone || ''
     }
-  } else { formTitle.textContent = '新增學生資料' }
+  } else { document.getElementById('form-title').textContent = '新增學生' }
   formModal.style.display = 'flex'
 }
 window.closeFormModal = () => formModal.style.display = 'none'
 
 studentForm.addEventListener('submit', async (e) => {
-  e.preventDefault(); submitBtn.disabled = true; submitBtn.textContent = '處理中...'
+  e.preventDefault(); const btn = document.getElementById('submit-btn'); btn.disabled = true; btn.textContent = '處理中...'
   try {
     const id = document.getElementById('student-id').value
-    let finalPhotoUrl = existingPhotoUrl
-    const photoInput = document.getElementById('photo_file')
-    if (photoInput.files.length > 0) {
-      const file = photoInput.files[0]
-      const fileName = `student_${Date.now()}.${file.name.split('.').pop()}`
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file)
-      if (uploadError) throw new Error('圖片上傳失敗')
-      finalPhotoUrl = supabase.storage.from('avatars').getPublicUrl(fileName).data.publicUrl
-    }
-    const studentData = {
+    const payload = {
       branch_id: document.getElementById('branch_id').value, name: document.getElementById('name').value,
-      student_number: document.getElementById('student_number').value || null, id_number: document.getElementById('id_number').value || null,
-      birthday: document.getElementById('birthday').value || null, school: document.getElementById('school').value || null,
-      grade: document.getElementById('grade').value || null, parent_name: document.getElementById('parent_name').value || null,
-      parent_phone: document.getElementById('parent_phone').value || null, photo_url: finalPhotoUrl
+      student_number: document.getElementById('student_number').value || null, contact_person: document.getElementById('contact_person').value || null, contact_phone: document.getElementById('contact_phone').value || null
     }
-    const { error } = id ? await supabase.from('students').update(studentData).eq('id', id) : await supabase.from('students').insert([studentData])
-    if (error) throw new Error(error.message)
-    window.closeFormModal(); fetchStudents()
-  } catch (err) { alert('儲存失敗：' + err.message) } finally { submitBtn.disabled = false; submitBtn.textContent = '儲存資料' }
+    const { error } = id ? await supabase.from('students').update(payload).eq('id', id) : await supabase.from('students').insert([payload])
+    if (error) throw error
+    window.closeFormModal(); await fetchStudents()
+  } catch (err) { await window.showCustomDialog('錯誤', '儲存失敗：' + err.message, 'alert', 'error') } 
+  finally { btn.disabled = false; btn.textContent = '儲存' }
 })
 
 window.deleteStudent = async (id, name) => {
-  if (!confirm(`確定要刪除「${name}」嗎？`)) return
+  const confirmDel = await window.showCustomDialog('確認刪除', `確定要刪除學生「${name}」嗎？這會移除他所有的考勤、成績與選課紀錄！`, 'confirm', 'help')
+  if (!confirmDel) return
   await supabase.from('students').delete().eq('id', id); fetchStudents()
 }
 
-// 💡 【視窗三】考勤日曆邏輯
-window.openAttendanceModal = async (id, name) => {
-  attUserId = id
-  document.getElementById('att-modal-name').textContent = `${name} 的考勤紀錄`
-  currentCalDate = new Date()
-  await renderCalendar()
-  attendanceModal.style.display = 'flex'
+// ==========================================
+// 💡 個人考勤紀錄邏輯
+// ==========================================
+window.openAttendanceModal = async (studentId, studentName) => {
+  currentViewStudentId = studentId; document.getElementById('att-student-name').textContent = studentName
+  attHistoryList.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">載入中...</td></tr>'
+  attModal.style.display = 'flex'; await loadStudentAttendance()
+}
+window.closeAttendanceModal = () => attModal.style.display = 'none'
+
+async function loadStudentAttendance() {
+  try {
+    const { data, error } = await supabase.from('attendance').select('*').eq('student_id', currentViewStudentId).order('record_date', { ascending: false })
+    if (error) throw error
+
+    attHistoryList.innerHTML = ''
+    if (!data || data.length === 0) { attHistoryList.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-light); padding: 20px;">尚無任何考勤或請假紀錄</td></tr>'; return }
+
+    data.forEach(a => {
+      const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) : '-'
+      const inTime = a.check_in ? formatTime(a.check_in) : '-'
+      const outTime = a.check_out ? formatTime(a.check_out) : '-'
+      
+      let statusHtml = '<span style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-size:12px;">已出席</span>'
+      let noteHtml = outTime
+      if (a.status === '請假') {
+        statusHtml = '<span style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:4px; font-size:12px;">已請假</span>'
+        noteHtml = `<span style="color:#b45309; font-size:13px;">${a.leave_reason || '無填寫事由'}</span>`
+      }
+
+      attHistoryList.innerHTML += `
+        <tr>
+          <td style="color:var(--text-main); font-weight:600; font-size:14px;">${a.record_date}</td>
+          <td>${statusHtml}</td>
+          <td style="font-family:monospace; color:var(--text-light);">${a.status === '請假' ? '-' : inTime}</td>
+          <td style="font-family:monospace; color:var(--text-light);">${noteHtml}</td>
+        </tr>`
+    })
+  } catch (err) { attHistoryList.innerHTML = `<tr><td colspan="4" style="color:red; text-align:center;">載入失敗</td></tr>` }
 }
 
-window.closeAttendanceModal = () => attendanceModal.style.display = 'none'
-
-window.changeMonth = async (offset) => {
-  currentCalDate.setMonth(currentCalDate.getMonth() + offset)
-  await renderCalendar()
+// ==========================================
+// 💡 登記請假邏輯 (直接與考勤系統打通)
+// ==========================================
+window.openLeaveModal = () => {
+  leaveForm.reset(); document.getElementById('leave-date').value = new Date().toISOString().split('T')[0]
+  leaveModal.style.display = 'flex'
 }
+window.closeLeaveModal = () => leaveModal.style.display = 'none'
 
-async function renderCalendar() {
-  const year = currentCalDate.getFullYear()
-  const month = currentCalDate.getMonth()
-  document.getElementById('cal-month-year').textContent = `${year} 年 ${month + 1} 月`
-  
-  const pad = (n) => String(n).padStart(2, '0')
-  const startOfMonth = `${year}-${pad(month+1)}-01`
-  const endOfMonth = `${year}-${pad(month+1)}-${pad(new Date(year, month + 1, 0).getDate())}`
-  
-  // 抓取該月考勤
-  const { data } = await supabase.from('attendance')
-    .select('*')
-    .eq('student_id', attUserId)
-    .gte('record_date', startOfMonth)
-    .lte('record_date', endOfMonth)
-    
-  const recordMap = {}
-  if (data) data.forEach(r => recordMap[r.record_date] = r)
-  
-  const grid = document.getElementById('cal-grid')
-  grid.innerHTML = ''
-  const firstDay = new Date(year, month, 1).getDay()
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-  
-  // 填補月初空白
-  for(let i=0; i<firstDay; i++) grid.innerHTML += `<div class="calendar-day empty"></div>`
-  
-  for(let i=1; i<=daysInMonth; i++) {
-    const dateStr = `${year}-${pad(month+1)}-${pad(i)}`
-    const hasRecord = recordMap[dateStr] ? 'has-record' : ''
-    
-    const dayEl = document.createElement('div')
-    dayEl.className = `calendar-day ${hasRecord}`
-    dayEl.textContent = i
-    dayEl.onclick = (e) => {
-      document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('active'))
-      e.target.classList.add('active')
-      showAttDetail(dateStr, recordMap[dateStr])
-    }
-    grid.appendChild(dayEl)
-  }
-  document.getElementById('att-detail-box').innerHTML = '<div style="color:var(--text-light); text-align:center;">請點選上方日期查看</div>'
-}
+leaveForm.addEventListener('submit', async (e) => {
+  e.preventDefault(); const btn = document.querySelector('#leave-form button[type="submit"]'); btn.disabled = true; btn.textContent = '登記中...'
+  try {
+    const leaveDate = document.getElementById('leave-date').value
+    const reason = document.getElementById('leave-reason').value
 
-function showAttDetail(dateStr, record) {
-  const box = document.getElementById('att-detail-box')
-  if (!record) {
-    box.innerHTML = `<div style="text-align:center; color:var(--text-light);">📅 ${dateStr}<br>當日無打卡紀錄</div>`
-    return
-  }
-  const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) : '<span style="color:#9ca3af;">未打卡</span>'
-  
-  box.innerHTML = `
-    <div style="font-weight:bold; margin-bottom:12px; color:var(--primary);">📅 ${dateStr}</div>
-    <div class="att-row"><span>進班時間：</span> <strong>${formatTime(record.check_in)}</strong></div>
-    <div class="att-row"><span>離班時間：</span> <strong>${formatTime(record.check_out)}</strong></div>
-  `
-}
+    // Upsert 寫入考勤表：這會自動覆蓋該學生當天可能存在的任何打卡紀錄，轉為請假
+    const payload = { user_type: 'student', student_id: currentViewStudentId, record_date: leaveDate, status: '請假', leave_reason: reason, check_in: null, check_out: null }
+    const { error } = await supabase.from('attendance').upsert([payload], { onConflict: 'student_id, record_date' })
+    if (error) throw error
 
-// 初始化
-loadBranches().then(fetchStudents)
+    await window.showCustomDialog('登記成功', `已將該生 ${leaveDate} 的狀態設為請假。`, 'alert', 'check_circle')
+    window.closeLeaveModal(); await loadStudentAttendance() // 重新載入歷史列表
+  } catch (err) { await window.showCustomDialog('錯誤', '請假登記失敗：' + err.message, 'alert', 'error') } 
+  finally { btn.disabled = false; btn.textContent = '確認登記' }
+})
+
+initData()
