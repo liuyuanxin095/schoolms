@@ -6,6 +6,19 @@
   <title>學生管理 - 補習班系統</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css" />
+  <style>
+    .avatar-preview { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); }
+    .avatar-sm { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
+    .student-info-mini { display: flex; align-items: center; gap: 10px; }
+    
+    /* 檢視資料的卡片樣式 */
+    .profile-header { display: flex; gap: 20px; align-items: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .profile-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
+    .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .profile-item { background: #f8fafc; padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border); }
+    .profile-label { font-size: 12px; color: var(--text-light); margin-bottom: 4px; }
+    .profile-value { font-size: 15px; color: var(--text-main); font-weight: 600; }
+  </style>
 </head>
 <body>
 
@@ -29,28 +42,64 @@
       
       <div class="table-responsive">
         <table>
-          <thead><tr><th>姓名 (學號)</th><th>所屬分校</th><th>聯絡人</th><th>聯絡電話</th><th>操作</th></tr></thead>
-          <tbody id="student-list"><tr><td colspan="5" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr></tbody>
+          <thead><tr><th width="60">照片</th><th>姓名 (學號)</th><th>所屬分校</th><th>家長姓名</th><th>家長電話</th><th>操作</th></tr></thead>
+          <tbody id="student-list"><tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
 
   <div class="modal-overlay" id="form-modal">
-    <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-content" style="max-width: 600px;">
       <span class="material-symbols-outlined modal-close" onclick="window.closeFormModal()">close</span>
       <h2 id="form-title" style="margin-top: 0; color: var(--primary);">新增學生</h2>
       <form id="student-form">
         <input type="hidden" id="student-id">
+        
+        <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
+          <img id="avatar-preview" src="https://via.placeholder.com/60" class="avatar-preview" alt="預覽圖">
+          <div>
+            <label style="font-size: 13px; color: var(--text-light); display: block; margin-bottom: 5px;">上傳學生照片 (選填)</label>
+            <input type="file" id="photo" accept="image/*" onchange="window.previewPhoto(event)">
+          </div>
+        </div>
+
         <div class="form-grid">
           <div class="form-group"><label>學生姓名 <span style="color:red">*</span></label><input type="text" id="name" required></div>
           <div class="form-group"><label>學號</label><input type="text" id="student_number" placeholder="例：SD1001"></div>
           <div class="form-group full-width"><label>所屬分校 <span style="color:red">*</span></label><select id="branch_id" required><option value="" disabled selected>載入中...</option></select></div>
-          <div class="form-group"><label>緊急聯絡人</label><input type="text" id="contact_person"></div>
-          <div class="form-group"><label>聯絡電話</label><input type="text" id="contact_phone"></div>
+          
+          <div class="form-group"><label>就讀學校</label><input type="text" id="school" placeholder="例：建國中學"></div>
+          <div class="form-group"><label>學生電話</label><input type="text" id="phone" placeholder="學生手機"></div>
+          
+          <div class="form-group"><label>家長/聯絡人姓名</label><input type="text" id="parent_name" placeholder="例：王大明"></div>
+          <div class="form-group"><label>家長電話</label><input type="text" id="parent_phone" placeholder="家長手機"></div>
+          
+          <div class="form-group full-width"><label>通訊地址</label><input type="text" id="address" placeholder="例：台北市中正區..."></div>
         </div>
         <div class="actions" style="margin-top: 25px;"><button type="button" class="btn btn-cancel" onclick="window.closeFormModal()">取消</button><button type="submit" class="btn btn-primary" id="submit-btn">儲存</button></div>
       </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="view-modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <span class="material-symbols-outlined modal-close" onclick="window.closeViewModal()">close</span>
+      <div class="profile-header">
+        <img id="view-avatar" src="" class="profile-avatar">
+        <div>
+          <h2 id="view-name" style="margin: 0 0 5px 0; color: var(--text-main);">姓名</h2>
+          <div style="color: var(--text-light); font-size: 14px;"><span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">domain</span> <span id="view-branch">分校</span></div>
+        </div>
+      </div>
+      <div class="profile-grid">
+        <div class="profile-item"><div class="profile-label">學號</div><div class="profile-value" id="view-student-number">-</div></div>
+        <div class="profile-item"><div class="profile-label">就讀學校</div><div class="profile-value" id="view-school">-</div></div>
+        <div class="profile-item"><div class="profile-label">學生電話</div><div class="profile-value" id="view-phone">-</div></div>
+        <div class="profile-item"><div class="profile-label">家長姓名</div><div class="profile-value" id="view-parent-name">-</div></div>
+        <div class="profile-item"><div class="profile-label">家長電話</div><div class="profile-value" id="view-parent-phone">-</div></div>
+        <div class="profile-item" style="grid-column: span 2;"><div class="profile-label">通訊地址</div><div class="profile-value" id="view-address">-</div></div>
+      </div>
     </div>
   </div>
 
