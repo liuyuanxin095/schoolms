@@ -19,17 +19,15 @@
     .tab-btn:hover { background: var(--bg-color); color: var(--text-main); }
     .tab-btn.active { background: #eff6ff; color: var(--primary); border-color: #bfdbfe; }
 
-    /* 狀態標籤 */
     .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
     .status-active { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
     .status-inactive { background-color: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
 
-    /* 💡 行事曆專屬微調 */
     #calendar-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.02); margin-top: 15px; }
     .fc-event { cursor: pointer; transition: 0.2s; border: none !important; border-radius: 4px !important; }
     .fc-event:hover { filter: brightness(0.9); }
     .fc-v-event .fc-event-main { padding: 4px; }
-    .fc-timegrid-slot { height: 40px !important; } /* 加大格子高度 */
+    .fc-timegrid-slot { height: 40px !important; }
     
     .fc .fc-toolbar-title { font-size: 18px !important; color: var(--text-main); }
     .fc .fc-button-primary { background-color: var(--primary) !important; border-color: var(--primary) !important; }
@@ -38,76 +36,78 @@
 </head>
 <body>
 
-  <div class="header">
-    <div class="header-left">
-      <span class="material-symbols-outlined" style="color: var(--primary);">school</span>
-      <h1>補習班管理系統</h1>
-    </div>
-    <a href="../index.html" class="back-btn"><span class="material-symbols-outlined">arrow_back</span>返回首頁</a>
-  </div>
-
-  <div class="container">
-    
-    <div class="module-tabs">
-      <button class="tab-btn active" onclick="window.switchTab('list')"><span class="material-symbols-outlined">meeting_room</span> 教室建檔管理</button>
-      <button class="tab-btn" onclick="window.switchTab('calendar')"><span class="material-symbols-outlined">calendar_month</span> 教室排課行事曆</button>
-    </div>
-
-    <div id="view-list" class="view-section active">
-      <div class="card">
-        <div class="toolbar">
-          <h2 class="toolbar-title"><span class="material-symbols-outlined" style="color: var(--primary);">sensor_door</span>教室列表</h2>
-          <button class="btn btn-primary" onclick="window.openFormModal()"><span class="material-symbols-outlined">add</span>新增教室</button>
-        </div>
-        
-        <div class="filter-bar">
-          <span class="material-symbols-outlined" style="color: var(--text-light);">search</span>
-          <input type="text" id="search-input" placeholder="搜尋教室名稱...">
-          <select id="branch-filter"><option value="all">所有分校</option></select>
-        </div>
-        
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr><th>教室名稱</th><th>所屬分校</th><th>容納人數</th><th>使用狀態</th><th>操作</th></tr>
-            </thead>
-            <tbody id="classroom-list">
-              <tr><td colspan="5" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr>
-            </tbody>
-          </table>
-        </div>
+  <main class="main-wrapper">
+    <header class="header">
+      <div class="header-left">
+        <span class="material-symbols-outlined" style="font-size: 28px; color: var(--primary);">meeting_room</span>
+        <h1>教室與行事曆</h1>
       </div>
-    </div>
+      <div class="header-right">
+        <span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span>
+      </div>
+    </header>
 
-    <div id="view-calendar" class="view-section">
-      <div class="card" style="background: var(--surface);">
-        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 5px;">
-          <span class="material-symbols-outlined" style="font-size: 32px; color: var(--primary);">calendar_view_week</span>
-          <div style="flex-grow: 1;">
-            <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 5px;">請選擇要查看的教室：</div>
-            <div style="display: flex; gap: 10px;">
-              <select id="cal-branch-select" onchange="window.handleCalBranchChange()" style="width: 200px; padding: 10px; font-size: 16px; border-radius: 8px;">
-                <option value="" disabled selected>請先選擇分校</option>
-              </select>
-              <select id="cal-classroom-select" onchange="window.loadClassroomCalendar()" style="width: 250px; padding: 10px; font-size: 16px; border-radius: 8px;">
-                <option value="" disabled selected>請選擇教室...</option>
-              </select>
-            </div>
+    <div class="container">
+      <div class="module-tabs">
+        <button class="tab-btn active" onclick="window.switchTab('list')"><span class="material-symbols-outlined">meeting_room</span> 教室建檔管理</button>
+        <button class="tab-btn" onclick="window.switchTab('calendar')"><span class="material-symbols-outlined">calendar_month</span> 教室排課行事曆</button>
+      </div>
+
+      <div id="view-list" class="view-section active">
+        <div class="card">
+          <div class="toolbar">
+            <h2 class="toolbar-title"><span class="material-symbols-outlined" style="color: var(--primary);">sensor_door</span>教室列表</h2>
+            <button class="btn btn-primary" onclick="window.openFormModal()"><span class="material-symbols-outlined">add</span>新增教室</button>
+          </div>
+          
+          <div class="filter-bar">
+            <span class="material-symbols-outlined" style="color: var(--text-light);">search</span>
+            <input type="text" id="search-input" placeholder="搜尋教室名稱...">
+            <select id="branch-filter"><option value="all">所有分校</option></select>
+          </div>
+          
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr><th>教室名稱</th><th>所屬分校</th><th>容納人數</th><th>使用狀態</th><th>操作</th></tr>
+              </thead>
+              <tbody id="classroom-list">
+                <tr><td colspan="5" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
+      </div>
 
-        <div id="calendar-container">
-          <div id="calendar"></div>
-        </div>
-        
-        <div id="calendar-empty-state" style="text-align: center; padding: 50px; color: var(--text-light);">
-          <span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.5;">event_busy</span>
-          <p>請從上方選擇一間教室以載入課表</p>
+      <div id="view-calendar" class="view-section">
+        <div class="card" style="background: var(--surface);">
+          <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 5px;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--primary);">calendar_view_week</span>
+            <div style="flex-grow: 1;">
+              <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 5px;">請選擇要查看的教室：</div>
+              <div style="display: flex; gap: 10px;">
+                <select id="cal-branch-select" onchange="window.handleCalBranchChange()" style="width: 200px; padding: 10px; font-size: 16px; border-radius: 8px;">
+                  <option value="" disabled selected>請先選擇分校</option>
+                </select>
+                <select id="cal-classroom-select" onchange="window.loadClassroomCalendar()" style="width: 250px; padding: 10px; font-size: 16px; border-radius: 8px;">
+                  <option value="" disabled selected>請選擇教室...</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div id="calendar-container">
+            <div id="calendar"></div>
+          </div>
+          
+          <div id="calendar-empty-state" style="text-align: center; padding: 50px; color: var(--text-light);">
+            <span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.5;">event_busy</span>
+            <p>請從上方選擇一間教室以載入課表</p>
+          </div>
         </div>
       </div>
     </div>
-
-  </div>
+  </main>
 
   <div class="modal-overlay" id="form-modal">
     <div class="modal-content" style="max-width: 400px;">
@@ -136,5 +136,6 @@
   </div>
 
   <script type="module" src="./app.js"></script>
+  <script>document.getElementById('header-date').textContent = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });</script>
 </body>
 </html>
