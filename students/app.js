@@ -16,9 +16,14 @@ const leaveForm = document.getElementById('leave-form')
 
 let allStudents = []
 let currentViewStudentId = null
-let currentPhotoUrl = null // 紀錄目前大頭貼
+let currentPhotoUrl = null 
 
-// 💡 0. 全域客製化視窗系統
+// 頂部日期顯示
+document.getElementById('header-date').textContent = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })
+
+// ==========================================
+// 💡 全域客製化視窗系統 & 登出
+// ==========================================
 window.showCustomDialog = (title, message, type = 'alert', icon = 'info') => {
   return new Promise((resolve) => {
     const dialog = document.getElementById('custom-dialog')
@@ -35,6 +40,30 @@ window.showCustomDialog = (title, message, type = 'alert', icon = 'info') => {
   })
 }
 
+window.showCustomPrompt = (title, message, placeholder = '') => {
+  return new Promise((resolve) => {
+    const dialog = document.getElementById('custom-prompt')
+    document.getElementById('prompt-title').textContent = title
+    document.getElementById('prompt-message').innerHTML = message.replace(/\n/g, '<br>')
+    const input = document.getElementById('prompt-input'); input.value = ''; input.placeholder = placeholder
+    const btnCancel = document.getElementById('prompt-btn-cancel'); const btnConfirm = document.getElementById('prompt-btn-confirm')
+    const cleanup = () => { dialog.style.display = 'none'; btnConfirm.onclick = null; btnCancel.onclick = null }
+    btnConfirm.onclick = () => { cleanup(); resolve(input.value) }
+    btnCancel.onclick = () => { cleanup(); resolve(null) }
+    dialog.style.display = 'flex'; input.focus()
+  })
+}
+
+window.logout = async () => {
+  const confirmLogout = await window.showCustomDialog('系統登出', '確定要登出系統嗎？', 'confirm', 'logout')
+  if (!confirmLogout) return
+  await supabase.auth.signOut()
+  window.location.href = '../login.html'
+}
+
+// ==========================================
+// 初始化與列表渲染
+// ==========================================
 async function initData() {
   const { data: bData } = await supabase.from('branches').select('id, name')
   if (bData) {
@@ -87,12 +116,11 @@ function filterData() {
 searchInput.addEventListener('input', filterData); branchFilter.addEventListener('change', filterData)
 
 // ==========================================
-// 💡 檢視學生詳細資料
+// 檢視學生詳細資料
 // ==========================================
 window.openViewModal = (id) => {
   const s = allStudents.find(x => x.id === id)
   if (!s) return
-  
   document.getElementById('view-avatar').src = s.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=eff6ff&color=2563eb`
   document.getElementById('view-name').textContent = s.name
   document.getElementById('view-branch').textContent = s.branches ? s.branches.name : '未綁定'
@@ -102,27 +130,23 @@ window.openViewModal = (id) => {
   document.getElementById('view-parent-name').textContent = s.parent_name || '-'
   document.getElementById('view-parent-phone').textContent = s.parent_phone || '-'
   document.getElementById('view-address').textContent = s.address || '-'
-  
   viewModal.style.display = 'flex'
 }
 window.closeViewModal = () => viewModal.style.display = 'none'
 
 // ==========================================
-// 💡 新增/編輯學生 (大頭貼上傳)
+// 新增/編輯學生 (大頭貼上傳)
 // ==========================================
 window.previewPhoto = (event) => {
   const file = event.target.files[0]
   if (file) {
-    const reader = new FileReader()
-    reader.onload = (e) => { document.getElementById('avatar-preview').src = e.target.result }
+    const reader = new FileReader(); reader.onload = (e) => { document.getElementById('avatar-preview').src = e.target.result }
     reader.readAsDataURL(file)
   }
 }
 
 window.openFormModal = (id = null) => {
-  studentForm.reset(); document.getElementById('student-id').value = id || ''
-  currentPhotoUrl = null
-  
+  studentForm.reset(); document.getElementById('student-id').value = id || ''; currentPhotoUrl = null
   if (id) {
     document.getElementById('form-title').textContent = '修改學生資料'
     const s = allStudents.find(x => x.id === id)
@@ -145,14 +169,11 @@ window.closeFormModal = () => formModal.style.display = 'none'
 studentForm.addEventListener('submit', async (e) => {
   e.preventDefault(); const btn = document.getElementById('submit-btn'); btn.disabled = true; btn.textContent = '處理中...'
   try {
-    const id = document.getElementById('student-id').value
-    const photoInput = document.getElementById('photo')
+    const id = document.getElementById('student-id').value; const photoInput = document.getElementById('photo')
     let finalPhotoUrl = currentPhotoUrl
 
-    // 若有上傳新照片，上傳至 supabase storage (avatars bucket)
     if (photoInput.files.length > 0) {
-      const file = photoInput.files[0]
-      const fileName = `${Date.now()}_${file.name}`
+      const file = photoInput.files[0]; const fileName = `${Date.now()}_${file.name}`
       const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file)
       if (uploadError) throw uploadError
       const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName)
@@ -181,7 +202,7 @@ window.deleteStudent = async (id, name) => {
 }
 
 // ==========================================
-// 💡 個人考勤紀錄邏輯
+// 個人考勤紀錄與請假邏輯
 // ==========================================
 window.openAttendanceModal = async (studentId, studentName) => {
   currentViewStudentId = studentId; document.getElementById('att-student-name').textContent = studentName
@@ -200,8 +221,7 @@ async function loadStudentAttendance() {
 
     data.forEach(a => {
       const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) : '-'
-      const inTime = a.check_in ? formatTime(a.check_in) : '-'
-      const outTime = a.check_out ? formatTime(a.check_out) : '-'
+      const inTime = a.check_in ? formatTime(a.check_in) : '-'; const outTime = a.check_out ? formatTime(a.check_out) : '-'
       
       let statusHtml = '<span style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-size:12px;">已出席</span>'
       let noteHtml = outTime
@@ -221,9 +241,6 @@ async function loadStudentAttendance() {
   } catch (err) { attHistoryList.innerHTML = `<tr><td colspan="4" style="color:red; text-align:center;">載入失敗</td></tr>` }
 }
 
-// ==========================================
-// 💡 登記請假邏輯
-// ==========================================
 window.openLeaveModal = () => {
   leaveForm.reset(); document.getElementById('leave-date').value = new Date().toISOString().split('T')[0]
   leaveModal.style.display = 'flex'
@@ -233,10 +250,9 @@ window.closeLeaveModal = () => leaveModal.style.display = 'none'
 leaveForm.addEventListener('submit', async (e) => {
   e.preventDefault(); const btn = document.querySelector('#leave-form button[type="submit"]'); btn.disabled = true; btn.textContent = '登記中...'
   try {
-    const leaveDate = document.getElementById('leave-date').value
-    const reason = document.getElementById('leave-reason').value
-
+    const leaveDate = document.getElementById('leave-date').value; const reason = document.getElementById('leave-reason').value
     const payload = { user_type: 'student', student_id: currentViewStudentId, record_date: leaveDate, status: '請假', leave_reason: reason, check_in: null, check_out: null }
+    
     const { error } = await supabase.from('attendance').upsert([payload], { onConflict: 'student_id, record_date' })
     if (error) throw error
 
