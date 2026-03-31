@@ -1,3 +1,5 @@
+import './sidebar.js' // 💡 自動載入並渲染全域側邊欄
+
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
 // ⚠️ 請換成你自己的 Supabase URL 與 Anon Key
