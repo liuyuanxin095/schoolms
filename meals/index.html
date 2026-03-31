@@ -30,7 +30,7 @@
     .batch-bar { background: #eff6ff; border: 1px solid #bfdbfe; padding: 12px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     .student-cb { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
 
-    /* 💡 訂餐專屬樣式 */
+    /* 訂餐專屬樣式 */
     .order-toggle { border: 2px solid var(--border); background: var(--surface); color: var(--text-light); padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 4px; user-select: none; }
     .order-toggle:hover { filter: brightness(0.95); }
     .order-toggle.active.lunch { background: #fef08a; color: #854d0e; border-color: #fde047; }
@@ -44,91 +44,98 @@
 </head>
 <body>
 
-  <div class="header">
-    <div class="header-left"><span class="material-symbols-outlined" style="color: var(--primary);">school</span><h1>補習班管理系統</h1></div>
-    <a href="../index.html" class="back-btn"><span class="material-symbols-outlined">arrow_back</span>返回首頁</a>
-  </div>
+  <main class="main-wrapper">
+    <header class="header">
+      <div class="header-left">
+        <span class="material-symbols-outlined" style="font-size: 28px; color: var(--primary);">restaurant</span>
+        <h1>餐費與訂餐管理</h1>
+      </div>
+      <div class="header-right">
+        <span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span>
+      </div>
+    </header>
 
-  <div class="container">
-    
-    <div class="module-tabs">
-      <button class="tab-btn active" onclick="window.switchTab('wallet')"><span class="material-symbols-outlined">account_balance_wallet</span> 學生錢包與儲值</button>
-      <button class="tab-btn" onclick="window.switchTab('orders')"><span class="material-symbols-outlined">bento</span> 每日訂餐管理</button>
-    </div>
+    <div class="container">
+      
+      <div class="module-tabs">
+        <button class="tab-btn active" onclick="window.switchTab('wallet')"><span class="material-symbols-outlined">account_balance_wallet</span> 學生錢包與儲值</button>
+        <button class="tab-btn" onclick="window.switchTab('orders')"><span class="material-symbols-outlined">bento</span> 每日訂餐管理</button>
+      </div>
 
-    <div id="view-wallet" class="view-section active">
-      <div class="card">
-        <div class="toolbar">
-          <h2 class="toolbar-title" style="color: var(--text-main);">學生餐費帳戶餘額</h2>
-        </div>
-        
-        <div class="filter-bar">
-          <span class="material-symbols-outlined" style="color: var(--text-light);">search</span>
-          <input type="text" id="wallet-search" placeholder="搜尋學生姓名或學號...">
-          <select id="wallet-branch-filter"><option value="all">所有分校</option></select>
-        </div>
+      <div id="view-wallet" class="view-section active">
+        <div class="card">
+          <div class="toolbar">
+            <h2 class="toolbar-title" style="color: var(--text-main);">學生餐費帳戶餘額</h2>
+          </div>
+          
+          <div class="filter-bar">
+            <span class="material-symbols-outlined" style="color: var(--text-light);">search</span>
+            <input type="text" id="wallet-search" placeholder="搜尋學生姓名或學號...">
+            <select id="wallet-branch-filter"><option value="all">所有分校</option></select>
+          </div>
 
-        <div class="batch-bar">
-          <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600;">
-            <input type="checkbox" id="select-all" onchange="window.toggleSelectAll()"> 全選
-            <span style="color: var(--primary); font-size: 14px;">(已選 <span id="selected-count">0</span> 人)</span>
-          </label>
-          <button class="btn btn-primary" id="btn-batch-deduct" onclick="window.openBatchModal()" disabled style="background: #f59e0b; border: none;">
-            <span class="material-symbols-outlined">receipt_long</span> 批次手動扣款
-          </button>
-        </div>
-        
-        <div class="table-responsive">
-          <table>
-            <thead><tr><th width="50">選取</th><th>學生姓名 (學號)</th><th>所屬分校</th><th>餐費餘額</th><th>操作</th></tr></thead>
-            <tbody id="wallet-list"><tr><td colspan="5" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr></tbody>
-          </table>
+          <div class="batch-bar">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+              <input type="checkbox" id="select-all" onchange="window.toggleSelectAll()"> 全選
+              <span style="color: var(--primary); font-size: 14px;">(已選 <span id="selected-count">0</span> 人)</span>
+            </label>
+            <button class="btn btn-primary" id="btn-batch-deduct" onclick="window.openBatchModal()" disabled style="background: #f59e0b; border: none;">
+              <span class="material-symbols-outlined">receipt_long</span> 批次手動扣款
+            </button>
+          </div>
+          
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th width="50">選取</th><th>學生姓名 (學號)</th><th>所屬分校</th><th>餐費餘額</th><th>操作</th></tr></thead>
+              <tbody id="wallet-list"><tr><td colspan="5" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div id="view-orders" class="view-section">
-      <div class="card">
-        <div class="toolbar" style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
-          <h2 class="toolbar-title" style="color: var(--text-main);">每日訂單與扣款</h2>
-          <div style="display: flex; gap: 10px; align-items: center;">
-            <label style="font-weight: 600;">選擇日期：</label>
-            <input type="date" id="order-date" onchange="window.loadDailyOrders()" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border);">
+      <div id="view-orders" class="view-section">
+        <div class="card">
+          <div class="toolbar" style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
+            <h2 class="toolbar-title" style="color: var(--text-main);">每日訂單與扣款</h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <label style="font-weight: 600;">選擇日期：</label>
+              <input type="date" id="order-date" onchange="window.loadDailyOrders()" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border);">
+            </div>
           </div>
-        </div>
 
-        <div class="order-stats">
-          <div class="order-stat-box" style="border-color: #fde047; background: #fefce8;">
-            <div style="color: #854d0e; font-weight: 600;"><span class="material-symbols-outlined" style="vertical-align: middle;">light_mode</span> 午餐總計</div>
-            <div class="order-stat-num" id="stat-lunch" style="color: #ca8a04;">0</div>
+          <div class="order-stats">
+            <div class="order-stat-box" style="border-color: #fde047; background: #fefce8;">
+              <div style="color: #854d0e; font-weight: 600;"><span class="material-symbols-outlined" style="vertical-align: middle;">light_mode</span> 午餐總計</div>
+              <div class="order-stat-num" id="stat-lunch" style="color: #ca8a04;">0</div>
+            </div>
+            <div class="order-stat-box" style="border-color: #fdba74; background: #fff7ed;">
+              <div style="color: #9a3412; font-weight: 600;"><span class="material-symbols-outlined" style="vertical-align: middle;">dark_mode</span> 晚餐總計</div>
+              <div class="order-stat-num" id="stat-dinner" style="color: #ea580c;">0</div>
+            </div>
           </div>
-          <div class="order-stat-box" style="border-color: #fdba74; background: #fff7ed;">
-            <div style="color: #9a3412; font-weight: 600;"><span class="material-symbols-outlined" style="vertical-align: middle;">dark_mode</span> 晚餐總計</div>
-            <div class="order-stat-num" id="stat-dinner" style="color: #ea580c;">0</div>
-          </div>
-        </div>
 
-        <div class="filter-bar" style="justify-content: space-between;">
-          <div style="display: flex; gap: 10px; flex-grow: 1;">
-            <span class="material-symbols-outlined" style="color: var(--text-light); margin-top: 8px;">search</span>
-            <input type="text" id="order-search" placeholder="搜尋學生...">
-            <select id="order-class-filter" onchange="window.loadDailyOrders()"><option value="all">所有班級</option></select>
+          <div class="filter-bar" style="justify-content: space-between;">
+            <div style="display: flex; gap: 10px; flex-grow: 1;">
+              <span class="material-symbols-outlined" style="color: var(--text-light); margin-top: 8px;">search</span>
+              <input type="text" id="order-search" placeholder="搜尋學生...">
+              <select id="order-class-filter" onchange="window.loadDailyOrders()"><option value="all">所有班級</option></select>
+            </div>
+            <button class="btn btn-primary" onclick="window.openSettleModal()" style="background: #10b981; border: none;">
+              <span class="material-symbols-outlined">task_alt</span> 一鍵結算 (扣除今日餐費)
+            </button>
           </div>
-          <button class="btn btn-primary" onclick="window.openSettleModal()" style="background: #10b981; border: none;">
-            <span class="material-symbols-outlined">task_alt</span> 一鍵結算 (扣除今日餐費)
-          </button>
-        </div>
 
-        <div class="table-responsive">
-          <table>
-            <thead><tr><th>學生姓名 (學號)</th><th>錢包餘額</th><th>訂購午餐</th><th>訂購晚餐</th><th>訂單狀態</th></tr></thead>
-            <tbody id="order-list"><tr><td colspan="5" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr></tbody>
-          </table>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th>學生姓名 (學號)</th><th>錢包餘額</th><th>訂購午餐</th><th>訂購晚餐</th><th>訂單狀態</th></tr></thead>
+              <tbody id="order-list"><tr><td colspan="5" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
 
-  </div>
+    </div>
+  </main>
 
   <div class="modal-overlay" id="transaction-modal">
     <div class="modal-content" style="max-width: 400px;">
@@ -159,5 +166,6 @@
   </div>
 
   <script type="module" src="./app.js"></script>
+  <script>document.getElementById('header-date').textContent = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });</script>
 </body>
 </html>
