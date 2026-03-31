@@ -28,106 +28,113 @@
 </head>
 <body>
 
-  <div class="header">
-    <div class="header-left"><span class="material-symbols-outlined" style="color: var(--primary);">school</span><h1>補習班管理系統</h1></div>
-    <a href="../index.html" class="back-btn"><span class="material-symbols-outlined">arrow_back</span>返回首頁</a>
-  </div>
-
-  <div class="container">
-    <div class="module-tabs">
-      <button class="tab-btn active" onclick="window.switchTab('all-payments')"><span class="material-symbols-outlined">receipt_long</span> 所有繳費單總覽</button>
-      <button class="tab-btn" onclick="window.switchTab('student-billing')"><span class="material-symbols-outlined">person_search</span> 查看學生個人帳單</button>
-    </div>
-
-    <div id="view-all-payments" class="view-section active">
-      <div class="card">
-        <div class="toolbar">
-          <h2 class="toolbar-title"><span class="material-symbols-outlined" style="color: #d97706;">payments</span>單據列表</h2>
-          <div style="display: flex; gap: 10px;">
-            <button class="btn btn-cancel" onclick="window.openBranchSettingsModal()" style="color: var(--text-main);">
-              <span class="material-symbols-outlined">settings</span>分校收據設定
-            </button>
-            <button class="btn btn-cancel" onclick="window.openBatchModal()" style="color: #d97706; border-color: #fcd34d; background: #fefce8;">
-              <span class="material-symbols-outlined">library_add</span>班級批次開單
-            </button>
-            <button class="btn btn-primary" onclick="window.openFormModal()"><span class="material-symbols-outlined">add</span>開立單筆單據</button>
-          </div>
-        </div>
-        
-        <div class="filter-bar">
-          <span class="material-symbols-outlined" style="color: var(--text-light);">search</span>
-          <input type="text" id="search-input" placeholder="搜尋學生、項目或班級...">
-          <select id="status-filter">
-            <option value="all">所有狀態</option>
-            <option value="未繳">未繳款</option>
-            <option value="已繳款">已繳款</option>
-          </select>
-        </div>
-        
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr><th>繳費學生</th><th>收費項目 / 關聯班級</th><th>應繳金額</th><th>繳款狀態</th><th>繳費方式 / 日期</th><th>操作</th></tr>
-            </thead>
-            <tbody id="payment-list">
-              <tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr>
-            </tbody>
-          </table>
-        </div>
+  <main class="main-wrapper">
+    <header class="header">
+      <div class="header-left">
+        <span class="material-symbols-outlined" style="font-size: 28px; color: var(--primary);">payments</span>
+        <h1>繳費管理</h1>
       </div>
-    </div>
+      <div class="header-right">
+        <span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span>
+      </div>
+    </header>
 
-    <div id="view-student-billing" class="view-section">
-      <div class="card" style="background: var(--surface);">
-        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-          <span class="material-symbols-outlined" style="font-size: 32px; color: var(--primary);">person_search</span>
-          <div style="flex-grow: 1;">
-            <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 5px;">請選擇學生以查看帳單：</div>
-            <select id="billing-student-select" onchange="window.loadStudentBilling()" style="width: 100%; max-width: 400px; padding: 10px; font-size: 16px; border-radius: 8px;">
-              <option value="" disabled selected>載入學生中...</option>
+    <div class="container">
+      <div class="module-tabs">
+        <button class="tab-btn active" onclick="window.switchTab('all-payments')"><span class="material-symbols-outlined">receipt_long</span> 所有繳費單總覽</button>
+        <button class="tab-btn" onclick="window.switchTab('student-billing')"><span class="material-symbols-outlined">person_search</span> 查看學生個人帳單</button>
+      </div>
+
+      <div id="view-all-payments" class="view-section active">
+        <div class="card">
+          <div class="toolbar">
+            <h2 class="toolbar-title"><span class="material-symbols-outlined" style="color: #d97706;">payments</span>單據列表</h2>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-cancel" onclick="window.openBranchSettingsModal()" style="color: var(--text-main);">
+                <span class="material-symbols-outlined">settings</span>分校收據設定
+              </button>
+              <button class="btn btn-cancel" onclick="window.openBatchModal()" style="color: #d97706; border-color: #fcd34d; background: #fefce8;">
+                <span class="material-symbols-outlined">library_add</span>班級批次開單
+              </button>
+              <button class="btn btn-primary" onclick="window.openFormModal()"><span class="material-symbols-outlined">add</span>開立單筆單據</button>
+            </div>
+          </div>
+          
+          <div class="filter-bar">
+            <span class="material-symbols-outlined" style="color: var(--text-light);">search</span>
+            <input type="text" id="search-input" placeholder="搜尋學生、項目或班級...">
+            <select id="status-filter">
+              <option value="all">所有狀態</option>
+              <option value="未繳">未繳款</option>
+              <option value="已繳款">已繳款</option>
             </select>
           </div>
-        </div>
-
-        <div id="billing-content" style="display: none;">
-          <div class="billing-summary-card">
-            <div>
-              <div class="billing-total-label">目前累計待繳總額</div>
-              <div class="billing-total-amount" id="billing-total-amount">$0</div>
-            </div>
-            <button class="btn btn-primary" onclick="window.printConsolidatedBill()" style="background: white; color: #1e3a8a; font-size: 16px; padding: 12px 24px;">
-              <span class="material-symbols-outlined">print</span> 列印合併繳費單
-            </button>
-          </div>
-
-          <h3 style="color: #b91c1c; border-bottom: 2px solid #fecaca; padding-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-            <span class="material-symbols-outlined">error</span> 待繳費項目
-          </h3>
-          <div class="table-responsive" style="margin-bottom: 30px;">
-            <table>
-              <thead><tr><th>建立日期</th><th>收費項目</th><th>關聯班級</th><th style="text-align: right;">金額</th><th>操作</th></tr></thead>
-              <tbody id="billing-unpaid-list"></tbody>
-            </table>
-          </div>
-
-          <h3 style="color: #15803d; border-bottom: 2px solid #bbf7d0; padding-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-            <span class="material-symbols-outlined">check_circle</span> 近期已繳款項目
-          </h3>
+          
           <div class="table-responsive">
             <table>
-              <thead><tr><th>繳款日期</th><th>收費項目</th><th>繳款方式</th><th style="text-align: right;">實繳金額</th><th>收據</th></tr></thead>
-              <tbody id="billing-paid-list"></tbody>
+              <thead>
+                <tr><th>繳費學生</th><th>收費項目 / 關聯班級</th><th>應繳金額</th><th>繳款狀態</th><th>繳費方式 / 日期</th><th>操作</th></tr>
+              </thead>
+              <tbody id="payment-list">
+                <tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
-        
-        <div id="billing-empty-state" style="text-align: center; padding: 50px; color: var(--text-light);">
-          <span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.5;">receipt</span>
-          <p>請從上方選單選擇一位學生</p>
+      </div>
+
+      <div id="view-student-billing" class="view-section">
+        <div class="card" style="background: var(--surface);">
+          <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <span class="material-symbols-outlined" style="font-size: 32px; color: var(--primary);">person_search</span>
+            <div style="flex-grow: 1;">
+              <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 5px;">請選擇學生以查看帳單：</div>
+              <select id="billing-student-select" onchange="window.loadStudentBilling()" style="width: 100%; max-width: 400px; padding: 10px; font-size: 16px; border-radius: 8px;">
+                <option value="" disabled selected>載入學生中...</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="billing-content" style="display: none;">
+            <div class="billing-summary-card">
+              <div>
+                <div class="billing-total-label">目前累計待繳總額</div>
+                <div class="billing-total-amount" id="billing-total-amount">$0</div>
+              </div>
+              <button class="btn btn-primary" onclick="window.printConsolidatedBill()" style="background: white; color: #1e3a8a; font-size: 16px; padding: 12px 24px;">
+                <span class="material-symbols-outlined">print</span> 列印合併繳費單
+              </button>
+            </div>
+
+            <h3 style="color: #b91c1c; border-bottom: 2px solid #fecaca; padding-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <span class="material-symbols-outlined">error</span> 待繳費項目
+            </h3>
+            <div class="table-responsive" style="margin-bottom: 30px;">
+              <table>
+                <thead><tr><th>建立日期</th><th>收費項目</th><th>關聯班級</th><th style="text-align: right;">金額</th><th>操作</th></tr></thead>
+                <tbody id="billing-unpaid-list"></tbody>
+              </table>
+            </div>
+
+            <h3 style="color: #15803d; border-bottom: 2px solid #bbf7d0; padding-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <span class="material-symbols-outlined">check_circle</span> 近期已繳款項目
+            </h3>
+            <div class="table-responsive">
+              <table>
+                <thead><tr><th>繳款日期</th><th>收費項目</th><th>繳款方式</th><th style="text-align: right;">實繳金額</th><th>收據</th></tr></thead>
+                <tbody id="billing-paid-list"></tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div id="billing-empty-state" style="text-align: center; padding: 50px; color: var(--text-light);">
+            <span class="material-symbols-outlined" style="font-size: 48px; opacity: 0.5;">receipt</span>
+            <p>請從上方選單選擇一位學生</p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </main>
 
   <div class="modal-overlay" id="form-modal">
     <div class="modal-content" style="max-width: 500px;">
@@ -208,5 +215,6 @@
   </div>
 
   <script type="module" src="./app.js"></script>
+  <script>document.getElementById('header-date').textContent = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });</script>
 </body>
 </html>
