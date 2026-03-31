@@ -3,148 +3,83 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>教職員管理 - 專業 HR 系統</title>
+  <title>教職員管理 - 補習班系統</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css" />
-  <style>
-    .role-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; display: inline-block; }
-    .role-admin { background-color: #fee2e2; color: #b91c1c; } .role-manager { background-color: #e0e7ff; color: #4338ca; } .role-teacher { background-color: #dcfce7; color: #15803d; }
-    .current-photo-preview { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 13px; color: var(--text-light); }
-    .current-photo-preview img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
-  </style>
 </head>
 <body>
 
-  <div class="header">
-    <div class="header-left"><span class="material-symbols-outlined" style="color: var(--primary);">school</span><h1>補習班管理系統</h1></div>
-    <a href="../index.html" class="back-btn"><span class="material-symbols-outlined">arrow_back</span>返回首頁</a>
-  </div>
+  <main class="main-wrapper">
+    <header class="header">
+      <div class="header-left">
+        <span class="material-symbols-outlined" style="font-size: 28px; color: var(--primary);">badge</span>
+        <h1>教職員管理</h1>
+      </div>
+      <div class="header-right">
+        <span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span>
+      </div>
+    </header>
 
-  <div class="container">
-    <div class="card">
-      <div class="toolbar">
-        <h2 class="toolbar-title"><span class="material-symbols-outlined">badge</span>教職員名單</h2>
-        <button class="btn btn-primary" onclick="window.openFormModal()"><span class="material-symbols-outlined">person_add</span>新增教職員</button>
-      </div>
-      
-      <div class="filter-bar">
-        <span class="material-symbols-outlined" style="color: var(--text-light);">search</span>
-        <input type="text" id="search-input" placeholder="搜尋姓名或員編...">
-        <select id="role-filter"><option value="all">所有職務</option><option value="admin">管理員</option><option value="manager">主任</option><option value="teacher">教師</option></select>
-        <select id="branch-filter"><option value="all">所有分校</option></select>
-      </div>
-      
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr><th>教職員</th><th>人事編號</th><th>職務</th><th>所屬分校</th><th>聯絡電話</th><th>操作</th></tr>
-          </thead>
-          <tbody id="staff-list">
-            <tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="detail-modal">
-    <div class="modal-content">
-      <span class="material-symbols-outlined modal-close" onclick="window.closeDetailModal()">close</span>
-      <div class="header" style="padding: 0; border: none; margin-bottom: 20px; justify-content: flex-start; gap: 15px;">
-        <img src="" id="modal-avatar" class="avatar" style="width: 70px; height: 70px;">
-        <div>
-          <h2 id="modal-name" style="margin: 0 0 8px 0; font-size: 22px;">-</h2>
-          <div style="display: flex; gap: 8px; align-items: center;"><span id="modal-role" class="role-badge">-</span><span id="modal-branch" style="background: #e5e7eb; color: #374151; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">-</span></div>
+    <div class="container">
+      <div class="card">
+        <div class="toolbar">
+          <h2 class="toolbar-title"><span class="material-symbols-outlined">badge</span>教職員列表</h2>
+          <button class="btn btn-primary" onclick="window.openFormModal()"><span class="material-symbols-outlined">add</span>新增教職員</button>
+        </div>
+        
+        <div class="filter-bar">
+          <span class="material-symbols-outlined" style="color: var(--text-light);">search</span>
+          <input type="text" id="search-input" placeholder="搜尋姓名...">
+          <select id="role-filter">
+            <option value="all">所有職務</option>
+            <option value="teacher">教師</option>
+            <option value="admin">行政/櫃檯</option>
+            <option value="manager">主任/主管</option>
+          </select>
+        </div>
+        
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr><th>姓名</th><th>職務角色</th><th>聯絡電話</th><th>主要分校</th><th>操作</th></tr>
+            </thead>
+            <tbody id="staff-list">
+              <tr><td colspan="5" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
-      <div class="section-title" style="margin-top:0;">基本身分資料</div>
-      <div class="form-grid" style="background: var(--input-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-        <div class="form-group" style="margin-bottom:0;"><span style="color: var(--text-light); font-size: 12px;">人事編號</span><span id="modal-staff-no" style="font-weight:500;">-</span></div>
-        <div class="form-group" style="margin-bottom:0;"><span style="color: var(--text-light); font-size: 12px;">身分證字號</span><span id="modal-id-no" style="font-weight:500;">-</span></div>
-        <div class="form-group" style="margin-bottom:0;"><span style="color: var(--text-light); font-size: 12px;">生日</span><span id="modal-birthday" style="font-weight:500;">-</span></div>
-        <div class="form-group" style="margin-bottom:0;"><span style="color: var(--text-light); font-size: 12px;">聯絡電話</span><span id="modal-phone" style="font-weight:500;">-</span></div>
-      </div>
-      <div class="section-title">薪資結構設定</div>
-      <div class="form-grid" style="background: var(--input-bg); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-        <div class="form-group" style="margin-bottom:0;"><span style="color: var(--text-light); font-size: 12px;">月結底薪</span><span id="modal-base-salary" style="color: #059669; font-weight:600;">-</span></div>
-        <div class="form-group" style="margin-bottom:0;"><span style="color: var(--text-light); font-size: 12px;">授課時薪</span><span id="modal-hourly-rate" style="color: #059669; font-weight:600;">-</span></div>
-      </div>
-      <div class="section-title">保險與福利紀錄</div>
-      <div class="form-grid" style="background: var(--input-bg); padding: 15px; border-radius: 8px;">
-        <div class="form-group" style="margin-bottom:0;"><span style="color: var(--text-light); font-size: 12px;">勞保加保日</span><span id="modal-labor-date" style="font-weight:500;">-</span></div>
-        <div class="form-group" style="margin-bottom:0;"><span style="color: var(--text-light); font-size: 12px;">每月勞保扣款</span><span id="modal-labor-amount" style="color: var(--danger); font-weight:600;">-</span></div>
-        <div class="form-group" style="margin-bottom:0;"><span style="color: var(--text-light); font-size: 12px;">健保加保日</span><span id="modal-health-date" style="font-weight:500;">-</span></div>
-        <div class="form-group" style="margin-bottom:0;"><span style="color: var(--text-light); font-size: 12px;">每月健保扣款</span><span id="modal-health-amount" style="color: var(--danger); font-weight:600;">-</span></div>
-        <div class="form-group" style="margin-bottom:0;"><span style="color: var(--text-light); font-size: 12px;">團保加保日</span><span id="modal-group-date" style="font-weight:500;">-</span></div>
-      </div>
     </div>
-  </div>
+  </main>
 
   <div class="modal-overlay" id="form-modal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 500px;">
       <span class="material-symbols-outlined modal-close" onclick="window.closeFormModal()">close</span>
-      <h2 id="form-title" style="margin-top: 0; color: var(--primary);">新增教職員資料</h2>
+      <h2 id="form-title" style="margin-top: 0; color: var(--primary);">新增教職員</h2>
       <form id="staff-form">
         <input type="hidden" id="staff-id">
-        <div class="section-title" style="margin-top:0;">基本身分資料</div>
         <div class="form-grid">
-          <div class="form-group full-width">
-            <label for="photo_file">上傳/更新大頭照</label>
-            <input type="file" id="photo_file" accept="image/jpeg, image/png, image/webp">
-            <div class="current-photo-preview" id="current-photo-container" style="display: none;"><img src="" id="current-photo-img"><span>目前照片</span></div>
-          </div>
-          <div class="form-group"><label for="name">員工姓名 <span style="color:red">*</span></label><input type="text" id="name" required></div>
-          <div class="form-group"><label for="phone">聯絡電話 <span style="color:red">*</span></label><input type="text" id="phone" required></div>
-          <div class="form-group"><label for="staff_number">人事編號 (員編)</label><input type="text" id="staff_number"></div>
-          <div class="form-group"><label for="id_number">身分證字號</label><input type="text" id="id_number"></div>
-          <div class="form-group"><label for="birthday">生日</label><input type="date" id="birthday"></div>
-        </div>
-        <div class="section-title">職務與薪資設定</div>
-        <div class="form-grid">
-          <div class="form-group"><label for="branch_id">歸屬分校 <span style="color:red">*</span></label><select id="branch_id" required><option value="" disabled selected>載入中...</option></select></div>
+          <div class="form-group"><label>姓名 <span style="color:red">*</span></label><input type="text" id="name" required placeholder="例：王大明"></div>
           <div class="form-group">
-            <label for="role">系統權限角色 <span style="color:red">*</span></label>
-            <select id="role" required><option value="teacher">教師</option><option value="manager">主任</option><option value="admin">管理員</option></select>
+            <label>職務角色 <span style="color:red">*</span></label>
+            <select id="role" required>
+              <option value="teacher">教師</option>
+              <option value="admin">行政/櫃檯</option>
+              <option value="manager">主任/主管</option>
+            </select>
           </div>
-          <div class="form-group"><label for="base_salary">月結底薪 (元)</label><input type="number" id="base_salary" min="0"></div>
-          <div class="form-group"><label for="hourly_rate">授課時薪 (元)</label><input type="number" id="hourly_rate" min="0"></div>
+          <div class="form-group full-width"><label>主要所屬分校 <span style="color:red">*</span></label><select id="branch_id" required><option value="" disabled selected>載入中...</option></select></div>
+          <div class="form-group full-width"><label>聯絡電話</label><input type="text" id="phone" placeholder="手機或市話"></div>
         </div>
-        <div class="section-title">保險管理</div>
-        <div class="form-grid">
-          <div class="form-group"><label for="labor_insurance_date">勞保加保日</label><input type="date" id="labor_insurance_date"></div>
-          <div class="form-group"><label for="labor_insurance_amount">勞保自付額 (元)</label><input type="number" id="labor_insurance_amount" min="0"></div>
-          <div class="form-group"><label for="health_insurance_date">健保加保日</label><input type="date" id="health_insurance_date"></div>
-          <div class="form-group"><label for="health_insurance_amount">健保自付額 (元)</label><input type="number" id="health_insurance_amount" min="0"></div>
-          <div class="form-group"><label for="group_insurance_date">團保加保日</label><input type="date" id="group_insurance_date"></div>
+        <div class="actions" style="margin-top: 25px;">
+          <button type="button" class="btn btn-cancel" onclick="window.closeFormModal()">取消</button>
+          <button type="submit" class="btn btn-primary" id="submit-btn">儲存資料</button>
         </div>
-        <div class="actions" style="margin-top: 25px;"><button type="button" class="btn btn-cancel" onclick="window.closeFormModal()">取消</button><button type="submit" class="btn btn-primary" id="submit-btn">儲存 HR 資料</button></div>
       </form>
     </div>
   </div>
 
-  <div class="modal-overlay" id="attendance-modal">
-    <div class="modal-content" style="max-width: 450px;">
-      <span class="material-symbols-outlined modal-close" onclick="window.closeAttendanceModal()">close</span>
-      <h2 id="att-modal-name" style="margin-top: 0; color: var(--primary);">考勤紀錄</h2>
-      
-      <div class="calendar-header">
-        <span class="material-symbols-outlined calendar-nav" onclick="window.changeMonth(-1)">chevron_left</span>
-        <span id="cal-month-year">YYYY 年 MM 月</span>
-        <span class="material-symbols-outlined calendar-nav" onclick="window.changeMonth(1)">chevron_right</span>
-      </div>
-      
-      <div class="calendar-grid">
-        <div class="calendar-day-header">日</div><div class="calendar-day-header">一</div><div class="calendar-day-header">二</div>
-        <div class="calendar-day-header">三</div><div class="calendar-day-header">四</div><div class="calendar-day-header">五</div><div class="calendar-day-header">六</div>
-      </div>
-      <div class="calendar-grid" id="cal-grid"></div>
-      
-      <div class="attendance-detail-box" id="att-detail-box">
-        <div style="color:var(--text-light); text-align:center;">請點選上方日期查看</div>
-      </div>
-    </div>
-  </div>
-
   <script type="module" src="./app.js"></script>
+  <script>document.getElementById('header-date').textContent = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });</script>
 </body>
 </html>
