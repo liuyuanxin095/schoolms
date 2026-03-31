@@ -1,108 +1,83 @@
-/* =========================================
-   補習班管理系統 - 全局共用樣式表 (含手機版 RWD)
-   ========================================= */
-
-/* 1. 統一定義配色變數 */
-:root { 
-  --primary: #2563eb; 
-  --primary-hover: #1d4ed8; 
-  --danger: #dc2626; 
-  --bg-color: #f3f4f6; 
-  --surface: #ffffff; 
-  --text-main: #1f2937; 
-  --text-light: #6b7280; 
-  --border: #e5e7eb; 
-  --input-bg: #f9fafb;
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --bg-color: #f8fafc;
+  --surface: #ffffff;
+  --text-main: #1e293b;
+  --text-light: #64748b;
+  --border: #e2e8f0;
+  --danger: #ef4444;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --sidebar-width: 250px;
 }
 
-/* 2. 基礎元素設定 */
-body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; }
-.container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-.card { background-color: var(--surface); border-radius: 8px; border: 1px solid var(--border); padding: 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; min-height: 100vh; }
 
-/* 3. 頂部導覽列 */
-.header { background-color: var(--surface); padding: 15px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-.header-left { display: flex; align-items: center; gap: 10px; }
-.header h1 { margin: 0; font-size: 20px; }
-.back-btn { text-decoration: none; color: var(--text-main); display: flex; align-items: center; gap: 5px; font-weight: 500; }
+/* =========================================
+   💡 全新：全域側邊欄 (Sidebar)
+========================================= */
+.sidebar { width: var(--sidebar-width); background-color: #1e293b; color: #f8fafc; display: flex; flex-direction: column; position: fixed; height: 100vh; left: 0; top: 0; z-index: 100; transition: 0.3s; }
+.sidebar-header { padding: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #334155; }
+.sidebar-header h2 { margin: 0; font-size: 18px; font-weight: bold; letter-spacing: 1px; }
+.sidebar-menu { flex-grow: 1; padding: 15px 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+.menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: #cbd5e1; text-decoration: none; border-radius: 8px; transition: 0.2s; font-weight: 600; font-size: 15px; }
+.menu-item:hover { background-color: #334155; color: #fff; }
+.menu-item.active { background-color: var(--primary); color: #fff; box-shadow: 0 4px 6px rgba(37,99,235,0.3); }
+.menu-item .material-symbols-outlined { font-size: 22px; }
+.sidebar-footer { padding: 15px 10px; border-top: 1px solid #334155; }
 
-/* 4. 按鈕與工具列 */
-.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.toolbar-title { margin: 0; font-size: 20px; display: flex; align-items: center; gap: 8px; }
-.filter-bar { display: flex; gap: 10px; align-items: center; background: var(--input-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; flex-wrap: wrap; }
-.filter-bar input, .filter-bar select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; flex-grow: 1; min-width: 120px; }
+/* =========================================
+   右側主內容區 (Main Content)
+========================================= */
+.main-wrapper { margin-left: var(--sidebar-width); flex: 1; display: flex; flex-direction: column; min-height: 100vh; width: calc(100% - var(--sidebar-width)); }
 
-.btn { padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; text-decoration: none; border: none; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+/* 頂部導覽列 (Header) */
+.header { background: var(--surface); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 90; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.header-left { display: flex; align-items: center; gap: 15px; }
+.header-left h1 { margin: 0; font-size: 20px; color: var(--text-main); }
+.header-right { display: flex; align-items: center; gap: 15px; }
+
+/* 內容容器 */
+.container { padding: 25px 30px; flex: 1; }
+
+/* =========================================
+   統一的 UI 元件 (Card, Button, Table)
+========================================= */
+.card { background: var(--surface); border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid var(--border); margin-bottom: 20px; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+.toolbar-title { font-size: 20px; margin: 0; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
+
+.btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; font-family: inherit; }
 .btn-primary { background-color: var(--primary); color: white; }
-.btn-primary:hover { background-color: var(--primary-hover); }
-.btn-cancel { background-color: white; border: 1px solid var(--border); color: var(--text-main); }
+.btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 6px rgba(37,99,235,0.2); }
+.btn-cancel { background-color: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
+.btn-cancel:hover { background-color: #e2e8f0; }
+.btn-icon { background: none; border: none; cursor: pointer; color: var(--text-light); transition: 0.2s; padding: 6px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; }
+.btn-icon:hover { background-color: #f1f5f9; color: var(--primary); }
 
-.action-btns { display: flex; gap: 8px; }
-.btn-icon { background: none; border: 1px solid var(--border); padding: 6px; border-radius: 6px; cursor: pointer; color: var(--text-light); transition: 0.2s; display: flex; align-items: center; text-decoration: none; }
-.btn-icon:hover { background-color: var(--bg-color); color: var(--primary); }
+.filter-bar { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; background: #f8fafc; padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border); }
+.filter-bar input, .filter-bar select { padding: 10px 15px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; flex: 1; transition: 0.2s; }
+.filter-bar input:focus, .filter-bar select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
 
-/* 5. 表單排版 */
+.table-responsive { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; min-width: 600px; }
+th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); }
+th { background-color: #f8fafc; font-weight: 600; color: var(--text-light); position: sticky; top: 0; z-index: 10; font-size: 14px; }
+tr:hover td { background-color: #f8fafc; }
+td { font-size: 15px; }
+
+/* 模態視窗 Modal */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; animation: fadeIn 0.2s; }
+.modal-content { background: var(--surface); padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); position: relative; max-height: 90vh; overflow-y: auto; }
+.modal-close { position: absolute; top: 20px; right: 20px; cursor: pointer; color: var(--text-light); transition: 0.2s; background: #f1f5f9; border-radius: 50%; padding: 4px; }
+.modal-close:hover { background: #e2e8f0; color: var(--danger); transform: rotate(90deg); }
+
+/* 表單 Form */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; }
+.form-group { display: flex; flex-direction: column; gap: 8px; }
 .form-group.full-width { grid-column: span 2; }
-label { font-size: 14px; font-weight: 500; color: #4b5563; }
-input, select { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background-color: var(--input-bg); font-family: inherit; }
-input:focus, select:focus { outline: none; border-color: var(--primary); background-color: #fff; }
-.section-title { font-size: 16px; color: var(--primary); font-weight: 600; margin: 25px 0 15px 0; display: flex; align-items: center; gap: 8px; background: #eff6ff; padding: 8px 12px; border-radius: 6px; }
-
-/* 6. 表格設計 (加入響應式滑動容器) */
-.table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-table { width: 100%; border-collapse: collapse; min-width: 600px; /* 防止表格在手機上擠成一團 */ }
-th, td { border-bottom: 1px solid var(--border); padding: 12px 16px; text-align: left; font-size: 14px; vertical-align: middle; }
-th { background-color: var(--input-bg); font-weight: 600; color: var(--text-light); white-space: nowrap; }
-tbody tr:hover { background-color: #f8fafc; }
-
-.avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background-color: var(--border); }
-
-/* 7. 彈出視窗 (Modal) */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 10px; box-sizing: border-box; }
-.modal-content { background: var(--surface); padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; box-sizing: border-box; }
-.modal-close { position: absolute; top: 15px; right: 15px; cursor: pointer; color: var(--text-light); background: var(--bg-color); padding: 4px; border-radius: 50%; }
-
-/* =========================================
-   8. 手機版響應式設計 (RWD 斷點設定)
-   當螢幕寬度小於 768px (手機/小平板) 時觸發以下設定
-   ========================================= */
-@media (max-width: 768px) {
-  /* 導覽列與容器縮減內邊距 */
-  .header { padding: 15px 20px; }
-  .container { padding: 0 10px; margin: 15px auto; }
-  .card { padding: 15px; }
-  
-  /* 工具列與按鈕改為直排 */
-  .toolbar { flex-direction: column; align-items: flex-start; gap: 15px; }
-  .toolbar .btn-primary { width: 100%; }
-  
-  /* 表單雙欄改為單欄 */
-  .form-grid { grid-template-columns: 1fr; gap: 10px; }
-  .form-group.full-width { grid-column: span 1; }
-  
-  /* Modal 排版調整 */
-  .modal-content { padding: 20px; }
-  .detail-grid { grid-template-columns: 1fr; }
-}
-
-/* =========================================
-   9. 日曆與考勤紀錄元件 (新增)
-   ========================================= */
-.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 16px; font-weight: bold; color: var(--text-main); }
-.calendar-nav { cursor: pointer; padding: 6px; border-radius: 6px; transition: 0.2s; user-select: none; background: var(--bg-color); display: flex; align-items: center; justify-content: center; }
-.calendar-nav:hover { background-color: var(--border); color: var(--primary); }
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; font-size: 14px; margin-bottom: 5px; }
-.calendar-day-header { color: var(--text-light); font-size: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-.calendar-day { padding: 10px 0; border-radius: 6px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; font-weight: 500; position: relative; }
-.calendar-day:hover:not(.empty) { border-color: var(--primary); background-color: #eff6ff; color: var(--primary); }
-.calendar-day.active { background-color: var(--primary) !important; color: white !important; box-shadow: 0 2px 4px rgba(37,99,235,0.3); }
-.calendar-day.empty { cursor: default; }
-/* 紀錄小綠點 */
-.calendar-day.has-record::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background-color: #10b981; border-radius: 50%; }
-.calendar-day.active.has-record::after { background-color: white; }
-
-.attendance-detail-box { margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; }
-.att-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
-.att-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.form-group label { font-size: 14px; font-weight: 600; color: var(--text-main); }
+.form-group input, .form-group select, .form-group textarea { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; font-family: inherit; transition: 0.2s; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
