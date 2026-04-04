@@ -9,7 +9,6 @@
   <style>
     .view-section { display: none; animation: fadeIn 0.3s ease; }
     .view-section.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
@@ -23,7 +22,6 @@
     </header>
 
     <div class="container">
-      
       <div id="view-list" class="view-section active">
         <div class="card">
           <div class="toolbar">
@@ -81,12 +79,10 @@
                 <div class="form-group"><label>人事編號</label><input type="text" id="staff_number" placeholder="例：T001"></div>
                 <div class="form-group"><label>身分證字號</label><input type="text" id="id_number"></div>
                 <div class="form-group"><label>本人手機</label><input type="text" id="phone"></div>
-                
                 <div class="form-group full-width">
                   <label>所屬分校 (可多選，按住 Ctrl/Cmd 點擊) <span style="color:red">*</span></label>
                   <select id="branch_ids" multiple required style="height: 120px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 15px;"></select>
                 </div>
-                
                 <div class="form-group"><label>緊急聯絡人</label><input type="text" id="emergency_contact"></div>
                 <div class="form-group"><label>緊急聯絡電話</label><input type="text" id="emergency_phone"></div>
                 <div class="form-group full-width"><label>通訊地址</label><input type="text" id="address"></div>
@@ -97,23 +93,41 @@
               <div class="form-grid">
                 <div class="form-group"><label>在職狀態</label><select id="status"><option value="在職">在職</option><option value="離職">離職</option></select></div>
                 <div class="form-group"><label>到職日期</label><input type="date" id="hire_date"></div>
-                
-                <div class="form-group full-width" style="border-top: 1px dashed var(--border); margin-top: 15px; padding-top: 20px;">
-                  <label style="color: var(--primary); font-size: 16px;"><span class="material-symbols-outlined" style="vertical-align:middle;">payments</span> 薪資計算參數設定 (HR專用)</label>
-                </div>
+                <div class="form-group full-width" style="border-top: 1px dashed var(--border); margin-top: 15px; padding-top: 20px;"><label style="color: var(--primary); font-size: 16px;"><span class="material-symbols-outlined" style="vertical-align:middle;">payments</span> 薪資計算參數設定 (HR專用)</label></div>
                 <div class="form-group"><label>固定底薪 (NT$)</label><input type="number" id="base_salary" value="0" min="0"></div>
                 <div class="form-group"><label>授課時薪 (NT$)</label><input type="number" id="hourly_rate" value="0" min="0"></div>
               </div>
             </div>
 
-            <div class="actions" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
-              <button type="submit" class="btn btn-primary" id="submit-btn" style="font-size: 16px; padding: 12px 24px;"><span class="material-symbols-outlined">save</span> 儲存人事檔案</button>
-            </div>
+            <div class="actions" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);"><button type="submit" class="btn btn-primary" id="submit-btn" style="font-size: 16px; padding: 12px 24px;"><span class="material-symbols-outlined">save</span> 儲存人事檔案</button></div>
           </form>
         </div>
       </div>
     </div>
   </main>
+
+  <div class="modal-overlay" id="account-setup-modal">
+    <div class="modal-content" style="max-width: 450px;">
+      <span class="material-symbols-outlined modal-close" onclick="window.closeAccountSetupModal()">close</span>
+      <h2 style="margin-top: 0; color: var(--primary);">為 <span id="setup-staff-name" style="color: var(--text-main);"></span> 開通帳號</h2>
+      <div style="font-size: 13px; color: var(--text-light); margin-bottom: 20px;">這將直接綁定該人員的 HR 檔案與系統登入權限。</div>
+      <form id="account-setup-form">
+        <input type="hidden" id="setup-staff-id">
+        <div class="form-group" style="margin-bottom: 15px;"><label>登入 Email <span style="color:red">*</span></label><input type="email" id="setup-email" required placeholder="例：teacher@yanghe.tw"></div>
+        <div class="form-group" style="margin-bottom: 15px;"><label>預設密碼 <span style="color:red">*</span></label><input type="text" id="setup-pwd" required placeholder="建議使用身分證字號"></div>
+        <div class="form-group" style="margin-bottom: 25px;">
+          <label>指派系統權限 <span style="color:red">*</span></label>
+          <select id="setup-role" required>
+            <option value="teacher">授課教師</option>
+            <option value="admin">分校櫃檯</option>
+            <option value="manager">分校主任</option>
+            <option value="superadmin">總管理員</option>
+          </select>
+        </div>
+        <div class="actions"><button type="button" class="btn btn-cancel" onclick="window.closeAccountSetupModal()">取消</button><button type="submit" class="btn btn-primary" id="btn-setup-submit">確認開通</button></div>
+      </form>
+    </div>
+  </div>
 
   <div class="modal-overlay" id="custom-dialog" style="z-index: 9999;"><div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;"><div id="dialog-icon" style="margin-bottom: 15px;"></div><h3 id="dialog-title" style="margin-top: 0; color: var(--text-main); font-size: 20px;">提示</h3><p id="dialog-message" style="color: var(--text-light); margin-bottom: 25px; line-height: 1.5; font-size: 15px;"></p><div style="display: flex; gap: 10px; justify-content: center;"><button class="btn btn-cancel" id="dialog-btn-cancel" style="display: none;">取消</button><button class="btn btn-primary" id="dialog-btn-confirm">確定</button></div></div></div>
 
