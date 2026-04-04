@@ -49,7 +49,7 @@ function renderTable() {
         <td><span style="font-weight:600;">${s.email}</span></td>
         <td>${roleDisplay}</td>
         <td>${branchName}</td>
-        <td><span style="color:#15803d; font-weight:bold; font-size:12px;">✅ 正常啟用</span></td>
+        <td><span style="color:#15803d; font-weight:bold; font-size:12px; display:inline-flex; align-items:center; gap:4px;"><span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>正常啟用</span></td>
         <td>
           <button class="btn-icon" style="color:var(--danger);" title="撤銷帳號" onclick="window.revokeAccount('${s.id}', '${s.name}')"><span class="material-symbols-outlined" style="font-size:18px;">no_accounts</span></button>
         </td>
@@ -70,11 +70,9 @@ accountForm.addEventListener('submit', async (e) => {
     const targetStaff = allStaff.find(s => s.id === staffId)
     const initialPassword = targetStaff.id_number || '123456'
 
-    // 1. 使用 Admin Client 偷偷建立帳號
     const { data: authData, error: authError } = await adminAuthClient.auth.signUp({ email: email, password: initialPassword })
     if (authError) throw new Error('系統帳號建立失敗：' + authError.message)
     
-    // 2. 將建立的 auth_id 綁定回教職員檔案，並更新他的角色與信箱
     const { error: updateError } = await supabase.from('staff').update({ auth_id: authData.user.id, email: email, role: role }).eq('id', staffId)
     if (updateError) throw updateError
 
@@ -84,7 +82,6 @@ accountForm.addEventListener('submit', async (e) => {
   finally { btn.disabled = false; btn.textContent = '確認開通帳號' }
 })
 
-// 撤銷帳號 (我們在前端只移除連結，實務上可用 Edge Function 刪除 Auth)
 window.revokeAccount = async (id, name) => {
   const confirm = await window.showCustomDialog('撤銷帳號', `確定要撤銷 ${name} 的系統登入權限嗎？`, 'confirm', 'warning')
   if (!confirm) return
