@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>系統帳號權限管理 (IT) - 補習班系統</title>
+  <title>系統帳號權限管理 - 陽禾文理補習班管理系統</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css" />
 </head>
@@ -39,6 +39,7 @@
     <div class="modal-content" style="max-width: 500px;">
       <span class="material-symbols-outlined modal-close" onclick="window.closeAccountModal()">close</span>
       <h2 style="margin-top: 0; color: var(--primary);">開通系統存取權限</h2>
+      
       <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #1e3a8a;">
         <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">info</span> 
         系統將為該人員建立登入帳號。<b>預設密碼為該人員的身分證字號</b> (若無則預設為 123456)。
@@ -57,10 +58,10 @@
           <div class="form-group">
             <label>指派系統權限 <span style="color:red">*</span></label>
             <select id="role" required>
-              <option value="teacher">👨‍🏫 授課教師 (僅能查看/管理自己任課的班級)</option>
-              <option value="admin">🖥️ 分校櫃檯 (可管理該分校所有教務與財務)</option>
-              <option value="manager">💼 分校主任 (可管理該分校並開通帳號)</option>
-              <option value="superadmin">👑 總部管理員 (擁有全域跨分校最高權限)</option>
+              <option value="teacher">授課教師 (僅能查看/管理自己任課的班級)</option>
+              <option value="admin">分校櫃檯 (可管理該分校所有教務與財務)</option>
+              <option value="manager">分校主任 (可管理該分校並開通帳號)</option>
+              <option value="superadmin">總部管理員 (擁有全域跨分校最高權限)</option>
             </select>
           </div>
         </div>
