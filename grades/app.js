@@ -1,7 +1,7 @@
 import { supabase } from '../config.js'
 
 const viewClasses = document.getElementById('view-classes'); const viewExams = document.getElementById('view-exams'); const viewEditor = document.getElementById('view-editor')
-const classGrid = document.getElementById('class-grid'); const examList = document.getElementById('exam-list'); const rosterList = document.getElementById('roster-list')
+const classListContainer = document.getElementById('class-list'); const examList = document.getElementById('exam-list'); const rosterList = document.getElementById('roster-list')
 const subjectModal = document.getElementById('subject-modal'); const subjectForm = document.getElementById('subject-form'); const subjectListContainer = document.getElementById('subject-list')
 
 let currentClassId = null; let currentClassName = ''; let rosterData = []; let hasUnsavedChanges = false
@@ -35,21 +35,35 @@ async function loadSubjects() {
 }
 
 async function loadClasses() {
-  let query = supabase.from('classes').select('id, name, branches(name), staff!classes_teacher_id_fkey(name)')
+  let query = supabase.from('classes').select('id, name, branches(name), staff!classes_teacher_id_fkey(name), tutor:staff!classes_tutor_id_fkey(name)')
+  
+  // 💡 RBAC 權限過濾：老師只看見自己的班級
   const user = window.currentUser
   if (user) {
-    if (user.role === 'teacher') query = query.eq('teacher_id', user.id)
-    else if (user.role === 'admin' || user.role === 'manager') query = query.eq('branch_id', user.branch_id)
+    if (user.role === 'teacher') {
+      query = query.or(`teacher_id.eq.${user.id},tutor_id.eq.${user.id}`)
+    } else if (user.role === 'admin' || user.role === 'manager') {
+      query = query.eq('branch_id', user.branch_id)
+    }
   }
-  const { data } = await query.order('created_at', { ascending: false })
-  classGrid.innerHTML = ''
-  if (!data || data.length === 0) { classGrid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: var(--text-light); padding: 30px;">查無授權管理之班級</div>'; return }
+
+  const { data, error } = await query.order('created_at', { ascending: false })
+  classListContainer.innerHTML = ''
+  if (error || !data || data.length === 0) { classListContainer.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-light); padding: 30px;">查無授權管理之班級</td></tr>'; return }
+  
   data.forEach(c => {
-    classGrid.innerHTML += `
-      <div class="class-card" onclick="window.openClassExams('${c.id}', '${c.name}', '${c.branches?.name || ''}', '${c.staff?.name || ''}')">
-        <div class="class-card-header"><div class="class-card-title">${c.name}</div><span class="material-symbols-outlined" style="color:var(--primary);">arrow_forward_ios</span></div>
-        <div class="class-card-subtitle"><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">domain</span> ${c.branches?.name || '無分校'} &nbsp;|&nbsp; <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">person</span> ${c.staff?.name || '未指派'}</div>
-      </div>`
+    const branchName = c.branches ? c.branches.name : '-'
+    const teacherName = c.staff ? c.staff.name : '<span style="color:#9ca3af;">未指派</span>'
+    const tutorName = c.tutor ? c.tutor.name : '<span style="color:#9ca3af;">未指派</span>'
+
+    classListContainer.innerHTML += `
+      <tr>
+        <td><strong>${c.name}</strong></td>
+        <td>${branchName}</td>
+        <td><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle; color:var(--text-light);">person</span> ${teacherName}</td>
+        <td><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle; color:var(--text-light);">assignment_ind</span> ${tutorName}</td>
+        <td><button class="btn btn-primary" style="padding: 6px 12px; font-size: 13px;" onclick="window.openClassExams('${c.id}', '${c.name}', '${branchName}', '${teacherName}')">進入登錄</button></td>
+      </tr>`
   })
 }
 
@@ -69,7 +83,7 @@ async function loadExamsList() {
     examList.innerHTML += `
       <tr>
         <td>${e.exam_date}</td><td><strong>${e.exam_name}</strong> <span style="font-size:12px; color:var(--text-light);">(${e.subject})</span></td>
-        <td>${avgHtml}</td><td><span style="color:#15803d;">${e.high_score !== null ? e.high_score : '-'}</span></td><td><span style="color:#b91c1c;">${e.low_score !== null ? e.low_score : '-'}</span></td>
+        <td>${avgHtml}</td><td><span style="color:#15803d; font-weight:bold;">${e.high_score !== null ? e.high_score : '-'}</span></td><td><span style="color:#b91c1c; font-weight:bold;">${e.low_score !== null ? e.low_score : '-'}</span></td>
         <td><button class="btn-icon" onclick="window.openExamEditor('${e.id}')"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button></td>
       </tr>`
   })
@@ -82,12 +96,10 @@ window.openExamEditor = async (examId = null) => {
     const { data: exam } = await supabase.from('class_exams').select('*').eq('id', examId).single()
     if (exam) { document.getElementById('exam_name').value = exam.exam_name; document.getElementById('subject').value = exam.subject; document.getElementById('exam_date').value = exam.exam_date; }
   } else {
-    document.getElementById('editor-title').textContent = `新增測驗 (${currentClassName})`
-    document.getElementById('exam_date').value = new Date().toISOString().split('T')[0]
+    document.getElementById('editor-title').textContent = `新增測驗 (${currentClassName})`; document.getElementById('exam_date').value = new Date().toISOString().split('T')[0]
   }
   
-  rosterList.innerHTML = '<tr><td colspan="3" style="text-align:center;">載入名單中...</td></tr>'
-  window.switchView('editor')
+  rosterList.innerHTML = '<tr><td colspan="3" style="text-align:center;">載入名單中...</td></tr>'; window.switchView('editor')
 
   const { data: students } = await supabase.from('class_students').select('student_id, students(name, student_number)').eq('class_id', currentClassId)
   let existingScores = {}
@@ -111,14 +123,9 @@ window.openExamEditor = async (examId = null) => {
 }
 
 window.calcStats = () => {
-  hasUnsavedChanges = true
-  const inputs = document.querySelectorAll('.row-score'); let total = 0, count = 0, high = -1, low = 999
-  inputs.forEach(inp => {
-    const v = inp.value; if(v !== '') { const num = parseFloat(v); total += num; count++; if(num > high) high = num; if(num < low) low = num }
-  })
-  document.getElementById('stat-avg').textContent = count > 0 ? (total/count).toFixed(1) : '-'
-  document.getElementById('stat-high').textContent = count > 0 ? high : '-'
-  document.getElementById('stat-low').textContent = count > 0 ? low : '-'
+  hasUnsavedChanges = true; const inputs = document.querySelectorAll('.row-score'); let total = 0, count = 0, high = -1, low = 999
+  inputs.forEach(inp => { const v = inp.value; if(v !== '') { const num = parseFloat(v); total += num; count++; if(num > high) high = num; if(num < low) low = num } })
+  document.getElementById('stat-avg').textContent = count > 0 ? (total/count).toFixed(1) : '-'; document.getElementById('stat-high').textContent = count > 0 ? high : '-'; document.getElementById('stat-low').textContent = count > 0 ? low : '-'
 }
 
 window.saveExamData = async () => {
@@ -134,8 +141,7 @@ window.saveExamData = async () => {
     if (examId) await supabase.from('class_exams').update(examPayload).eq('id', examId)
     else { const { data } = await supabase.from('class_exams').insert([examPayload]).select(); targetExamId = data[0].id }
 
-    const rows = document.querySelectorAll('#roster-list tr')
-    const gradesPayload = []
+    const rows = document.querySelectorAll('#roster-list tr'); const gradesPayload = []
     rows.forEach(tr => {
       const sId = tr.querySelector('.row-student-id').value; const scoreStr = tr.querySelector('.row-score').value; const note = tr.querySelector('.row-note').value
       gradesPayload.push({ exam_id: targetExamId, student_id: sId, score: scoreStr===''?null:parseFloat(scoreStr), note: note||null })
@@ -149,15 +155,10 @@ window.saveExamData = async () => {
   } catch (err) { await window.showCustomDialog('錯誤', err.message, 'alert', 'error') } finally { btn.disabled = false; btn.innerHTML = '<span class="material-symbols-outlined">save</span> 儲存成績與發布' }
 }
 
-window.handleBackFromEditor = async () => {
-  if (hasUnsavedChanges) { const confirm = await window.showCustomDialog('確認離開', '有尚未儲存的成績，確定要放棄變更嗎？', 'confirm', 'warning'); if(!confirm) return }
-  window.switchView('exams')
-}
+window.handleBackFromEditor = async () => { if (hasUnsavedChanges) { const confirm = await window.showCustomDialog('確認離開', '有尚未儲存的成績，確定要放棄變更嗎？', 'confirm', 'warning'); if(!confirm) return }; window.switchView('exams') }
 
-// Excel 貼上支援
 document.addEventListener('paste', (e) => {
-  if (!viewEditor.classList.contains('active')) return
-  const target = e.target; if (!target.classList.contains('row-score')) return
+  if (!viewEditor.classList.contains('active')) return; const target = e.target; if (!target.classList.contains('row-score')) return
   e.preventDefault(); const pasteData = (e.clipboardData || window.clipboardData).getData('text')
   const rows = pasteData.split(/\r\n|\n|\r/); let currentIdx = parseInt(target.getAttribute('data-idx'))
   const inputs = document.querySelectorAll('.row-score')
@@ -170,4 +171,4 @@ window.closeSubjectModal = () => subjectModal.style.display = 'none'
 subjectForm.addEventListener('submit', async (e) => { e.preventDefault(); const val = document.getElementById('new-subject').value.trim(); if(val){ await supabase.from('subjects').insert([{name: val}]); document.getElementById('new-subject').value=''; loadSubjects() } })
 window.deleteSubject = async (id) => { const confirm = await window.showCustomDialog('刪除科目', '確定要刪除嗎？', 'confirm', 'delete'); if(confirm){ await supabase.from('subjects').delete().eq('id', id); loadSubjects() } }
 
-initData(); loadSubjects(); loadClasses()
+loadSubjects(); loadClasses()
