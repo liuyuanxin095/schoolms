@@ -1,39 +1,54 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 import { initSidebar } from './sidebar.js'
 
-// 1. 基礎連線設定
-export const supabaseUrl = 'https://gqxvgwpccydkktavblao.supabase.co';
-export const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeHZnd3BjY3lka2t0YXZibGFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDc4MDYsImV4cCI6MjA4OTkyMzgwNn0.nikwxfuqc2WMlytVrnfLeBsqWOySN0_WSYFqKjM6yvM';
-const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeHZnd3BjY3lka2t0YXZibGFvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDM0NzgwNiwiZXhwIjoyMDg5OTIzODA2fQ.fWHfq8mAURiCermtWiG0oCkCvJaEx8zLwUqlF3_-5mQ';
+// ⚠️ 請換成你自己的 Supabase URL 與 Anon Key
+const supabaseUrl = 'https://gqxvgwpccydkktavblao.supabase.co' 
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeHZnd3BjY3lka2t0YXZibGFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDc4MDYsImV4cCI6MjA4OTkyMzgwNn0.nikwxfuqc2WMlytVrnfLeBsqWOySN0_WSYFqKjM6yvM'
 
-// 💡 整個系統「唯一」的連線實例
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey)
 
-export const adminAuthClient = createClient(supabaseUrl, S_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false }
-});
+export const adminAuthClient = createClient(supabaseUrl, supabaseKey, {
+  auth: { persistSession: false, autoRefreshToken: false }
+})
 
-// 2. 登入監聽 (僅做身分確認與畫 Sidebar)
-supabase.auth.onAuthStateChange(async (event, session) => {
-  const path = window.location.pathname.toLowerCase();
-  if (path.includes('parent')) return;
+// 全域使用者狀態
+window.currentUser = null;
 
-  if (!session && !path.includes('login.html')) {
-    window.location.replace('/schoolms/login.html');
-    return;
+// ==========================================
+// 🛡️ 權限防護罩與身分載入引擎 (Auth Guard & RBAC)
+// ==========================================
+async function initializeSystem() {
+  const currentPath = window.location.pathname
+  const isLoginPage = currentPath.includes('login.html')
+  const isInSubfolder = currentPath.match(/\/(students|staff|classes|attendance|grades|payments|notifications|classrooms|meals|accounts)\//)
+  
+  const loginUrl = isInSubfolder ? '../login.html' : './login.html'
+  const indexUrl = isInSubfolder ? '../index.html' : './index.html'
+
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session && !isLoginPage) {
+    window.location.replace(loginUrl)
+    return
+  } else if (session && isLoginPage) {
+    window.location.replace(indexUrl)
+    return
   }
 
-  if (session && !path.includes('login.html')) {
-    try {
-      const { data } = await supabase.from('staff').select('*, branches(name)').eq('auth_id', session.user.id).maybeSingle();
-      window.currentUser = data || { name: '管理員', role: 'superadmin' };
-      
-      // 檢查是否已經有 Sidebar，避免重複畫
-      if (!document.getElementById('global-sidebar')) {
-        initSidebar(supabase);
-      }
-    } catch (e) {
-      console.error("Sidebar 初始化失敗", e);
+  // 如果已登入，抓取使用者的詳細權限與分校資料
+  if (session) {
+    const { data: userData, error } = await supabase.from('staff').select('*, branches(name)').eq('auth_id', session.user.id).maybeSingle()
+    
+    if (userData) {
+      window.currentUser = userData
+    } else {
+      // 若是最初的超級管理員(尚未建立staff檔案)，給予預設最高權限
+      window.currentUser = { name: '系統管理員', role: 'superadmin', branch_id: 'all' }
     }
+    
+    // 身分載入完成後，才繪製側邊欄
+    initSidebar(supabase)
   }
-});
+}
+
+initializeSystem()
