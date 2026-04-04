@@ -6,34 +6,24 @@
   <title>陽禾家長專區</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <style>
-    /* 📱 手機原生 APP 風格設定 */
     :root { --primary: #3b82f6; --bg: #f8fafc; --surface: #ffffff; --text-main: #1e293b; --text-light: #64748b; --border: #e2e8f0; }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text-main); padding-bottom: 70px; }
-    
-    /* 頂部導覽 */
     .app-header { background: var(--primary); color: white; padding: 20px 20px 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(59,130,246,0.3); border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
     .app-header h1 { margin: 0; font-size: 20px; font-weight: bold; }
     .app-header p { margin: 5px 0 0 0; font-size: 13px; opacity: 0.9; }
-
-    /* 內容區與卡片 */
     .content { padding: 20px; }
     .card { background: var(--surface); border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.02); }
     .card-title { font-size: 16px; font-weight: bold; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
-    
-    /* 登入畫面 */
     #login-screen { display: flex; flex-direction: column; justify-content: center; height: 80vh; padding: 30px; }
     .input-box { width: 100%; padding: 15px; border: 2px solid var(--border); border-radius: 12px; font-size: 16px; margin-bottom: 20px; outline: none; transition: 0.2s; }
     .input-box:focus { border-color: var(--primary); }
-    .btn-login { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(59,130,246,0.3); }
-
-    /* 底部導覽列 Bottom Navigation */
+    .btn-login { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(59,130,246,0.3); transition: 0.2s; }
+    .btn-login:active { transform: scale(0.98); }
     .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding-bottom: env(safe-area-inset-bottom); z-index: 100; }
     .nav-item { flex: 1; text-align: center; padding: 12px 0; color: var(--text-light); font-size: 11px; cursor: pointer; }
     .nav-item.active { color: var(--primary); }
     .nav-item .material-symbols-outlined { display: block; font-size: 24px; margin-bottom: 4px; margin-left: auto; margin-right: auto; }
-
-    /* 隱藏區塊 */
     .view { display: none; animation: fadeIn 0.3s ease; }
     .view.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -48,12 +38,12 @@
       <p style="color: var(--text-light); margin: 0;">隨時掌握孩子的學習狀況</p>
     </div>
     <input type="text" id="student-number" class="input-box" placeholder="請輸入孩子學號 (例：SD1001)">
-    <button class="btn-login" onclick="window.parentLogin()">綁定並登入</button>
+    <button class="btn-login" id="login-btn" onclick="window.parentLogin()">綁定並登入</button>
   </div>
 
   <div id="main-screen" class="view">
     <header class="app-header">
-      <h1 id="student-name">王小明 同學</h1>
+      <h1 id="student-name">載入中...</h1>
       <p id="student-branch">陽禾補習班</p>
     </header>
 
@@ -75,9 +65,7 @@
 
       <div class="card">
         <h2 class="card-title"><span class="material-symbols-outlined" style="color: #f59e0b;">workspace_premium</span> 最近一次測驗</h2>
-        <div id="latest-grade">
-          <div style="text-align: center; color: var(--text-light); padding: 10px;">載入中...</div>
-        </div>
+        <div id="latest-grade"><div style="text-align: center; color: var(--text-light); padding: 10px;">載入中...</div></div>
       </div>
     </div>
 
@@ -89,56 +77,60 @@
   </div>
 
   <script type="module">
-    import { supabase } from '../config.js'; // 載入你寫好的資料庫設定
-
-    let currentStudentId = null;
+    import { supabase } from '../config.js?v=999'; 
 
     window.parentLogin = async () => {
+      const btn = document.getElementById('login-btn');
       const num = document.getElementById('student-number').value.trim();
       if (!num) return alert('請輸入學號！');
 
-      // 1. 查詢學生資料
-      const { data: student, error } = await supabase.from('students').select('*, branches(name)').eq('student_number', num).maybeSingle();
-      
-      if (!student) return alert('查無此學號，請確認後再試！');
+      btn.textContent = '連線中...';
+      btn.disabled = true;
 
-      // 2. 切換畫面與設定名稱
-      currentStudentId = student.id;
-      document.getElementById('student-name').textContent = `${student.name} 同學`;
-      document.getElementById('student-branch').textContent = student.branches ? student.branches.name : '陽禾補習班';
-      
-      document.getElementById('login-screen').classList.remove('active');
-      document.getElementById('main-screen').classList.add('active');
+      try {
+        // 防呆：檢查 Supabase 有沒有正確載入
+        if (!supabase) throw new Error('資料庫無法連線，請檢查 config.js 裡的金鑰是否正確！');
 
-      // 3. 載入今日出勤
-      const todayStr = new Date().toISOString().split('T')[0];
-      const { data: att } = await supabase.from('attendance').select('*').match({ student_id: student.id, record_date: todayStr }).maybeSingle();
-      if (att) {
-        document.getElementById('att-in').textContent = att.check_in ? new Date(att.check_in).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
-        document.getElementById('att-out').textContent = att.check_out ? new Date(att.check_out).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
-        if (att.status === '請假') {
-          document.getElementById('att-in').textContent = '已請假';
-          document.getElementById('att-out').textContent = '已請假';
-          document.getElementById('att-in').style.color = '#f59e0b';
+        const { data: student, error } = await supabase.from('students').select('*, branches(name)').eq('student_number', num).maybeSingle();
+        
+        if (error) throw error;
+        if (!student) {
+          throw new Error('查無此學號！\n\n(若確定學號無誤，請確認您是否有在 Supabase 執行「允許家長查詢學生」的 RLS 開放語法)');
         }
-      }
 
-      // 4. 載入最新成績
-      const { data: grades } = await supabase.from('grades').select('score, note, class_exams(exam_name, subject)').eq('student_id', student.id).order('created_at', { ascending: false }).limit(1);
-      
-      const gradeContainer = document.getElementById('latest-grade');
-      if (grades && grades.length > 0) {
-        const g = grades[0];
-        gradeContainer.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <div style="font-weight:bold;">${g.class_exams.exam_name}</div>
-            <div style="background:#eff6ff; color:#3b82f6; padding:4px 8px; border-radius:6px; font-size:12px;">${g.class_exams.subject}</div>
-          </div>
-          <div style="font-size:36px; font-weight:bold; color:var(--text-main); margin-bottom:10px;">${g.score !== null ? g.score : '缺考'} <span style="font-size:14px; font-weight:normal; color:var(--text-light);">分</span></div>
-          <div style="font-size:13px; color:var(--text-light); background:#f8fafc; padding:10px; border-radius:8px; border:1px solid var(--border);">老師評語：${g.note || '無'}</div>
-        `;
-      } else {
-        gradeContainer.innerHTML = '<div style="color:var(--text-light); text-align:center;">近期尚無測驗紀錄</div>';
+        document.getElementById('student-name').textContent = `${student.name} 同學`;
+        document.getElementById('student-branch').textContent = student.branches ? student.branches.name : '陽禾補習班';
+        document.getElementById('login-screen').classList.remove('active');
+        document.getElementById('main-screen').classList.add('active');
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const { data: att } = await supabase.from('attendance').select('*').match({ student_id: student.id, record_date: todayStr }).maybeSingle();
+        if (att) {
+          document.getElementById('att-in').textContent = att.check_in ? new Date(att.check_in).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
+          document.getElementById('att-out').textContent = att.check_out ? new Date(att.check_out).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
+          if (att.status === '請假') { document.getElementById('att-in').textContent = '已請假'; document.getElementById('att-out').textContent = '已請假'; document.getElementById('att-in').style.color = '#f59e0b'; }
+        }
+
+        const { data: grades } = await supabase.from('grades').select('score, note, class_exams(exam_name, subject)').eq('student_id', student.id).order('created_at', { ascending: false }).limit(1);
+        const gradeContainer = document.getElementById('latest-grade');
+        if (grades && grades.length > 0) {
+          const g = grades[0];
+          gradeContainer.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div style="font-weight:bold;">${g.class_exams.exam_name}</div>
+              <div style="background:#eff6ff; color:#3b82f6; padding:4px 8px; border-radius:6px; font-size:12px;">${g.class_exams.subject}</div>
+            </div>
+            <div style="font-size:36px; font-weight:bold; color:var(--text-main); margin-bottom:10px;">${g.score !== null ? g.score : '缺考'} <span style="font-size:14px; font-weight:normal; color:var(--text-light);">分</span></div>
+            <div style="font-size:13px; color:var(--text-light); background:#f8fafc; padding:10px; border-radius:8px; border:1px solid var(--border);">老師評語：${g.note || '無'}</div>
+          `;
+        } else {
+          gradeContainer.innerHTML = '<div style="color:var(--text-light); text-align:center;">近期尚無測驗紀錄</div>';
+        }
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.textContent = '綁定並登入';
+        btn.disabled = false;
       }
     };
   </script>
