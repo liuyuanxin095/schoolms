@@ -23,31 +23,26 @@ export const adminAuthClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, 
 // 2. 全域路由與登入狀態防護罩 (Router Guard)
 // ==========================================
 supabase.auth.onAuthStateChange(async (event, session) => {
-  const currentPath = window.location.pathname;
-  
-  // 判斷當前所在頁面的類型
+  // 💡 將網址轉為小寫，並放寬判定條件，只要包含 parent 就放行
+  const currentPath = window.location.pathname.toLowerCase();
   const isLoginPage = currentPath.includes('login.html');
-  const isParentApp = currentPath.includes('/parent/');
+  const isParentApp = currentPath.includes('parent');
 
-  // 💡 情境 A：尚未登入
   if (!session) {
-    // 如果不在登入頁，且不是在家長端 APP，一律強制踢回後台登入頁
     if (!isLoginPage && !isParentApp) {
-      window.location.replace('/schoolms/login.html'); // 根據您的 GitHub repo 名稱定位
+      window.location.replace('/schoolms/login.html'); 
     }
-    return;
+    return; // 家長未登入狀態，直接停在這裡，不產生側邊欄
   }
 
-  // 💡 情境 B：已登入，但卡在登入頁 (防止重複登入)
   if (session && isLoginPage) {
     window.location.replace('/schoolms/index.html');
     return;
   }
 
-  // 💡 情境 C：已登入，且在後台管理系統中 (需抓取人事權限與側邊欄)
+  // 💡 只有「已登入」且「不是在家長端」，才去抓取人事權限與側邊欄
   if (session && !isParentApp) {
     try {
-      // 根據登入的 Auth ID，去人事名冊 (staff) 抓取該員工的詳細資料與分校
       const { data: staffData, error } = await supabase
         .from('staff')
         .select('*, branches(name)')
@@ -55,18 +50,12 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         .single();
 
       if (error) throw error;
-      
-      // 將員工資料存入全域變數，供各模組讀取權限 (RBAC)
       window.currentUser = staffData;
       
-      // 確保側邊欄只被繪製一次
       if (!document.getElementById('global-sidebar')) {
         initSidebar(supabase);
       }
-      
     } catch (err) {
-      console.error('無法獲取使用者權限資料:', err);
-      // 如果在 staff 表找不到這筆資料 (可能被 IT 撤銷帳號了)，強制登出
       await supabase.auth.signOut();
       window.location.replace('/schoolms/login.html');
     }
