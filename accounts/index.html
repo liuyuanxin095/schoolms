@@ -21,12 +21,12 @@
       <div class="card">
         <div class="toolbar">
           <h2 class="toolbar-title"><span class="material-symbols-outlined">admin_panel_settings</span>系統存取帳號列表</h2>
-          <button class="btn btn-primary" onclick="window.openAccountModal()"><span class="material-symbols-outlined">key</span>獨立開通新帳號</button>
+          <button class="btn btn-primary" onclick="window.openAccountModal()"><span class="material-symbols-outlined">key</span>為現有人員開通帳號</button>
         </div>
         
         <div class="table-responsive">
           <table>
-            <thead><tr><th>綁定人員姓名</th><th>登入 Email 帳號</th><th>系統權限角色</th><th>所屬分校</th><th>狀態</th><th>操作</th></tr></thead>
+            <thead><tr><th>綁定 HR 人事姓名</th><th>登入 Email 帳號</th><th>系統權限角色</th><th>主要分校</th><th>狀態</th><th>操作</th></tr></thead>
             <tbody id="account-list"><tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr></tbody>
           </table>
         </div>
@@ -37,30 +37,26 @@
   <div class="modal-overlay" id="account-modal">
     <div class="modal-content" style="max-width: 500px;">
       <span class="material-symbols-outlined modal-close" onclick="window.closeAccountModal()">close</span>
-      <h2 style="margin-top: 0; color: var(--primary);">開通系統存取權限</h2>
+      <h2 style="margin-top: 0; color: var(--primary);">綁定與開通登入權限</h2>
       
       <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #1e3a8a; line-height: 1.5;">
         <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">info</span> 
-        建立帳號時，系統會自動在「人事管理系統」中同步建立一筆基本檔案。<b>預設密碼建議使用身分證字號</b>。
+        請選擇尚未開通帳號的人事檔案。基於權限安全，所有登入帳號必須綁定一筆現有的 HR 人事資料。
       </div>
       
       <form id="account-form">
         <div class="form-grid" style="grid-template-columns: 1fr;">
           <div class="form-group">
+            <label>選擇綁定人員 (HR名冊) <span style="color:red">*</span></label>
+            <select id="staff_id" required onchange="window.autoFillAccountInfo()"><option value="" disabled selected>載入中...</option></select>
+          </div>
+          <div class="form-group">
             <label>設定登入 Email 帳號 <span style="color:red">*</span></label>
-            <input type="email" id="email" required placeholder="例：admin@yanghe.tw">
+            <input type="email" id="email" required placeholder="例：teacher@yanghe.tw">
           </div>
           <div class="form-group">
-            <label>人員姓名 (顯示於系統) <span style="color:red">*</span></label>
-            <input type="text" id="acc_name" required placeholder="例：王小明">
-          </div>
-          <div class="form-group">
-            <label>預設登入密碼 (建議使用身分證) <span style="color:red">*</span></label>
-            <input type="text" id="id_number" required placeholder="請輸入預設密碼 / 身分證字號">
-          </div>
-          <div class="form-group">
-            <label>所屬主要分校 <span style="color:red">*</span></label>
-            <select id="branch_id" required><option value="" disabled selected>載入中...</option></select>
+            <label>預設登入密碼 <span style="color:red">*</span></label>
+            <input type="text" id="id_number" required placeholder="身分證字號或自訂密碼">
           </div>
           <div class="form-group">
             <label>指派系統權限 <span style="color:red">*</span></label>
