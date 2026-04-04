@@ -3,105 +3,62 @@ import { supabase } from '../config.js'
 const branchList = document.getElementById('branch-list')
 const formModal = document.getElementById('form-modal')
 const branchForm = document.getElementById('branch-form')
-const formTitle = document.getElementById('form-title')
-const submitBtn = document.getElementById('submit-btn')
 
-// 讀取分校列表
+let allBranches = []
+
+window.showCustomDialog = (title, message, type = 'alert', icon = 'info') => { return new Promise((resolve) => { const dialog = document.getElementById('custom-dialog'); document.getElementById('dialog-title').textContent = title; document.getElementById('dialog-message').innerHTML = message.replace(/\n/g, '<br>'); const iconColor = type === 'confirm' ? '#f59e0b' : (type === 'error' ? '#dc2626' : '#3b82f6'); document.getElementById('dialog-icon').innerHTML = `<span class="material-symbols-outlined" style="font-size: 48px; color: ${iconColor};">${icon}</span>`; const btnCancel = document.getElementById('dialog-btn-cancel'); const btnConfirm = document.getElementById('dialog-btn-confirm'); btnCancel.style.display = type === 'confirm' ? 'block' : 'none'; const cleanup = () => { dialog.style.display = 'none'; btnConfirm.onclick = null; btnCancel.onclick = null }; btnConfirm.onclick = () => { cleanup(); resolve(true) }; btnCancel.onclick = () => { cleanup(); resolve(false) }; dialog.style.display = 'flex' }) }
+
 async function fetchBranches() {
   const { data, error } = await supabase.from('branches').select('*').order('created_at', { ascending: true })
-  if (error) {
-    branchList.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">${error.message}</td></tr>`
-    return
-  }
-  
-  branchList.innerHTML = ''
-  if (data.length === 0) {
-    branchList.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#6b7280; padding:30px;">目前沒有資料</td></tr>'
-    return
-  }
+  if (error) { branchList.innerHTML = `<tr><td colspan="5" style="color:red; text-align: center;">載入失敗</td></tr>`; return }
+  allBranches = data || []; renderTable()
+}
 
-  data.forEach(branch => {
-    const createdDate = new Date(branch.created_at).toLocaleDateString('zh-TW')
-    const row = document.createElement('tr')
-    row.innerHTML = `
-      <td><strong>${branch.name}</strong></td>
-      <td>${branch.address || '-'}</td>
-      <td>${branch.phone || '-'}</td>
-      <td style="color: var(--text-light);">${createdDate}</td>
-      <td>
-        <div class="action-btns">
-          <button class="btn-icon" onclick="window.openFormModal('${branch.id}')"><span class="material-symbols-outlined" style="font-size: 18px;">edit</span></button>
-          <button class="btn-icon" style="color: var(--danger);" onclick="window.deleteBranch('${branch.id}', '${branch.name}')"><span class="material-symbols-outlined" style="font-size: 18px;">delete</span></button>
-        </div>
-      </td>
-    `
-    branchList.appendChild(row)
+function renderTable() {
+  branchList.innerHTML = ''
+  if (allBranches.length === 0) { branchList.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-light); padding: 30px;">查無資料</td></tr>'; return }
+  allBranches.forEach(b => {
+    branchList.innerHTML += `
+      <tr>
+        <td><strong>${b.name}</strong></td>
+        <td>${b.receipt_header || '-'}</td>
+        <td>${b.phone || '-'}</td>
+        <td>${b.address || '-'}</td>
+        <td>
+          <button class="btn-icon" onclick="window.openFormModal('${b.id}')"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
+          <button class="btn-icon" style="color:var(--danger);" onclick="window.deleteBranch('${b.id}', '${b.name}')"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+        </td>
+      </tr>`
   })
 }
 
-// 開啟表單視窗 (如果有 id 就是修改，沒有就是新增)
-window.openFormModal = async (id = null) => {
-  branchForm.reset()
-  document.getElementById('branch-id').value = id || ''
-  
+window.openFormModal = (id = null) => {
+  branchForm.reset(); document.getElementById('branch-id').value = id || ''
   if (id) {
-    formTitle.textContent = '修改分校資料'
-    const { data } = await supabase.from('branches').select('*').eq('id', id).single()
-    if (data) {
-      document.getElementById('name').value = data.name || ''
-      document.getElementById('address').value = data.address || ''
-      document.getElementById('phone').value = data.phone || ''
+    document.getElementById('form-title').textContent = '修改分校資料'; const b = allBranches.find(x => x.id === id)
+    if (b) {
+      document.getElementById('name').value = b.name || ''; document.getElementById('receipt_header').value = b.receipt_header || ''
+      document.getElementById('phone').value = b.phone || ''; document.getElementById('address').value = b.address || ''
+      document.getElementById('receipt_footer').value = b.receipt_footer || ''
     }
-  } else {
-    formTitle.textContent = '新增分校'
-  }
+  } else { document.getElementById('form-title').textContent = '新增分校' }
   formModal.style.display = 'flex'
 }
+window.closeFormModal = () => formModal.style.display = 'none'
 
-window.closeFormModal = () => {
-  formModal.style.display = 'none'
-}
-
-// 送出表單 (智慧判斷 Insert 或 Update)
 branchForm.addEventListener('submit', async (e) => {
-  e.preventDefault()
-  submitBtn.disabled = true
-  submitBtn.textContent = '處理中...'
-
-  const id = document.getElementById('branch-id').value
-  const branchData = {
-    name: document.getElementById('name').value,
-    address: document.getElementById('address').value || null,
-    phone: document.getElementById('phone').value || null
-  }
-
-  let resultError;
-  if (id) {
-    // 修改
-    const { error } = await supabase.from('branches').update(branchData).eq('id', id)
-    resultError = error
-  } else {
-    // 新增
-    const { error } = await supabase.from('branches').insert([branchData])
-    resultError = error
-  }
-
-  submitBtn.disabled = false
-  submitBtn.textContent = '儲存資料'
-
-  if (resultError) {
-    alert('儲存失敗：' + resultError.message)
-  } else {
-    window.closeFormModal()
-    fetchBranches()
-  }
+  e.preventDefault(); const btn = document.getElementById('submit-btn'); btn.disabled = true; btn.textContent = '處理中...'
+  try {
+    const id = document.getElementById('branch-id').value
+    const payload = { name: document.getElementById('name').value, receipt_header: document.getElementById('receipt_header').value || null, phone: document.getElementById('phone').value || null, address: document.getElementById('address').value || null, receipt_footer: document.getElementById('receipt_footer').value || null }
+    const { error } = id ? await supabase.from('branches').update(payload).eq('id', id) : await supabase.from('branches').insert([payload])
+    if (error) throw error; window.closeFormModal(); await fetchBranches()
+  } catch (err) { await window.showCustomDialog('錯誤', err.message, 'alert', 'error') } finally { btn.disabled = false; btn.textContent = '儲存' }
 })
 
-// 刪除
 window.deleteBranch = async (id, name) => {
-  if (!confirm(`確定要刪除「${name}」嗎？`)) return
-  await supabase.from('branches').delete().eq('id', id)
-  fetchBranches()
+  const confirmDel = await window.showCustomDialog('確認刪除', `確定刪除分校「${name}」？此動作將影響該分校所有綁定資料！`, 'confirm', 'warning')
+  if (!confirmDel) return; await supabase.from('branches').delete().eq('id', id); fetchBranches()
 }
 
 fetchBranches()
