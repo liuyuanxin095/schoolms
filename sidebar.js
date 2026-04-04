@@ -1,12 +1,22 @@
-// sidebar.js - 全域側邊導覽列自動生成組件 (支援 RWD 與 修改密碼)
+// sidebar.js - 支援 RBAC 權限與登入者資訊
 
 export function initSidebar(supabase) {
   const currentPath = window.location.pathname;
   if (currentPath.includes('login.html')) return; 
 
-  const isSubfolder = currentPath.match(/\/(students|staff|classes|attendance|grades|payments|notifications|classrooms|meals)\//);
+  const isSubfolder = currentPath.match(/\/(students|staff|classes|attendance|grades|payments|notifications|classrooms|meals|accounts)\//);
   const basePath = isSubfolder ? '../' : './';
   const currentModule = isSubfolder ? isSubfolder[1] : 'home';
+
+  const user = window.currentUser || { name: '未知使用者', role: 'teacher' };
+  
+  // 角色中文名稱對照
+  const roleNameMap = { 'superadmin': '總部管理員', 'manager': '分校主任', 'admin': '分校櫃檯', 'teacher': '授課教師' };
+  const userRoleText = roleNameMap[user.role] || '教職員';
+  const userBranchText = user.branches ? user.branches.name : (user.role === 'superadmin' ? '全域總部' : '未綁定分校');
+
+  // 💡 權限控管：只有 superadmin 和 manager 可以看到「行政與帳號設定」模組
+  const showAdminMenu = user.role === 'superadmin' || user.role === 'manager';
 
   const sidebarHTML = `
     <aside class="sidebar" id="global-sidebar">
@@ -16,7 +26,7 @@ export function initSidebar(supabase) {
       </div>
       
       <div class="sidebar-menu">
-        <div style="font-size: 11px; color: #64748b; font-weight: bold; margin: 10px 0 5px 15px;">核心模組</div>
+        <div style="font-size: 11px; color: #64748b; font-weight: bold; margin: 10px 0 5px 15px;">核心業務</div>
         <a href="${basePath}index.html" class="menu-item ${currentModule === 'home' ? 'active' : ''}"><span class="material-symbols-outlined">dashboard</span> 首頁儀表板</a>
         <a href="${basePath}students/index.html" class="menu-item ${currentModule === 'students' ? 'active' : ''}"><span class="material-symbols-outlined">group</span> 學生管理</a>
         <a href="${basePath}classes/index.html" class="menu-item ${currentModule === 'classes' ? 'active' : ''}"><span class="material-symbols-outlined">class</span> 班級與排課</a>
@@ -24,22 +34,39 @@ export function initSidebar(supabase) {
         
         <div style="font-size: 11px; color: #64748b; font-weight: bold; margin: 20px 0 5px 15px;">教務與財務</div>
         <a href="${basePath}grades/index.html" class="menu-item ${currentModule === 'grades' ? 'active' : ''}"><span class="material-symbols-outlined">quiz</span> 成績管理</a>
+        <a href="${basePath}notifications/index.html" class="menu-item ${currentModule === 'notifications' ? 'active' : ''}"><span class="material-symbols-outlined">campaign</span> 班級通知</a>
+        ${user.role !== 'teacher' ? `
         <a href="${basePath}payments/index.html" class="menu-item ${currentModule === 'payments' ? 'active' : ''}"><span class="material-symbols-outlined">payments</span> 繳費管理</a>
         <a href="${basePath}meals/index.html" class="menu-item ${currentModule === 'meals' ? 'active' : ''}"><span class="material-symbols-outlined">restaurant</span> 餐費與訂餐</a>
+        ` : ''}
         
-        <div style="font-size: 11px; color: #64748b; font-weight: bold; margin: 20px 0 5px 15px;">行政系統</div>
-        <a href="${basePath}staff/index.html" class="menu-item ${currentModule === 'staff' ? 'active' : ''}"><span class="material-symbols-outlined">badge</span> 教職員與帳號管理</a>
+        ${showAdminMenu ? `
+        <div style="font-size: 11px; color: #64748b; font-weight: bold; margin: 20px 0 5px 15px;">行政與設定</div>
+        <a href="${basePath}staff/index.html" class="menu-item ${currentModule === 'staff' ? 'active' : ''}"><span class="material-symbols-outlined">badge</span> 教職員名冊 (HR)</a>
+        <a href="${basePath}accounts/index.html" class="menu-item ${currentModule === 'accounts' ? 'active' : ''}"><span class="material-symbols-outlined">manage_accounts</span> 系統帳號權限 (IT)</a>
         <a href="${basePath}classrooms/index.html" class="menu-item ${currentModule === 'classrooms' ? 'active' : ''}"><span class="material-symbols-outlined">meeting_room</span> 教室與行事曆</a>
-        <a href="${basePath}notifications/index.html" class="menu-item ${currentModule === 'notifications' ? 'active' : ''}"><span class="material-symbols-outlined">campaign</span> 班級通知</a>
+        ` : ''}
       </div>
       
-      <div class="sidebar-footer" style="display: flex; flex-direction: column; gap: 10px;">
-        <button class="btn" style="width: 100%; background: transparent; color: #cbd5e1; border: 1px solid #475569;" id="btn-global-pwd">
-          <span class="material-symbols-outlined" style="font-size: 18px;">key</span> 變更登入密碼
-        </button>
-        <button class="btn" style="width: 100%; background: #334155; color: #f8fafc; border: 1px solid #475569;" onclick="window.logout()">
-          <span class="material-symbols-outlined" style="font-size: 18px;">logout</span> 登出系統
-        </button>
+      <div class="sidebar-footer" style="background: #0f172a; padding: 15px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+          <div style="background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px;">
+            ${user.name.charAt(0)}
+          </div>
+          <div style="flex-grow: 1; overflow: hidden;">
+            <div style="color: white; font-weight: bold; font-size: 14px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${user.name}</div>
+            <div style="color: #94a3b8; font-size: 11px;">${userRoleText} · ${userBranchText}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 5px;">
+          <button class="btn" title="變更密碼" style="flex: 1; background: #334155; color: #cbd5e1; border: 1px solid #475569; padding: 8px;" id="btn-global-pwd">
+            <span class="material-symbols-outlined" style="font-size: 18px;">key</span>
+          </button>
+          <button class="btn" title="登出系統" style="flex: 1; background: #7f1d1d; color: #fca5a5; border: 1px solid #991b1b; padding: 8px;" onclick="window.logout()">
+            <span class="material-symbols-outlined" style="font-size: 18px;">logout</span>
+          </button>
+        </div>
       </div>
     </aside>
 
@@ -56,9 +83,7 @@ export function initSidebar(supabase) {
             <label>再次確認新密碼 <span style="color:red">*</span></label>
             <input type="password" id="global-confirm-pwd" required minlength="6">
           </div>
-          <div class="actions">
-            <button type="submit" class="btn btn-primary" style="width: 100%;">確認變更</button>
-          </div>
+          <div class="actions"><button type="submit" class="btn btn-primary" style="width: 100%;">確認變更</button></div>
         </form>
       </div>
     </div>
@@ -67,53 +92,29 @@ export function initSidebar(supabase) {
   document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
 
   // RWD 漢堡選單邏輯
-  const overlay = document.createElement('div');
-  overlay.className = 'sidebar-overlay';
-  document.body.appendChild(overlay);
-
+  const overlay = document.createElement('div'); overlay.className = 'sidebar-overlay'; document.body.appendChild(overlay);
   const headerLeft = document.querySelector('.header-left');
   if (headerLeft) {
-    const toggleBtn = document.createElement('button');
-    toggleBtn.className = 'menu-toggle';
-    toggleBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 28px;">menu</span>';
+    const toggleBtn = document.createElement('button'); toggleBtn.className = 'menu-toggle'; toggleBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 28px;">menu</span>';
     headerLeft.insertBefore(toggleBtn, headerLeft.firstChild);
-    
     const sidebar = document.getElementById('global-sidebar');
     const toggleSidebar = () => { sidebar.classList.toggle('open'); overlay.classList.toggle('active'); };
-    toggleBtn.addEventListener('click', toggleSidebar);
-    overlay.addEventListener('click', toggleSidebar);
+    toggleBtn.addEventListener('click', toggleSidebar); overlay.addEventListener('click', toggleSidebar);
   }
 
-  // 💡 綁定修改密碼邏輯
+  // 變更密碼綁定
   const pwdModal = document.getElementById('global-pwd-modal');
-  document.getElementById('btn-global-pwd').onclick = () => {
-    document.getElementById('global-pwd-form').reset();
-    pwdModal.style.display = 'flex';
-  };
+  document.getElementById('btn-global-pwd').onclick = () => { document.getElementById('global-pwd-form').reset(); pwdModal.style.display = 'flex'; };
   document.getElementById('close-pwd-modal').onclick = () => { pwdModal.style.display = 'none'; };
   
   document.getElementById('global-pwd-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const pwd1 = document.getElementById('global-new-pwd').value;
-    const pwd2 = document.getElementById('global-confirm-pwd').value;
-    
-    if (pwd1 !== pwd2) return window.showCustomDialog ? window.showCustomDialog('錯誤', '兩次輸入的密碼不一致！', 'alert', 'error') : alert('兩次輸入的密碼不一致！');
-
+    e.preventDefault(); const pwd1 = document.getElementById('global-new-pwd').value; const pwd2 = document.getElementById('global-confirm-pwd').value;
+    if (pwd1 !== pwd2) return window.showCustomDialog ? window.showCustomDialog('錯誤', '兩次輸入密碼不一致！', 'alert', 'error') : alert('錯誤');
     const btn = e.target.querySelector('button'); btn.disabled = true; btn.textContent = '變更中...';
     try {
-      const { error } = await supabase.auth.updateUser({ password: pwd1 });
-      if (error) throw error;
-      
-      if (window.showCustomDialog) {
-        await window.showCustomDialog('修改成功', '密碼已成功變更，請使用新密碼重新登入。', 'alert', 'check_circle');
-      } else {
-        alert('密碼已成功變更，請重新登入。');
-      }
-      await supabase.auth.signOut();
-      window.location.href = loginUrl;
-    } catch (err) {
-      window.showCustomDialog ? window.showCustomDialog('變更失敗', err.message, 'alert', 'error') : alert(err.message);
-      btn.disabled = false; btn.textContent = '確認變更';
-    }
+      const { error } = await supabase.auth.updateUser({ password: pwd1 }); if (error) throw error;
+      if (window.showCustomDialog) await window.showCustomDialog('成功', '密碼變更成功，請重新登入。', 'alert', 'check_circle'); else alert('成功');
+      await supabase.auth.signOut(); window.location.href = loginUrl;
+    } catch (err) { window.showCustomDialog ? window.showCustomDialog('失敗', err.message, 'alert', 'error') : alert(err.message); btn.disabled = false; btn.textContent = '確認變更'; }
   });
 }
