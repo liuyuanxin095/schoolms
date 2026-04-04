@@ -12,116 +12,79 @@
        📱 全域變數與暗黑模式設定
     ========================================= */
     :root {
-      --primary: #3b82f6;
-      --bg-dark: #121212;
-      --card-bg: #1e1e1e;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #2dd4bf20; /* 微弱的邊框 */
-      --border-solid: #334155;
-      --success: #10b981;
-      --warning: #f59e0b;
+      --primary: #3b82f6; --bg-dark: #121212; --card-bg: #1e1e1e;
+      --text-main: #f8fafc; --text-muted: #94a3b8;
+      --border-solid: #334155; --success: #10b981; --warning: #f59e0b;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+    /* 修復多餘黑邊：確保 body 完全貼合螢幕 */
     body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
+      background-color: var(--bg-dark); color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      margin: 0;
-      padding-bottom: 90px; /* 留給底部導覽列的空間 */
+      margin: 0; min-height: 100vh; overflow-x: hidden;
     }
 
-    /* 隱藏與顯示的動畫類別 */
-    .view-section { display: none; opacity: 0; transition: opacity 0.3s ease; }
+    .view-section { display: none; opacity: 0; transition: opacity 0.3s ease; min-height: 100vh; }
     .view-section.active { display: block; opacity: 1; animation: slideUp 0.3s ease; }
     @keyframes slideUp { from { transform: translateY(10px); } to { transform: translateY(0); } }
 
     /* 通用 UI 元件 */
-    .app-header {
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      padding: 40px 20px 30px 20px;
-      border-radius: 0 0 24px 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    }
-    
-    .card {
-      background-color: var(--card-bg);
-      border-radius: 16px;
-      padding: 20px;
-      margin: 0 15px 15px 15px;
-      border: 1px solid var(--border-solid);
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    .card-title {
-      font-size: 16px; font-weight: bold; margin-bottom: 15px;
-      display: flex; align-items: center; gap: 8px; color: var(--text-main);
-    }
-
-    .btn {
-      width: 100%; padding: 16px; border-radius: 12px; border: none;
-      font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;
-    }
+    .app-header { background: linear-gradient(135deg, #2563eb, #1d4ed8); padding: 40px 20px 30px 20px; border-radius: 0 0 24px 24px; margin-bottom: 20px; position: relative; }
+    .card { background-color: var(--card-bg); border-radius: 16px; padding: 20px; margin: 0 15px 15px 15px; border: 1px solid var(--border-solid); }
+    .card-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
+    .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .btn-primary { background: var(--primary); color: white; }
-    .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+    .btn-primary:active { transform: scale(0.98); }
 
-    /* 底部導覽列 */
+    /* 底部導覽列 (使用 fixed 並保留底部安全距離) */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; width: 100%;
-      background: rgba(30, 30, 30, 0.9); backdrop-filter: blur(10px);
+      background: rgba(30, 30, 30, 0.95); backdrop-filter: blur(10px);
       border-top: 1px solid var(--border-solid);
       display: flex; justify-content: space-around;
-      padding: 10px 0 env(safe-area-inset-bottom) 0;
+      padding: 10px 0 calc(10px + env(safe-area-inset-bottom)) 0;
       z-index: 1000;
     }
-    .nav-item {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-      color: var(--text-muted); cursor: pointer; font-size: 11px;
-    }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; font-size: 11px; }
     .nav-item.active { color: var(--primary); }
 
-    /* 列表與清單設計 */
-    .list-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 16px; background: #27272a; border-radius: 12px;
-      margin-bottom: 10px; border: 1px solid var(--border-solid);
-    }
-    
-    .empty-state { text-align: center; color: var(--text-muted); padding: 30px 15px; }
+    /* 確保有導覽列時，內容不會被擋住 */
+    .has-bottom-nav { padding-bottom: 100px; }
 
-    /* FullCalendar 暗黑模式覆寫 */
+    /* 列表清單設計 */
+    .list-item { display: flex; align-items: center; gap: 12px; padding: 16px; background: #27272a; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-solid); cursor: pointer; }
+    .empty-state { text-align: center; color: var(--text-muted); padding: 40px 15px; }
+
+    /* FullCalendar 暗黑模式 */
     .fc { font-size: 14px; background: var(--card-bg); padding: 10px; border-radius: 12px; }
     .fc-theme-standard td, .fc-theme-standard th { border-color: #334155; }
     .fc-col-header-cell-cushion { color: var(--text-muted); font-weight: normal; }
     .fc-daygrid-day-number { color: var(--text-main); }
     .fc-day-today { background-color: #334155 !important; }
-    .fc .fc-toolbar-title { font-size: 16px; color: var(--text-main); }
     .fc .fc-button { background: transparent; border: 1px solid var(--border-solid); color: var(--text-main); }
     
     /* Modal 彈窗 */
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(3px);
-      display: none; align-items: center; justify-content: center; z-index: 2000;
-    }
-    .modal-content {
-      background: var(--card-bg); width: 90%; max-width: 400px;
-      border-radius: 20px; padding: 24px; position: relative; border: 1px solid var(--border-solid);
-    }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 2000; }
+    .modal-content { background: var(--card-bg); width: 90%; max-width: 400px; border-radius: 20px; padding: 24px; position: relative; border: 1px solid var(--border-solid); max-height: 80vh; overflow-y: auto; }
   </style>
 </head>
 <body>
 
-  <div id="view-login" class="view-section active" style="min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 30px;">
+  <div id="view-loading" class="view-section active" style="display: flex; align-items: center; justify-content: center;">
+    <div style="text-align: center; color: var(--primary);">
+      <span class="material-symbols-outlined" style="font-size: 48px; animation: spin 2s linear infinite;">sync</span>
+      <p style="margin-top: 10px;">系統連線中...</p>
+    </div>
+  </div>
+
+  <div id="view-login" class="view-section" style="display: flex; flex-direction: column; justify-content: center; padding: 30px;">
     <div style="text-align: center; margin-bottom: 40px;">
       <span class="material-symbols-outlined" style="font-size: 72px; color: var(--primary);">school</span>
       <h1 style="margin: 16px 0 8px 0; font-size: 28px;">陽禾家長專區</h1>
       <p style="color: var(--text-muted); margin: 0;">輸入手機號碼，隨時掌握學習狀況</p>
     </div>
-    
     <div style="background: var(--card-bg); padding: 20px; border-radius: 16px; border: 1px solid var(--border-solid);">
       <div style="margin-bottom: 20px;">
         <label style="display:block; color:var(--text-muted); font-size:13px; margin-bottom:8px;">家長手機號碼</label>
@@ -132,12 +95,14 @@
   </div>
 
   <div id="view-select" class="view-section" style="padding: 20px;">
-    <h2 style="margin: 20px 0 24px 0;"><span class="material-symbols-outlined" style="vertical-align:bottom; color:var(--primary);">group</span> 請選擇孩子</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0 24px 0;">
+      <h2 style="margin: 0;"><span class="material-symbols-outlined" style="vertical-align:bottom; color:var(--primary);">group</span> 請選擇孩子</h2>
+      <button onclick="window.parentLogout()" style="background:transparent; border:none; color:var(--text-muted); font-size:14px; cursor:pointer;">登出</button>
+    </div>
     <div id="child-list-container"></div>
   </div>
 
-  <div id="view-main" class="view-section">
-    
+  <div id="view-main" class="view-section has-bottom-nav">
     <nav class="bottom-nav">
       <div class="nav-item active" data-tab="home"><span class="material-symbols-outlined">home</span>首頁</div>
       <div class="nav-item" data-tab="att"><span class="material-symbols-outlined">calendar_month</span>考勤</div>
@@ -147,8 +112,16 @@
 
     <div id="tab-home" class="tab-content active">
       <header class="app-header">
-        <h1 id="header-name" style="margin: 0 0 4px 0; font-size: 22px;">同學</h1>
-        <p id="header-branch" style="margin: 0; font-size: 14px; opacity: 0.8;">陽禾文理補習班</p>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h1 id="header-name" style="margin: 0 0 4px 0; font-size: 22px;">同學</h1>
+            <p id="header-branch" style="margin: 0; font-size: 14px; opacity: 0.8;">陽禾文理補習班</p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button id="btn-switch-child" style="display:none; background:rgba(255,255,255,0.2); border:none; color:white; padding:6px 12px; border-radius:20px; font-size:12px; cursor:pointer;"><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">swap_horiz</span> 切換孩子</button>
+            <button onclick="window.parentLogout()" style="background:rgba(0,0,0,0.2); border:none; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span class="material-symbols-outlined" style="font-size:16px;">logout</span></button>
+          </div>
+        </div>
       </header>
 
       <div class="card">
@@ -164,8 +137,7 @@
     <div id="tab-att" class="tab-content" style="display:none; padding-top:20px;">
       <h2 style="margin: 0 15px 15px 15px;">出勤紀錄</h2>
       <div class="card" style="padding:10px;"><div id="calendar"></div></div>
-      
-      <div class="card" id="att-detail-card" style="display:none;">
+      <div class="card" id="att-detail-card" style="display:none; background:#1c1c1e;">
         <div id="att-detail-date" style="font-size:16px; font-weight:bold; margin-bottom:12px; color:var(--primary);"></div>
         <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span style="color:var(--text-muted);">到班</span><span id="att-detail-in" style="font-weight:bold;"></span></div>
         <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span style="color:var(--text-muted);">離班</span><span id="att-detail-out" style="font-weight:bold;"></span></div>
@@ -182,7 +154,6 @@
       <h2 style="margin: 0 15px 15px 15px;">班級公告</h2>
       <div id="notis-container"></div>
     </div>
-
   </div>
 
   <div class="modal-overlay" id="noti-modal">
@@ -194,262 +165,211 @@
     </div>
   </div>
 
+  <style> @keyframes spin { 100% { transform: rotate(360deg); } } </style>
+
   <script type="module">
     import { supabase } from '../config.js';
 
-    // 系統狀態變數
+    let allMyKids = [];
     let currentStudent = null;
     let calendarInstance = null;
     let attendanceDataMap = {};
 
-    // DOM 元素快取
-    const viewLogin = document.getElementById('view-login');
-    const viewSelect = document.getElementById('view-select');
-    const viewMain = document.getElementById('view-main');
-    const inputPhone = document.getElementById('input-phone');
-    const btnLogin = document.getElementById('btn-login');
+    // 💡 初始化：檢查是否曾經登入過
+    document.addEventListener('DOMContentLoaded', async () => {
+      const savedPhone = localStorage.getItem('yh_parent_phone');
+      if (savedPhone) {
+        await executeLogin(savedPhone, true);
+      } else {
+        switchView('view-login');
+      }
 
-    // ==============================================
-    // 初始化與事件綁定
-    // ==============================================
-    document.addEventListener('DOMContentLoaded', () => {
-      // 1. 綁定登入按鈕
-      btnLogin.addEventListener('click', handleLogin);
-      
-      // 2. 綁定底部導覽切換
+      // 綁定事件
+      document.getElementById('btn-login').addEventListener('click', () => {
+        const phone = document.getElementById('input-phone').value.trim();
+        if(!phone) return alert('請輸入家長手機號碼！');
+        executeLogin(phone, false);
+      });
+
       document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => switchTab(e.currentTarget.dataset.tab));
       });
 
-      // 3. 綁定關閉 Modal
       document.getElementById('close-modal').addEventListener('click', () => {
         document.getElementById('noti-modal').style.display = 'none';
       });
+
+      document.getElementById('btn-switch-child').addEventListener('click', () => {
+        renderChildSelection(allMyKids);
+      });
     });
 
-    // ==============================================
-    // 登入邏輯
-    // ==============================================
-    async function handleLogin() {
-      const phone = inputPhone.value.trim();
-      if (!phone) return alert('請輸入家長手機號碼！');
+    // 💡 登出功能
+    window.parentLogout = () => {
+      if(confirm('確定要登出家長專區嗎？')) {
+        localStorage.removeItem('yh_parent_phone');
+        localStorage.removeItem('yh_kid_id');
+        window.location.reload();
+      }
+    };
 
-      btnLogin.textContent = '驗證中...';
-      btnLogin.disabled = true;
+    // 執行登入與資料抓取
+    async function executeLogin(phone, isAutoLogin = false) {
+      const btn = document.getElementById('btn-login');
+      if(!isAutoLogin) { btn.textContent = '連線中...'; btn.disabled = true; }
+      switchView('view-loading');
 
       try {
-        const { data: students, error } = await supabase
-          .from('students')
-          .select('*, branches(name)')
-          .eq('parent_phone', phone);
-
+        const { data: students, error } = await supabase.from('students').select('*, branches(name)').eq('parent_phone', phone);
         if (error) throw error;
         if (!students || students.length === 0) {
-          throw new Error('查無此號碼綁定的學生資料，請確認是否留存於補習班。');
+          localStorage.removeItem('yh_parent_phone'); // 清除錯誤的記憶
+          throw new Error('查無此號碼綁定的孩子資料，請聯絡補習班。');
         }
 
+        // 成功抓到資料，記憶手機號碼
+        localStorage.setItem('yh_parent_phone', phone);
+        allMyKids = students;
+
         if (students.length === 1) {
+          // 單一孩子：直接進儀表板
           loadDashboard(students[0]);
         } else {
-          renderChildSelection(students);
+          // 多個孩子：檢查有沒有記憶上次選誰
+          const savedKidId = localStorage.getItem('yh_kid_id');
+          const targetKid = students.find(s => s.id === savedKidId);
+          
+          if (targetKid && isAutoLogin) {
+            loadDashboard(targetKid);
+          } else {
+            renderChildSelection(students);
+          }
         }
       } catch (err) {
         alert(err.message);
+        switchView('view-login');
       } finally {
-        btnLogin.textContent = '進入系統';
-        btnLogin.disabled = false;
+        if(!isAutoLogin) { btn.textContent = '進入系統'; btn.disabled = false; }
       }
     }
 
-    // ==============================================
-    // 畫面切換與渲染
-    // ==============================================
+    function switchView(viewId) {
+      document.querySelectorAll('.view-section').forEach(v => {
+        v.classList.remove('active');
+        v.style.display = 'none'; 
+      });
+      const target = document.getElementById(viewId);
+      target.style.display = 'block';
+      setTimeout(() => target.classList.add('active'), 10);
+    }
+
     function renderChildSelection(students) {
-      viewLogin.classList.remove('active');
-      viewSelect.classList.add('active');
-      
       const container = document.getElementById('child-list-container');
       container.innerHTML = '';
-
       students.forEach(student => {
-        const div = document.createElement('div');
-        div.className = 'list-item';
-        div.style.cursor = 'pointer';
-        div.innerHTML = `
-          <div style="background:#2563eb30; padding:10px; border-radius:50%;"><span class="material-symbols-outlined" style="color:var(--primary);">face</span></div>
-          <div style="flex:1;">
-            <div style="font-weight:bold; font-size:16px;">${student.name}</div>
-            <div style="font-size:12px; color:var(--text-muted);">學號：${student.student_number || '無'}</div>
-          </div>
-          <span class="material-symbols-outlined" style="color:var(--text-muted);">chevron_right</span>
-        `;
-        div.addEventListener('click', () => loadDashboard(student));
+        const div = document.createElement('div'); div.className = 'list-item';
+        div.innerHTML = `<div style="background:#2563eb30; padding:10px; border-radius:50%;"><span class="material-symbols-outlined" style="color:var(--primary);">face</span></div><div style="flex:1;"><div style="font-weight:bold; font-size:16px;">${student.name}</div><div style="font-size:12px; color:var(--text-muted);">學號：${student.student_number || '無'}</div></div><span class="material-symbols-outlined" style="color:var(--text-muted);">chevron_right</span>`;
+        div.addEventListener('click', () => {
+          localStorage.setItem('yh_kid_id', student.id); // 記憶選擇的孩子
+          loadDashboard(student);
+        });
         container.appendChild(div);
       });
+      switchView('view-select');
     }
 
     function loadDashboard(student) {
       currentStudent = student;
       document.getElementById('header-name').textContent = `${student.name} 同學`;
       document.getElementById('header-branch').textContent = student.branches?.name || '陽禾文理補習班';
+      
+      // 如果有多個孩子，顯示「切換孩子」按鈕
+      document.getElementById('btn-switch-child').style.display = allMyKids.length > 1 ? 'inline-block' : 'none';
 
-      viewLogin.classList.remove('active');
-      viewSelect.classList.remove('active');
-      viewMain.classList.add('active');
-
-      switchTab('home'); // 預設載入首頁
+      switchView('view-main');
+      switchTab('home'); 
     }
 
     function switchTab(tabId) {
-      // UI 切換
       document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
       document.querySelector(`.nav-item[data-tab="${tabId}"]`).classList.add('active');
-
       document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
       document.getElementById(`tab-${tabId}`).style.display = 'block';
 
-      // 資料載入策略
       if (tabId === 'home') fetchHomeData();
       if (tabId === 'att') initCalendar();
       if (tabId === 'grades') fetchGrades();
       if (tabId === 'notis') fetchNotifications();
     }
 
-    // ==============================================
-    // 資料抓取模組
-    // ==============================================
+    // -- 以下為資料抓取邏輯 (維持不變) --
     async function fetchHomeData() {
       const today = new Date().toISOString().split('T')[0];
-      const { data } = await supabase.from('attendance')
-        .select('*').match({ student_id: currentStudent.id, record_date: today }).maybeSingle();
-
-      const inEl = document.getElementById('home-in');
-      const outEl = document.getElementById('home-out');
-
+      const { data } = await supabase.from('attendance').select('*').match({ student_id: currentStudent.id, record_date: today }).maybeSingle();
+      const inEl = document.getElementById('home-in'); const outEl = document.getElementById('home-out');
       if (data) {
         inEl.textContent = data.check_in ? new Date(data.check_in).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
         outEl.textContent = data.check_out ? new Date(data.check_out).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
-        if(data.status === '請假') { inEl.textContent = '請假'; outEl.textContent = '請假'; inEl.style.color = 'var(--warning)'; }
-      } else {
-        inEl.textContent = '--:--'; outEl.textContent = '--:--';
-      }
+        if(data.status === '請假') { inEl.textContent = '請假'; outEl.textContent = '請假'; inEl.style.color = 'var(--warning)'; } else { inEl.style.color = ''; }
+      } else { inEl.textContent = '--:--'; outEl.textContent = '--:--'; inEl.style.color = ''; }
     }
 
     async function initCalendar() {
       const { data } = await supabase.from('attendance').select('*').eq('student_id', currentStudent.id);
-      
-      const events = [];
-      attendanceDataMap = {};
-      
+      const events = []; attendanceDataMap = {};
       if (data) {
         data.forEach(record => {
           attendanceDataMap[record.record_date] = record;
-          events.push({
-            start: record.record_date,
-            display: 'background',
-            backgroundColor: record.status === '請假' ? 'var(--warning)' : 'var(--primary)'
-          });
+          events.push({ start: record.record_date, display: 'background', backgroundColor: record.status === '請假' ? 'var(--warning)' : 'var(--primary)' });
         });
       }
-
       if (!calendarInstance) {
         calendarInstance = new FullCalendar.Calendar(document.getElementById('calendar'), {
-          initialView: 'dayGridMonth', locale: 'zh-tw', height: 'auto',
-          headerToolbar: { left: 'prev', center: 'title', right: 'next' },
-          events: events,
-          dateClick: (info) => renderAttendanceDetail(info.dateStr),
-          eventClick: (info) => renderAttendanceDetail(info.event.startStr.split('T')[0])
+          initialView: 'dayGridMonth', locale: 'zh-tw', height: 'auto', headerToolbar: { left: 'prev', center: 'title', right: 'next' }, events: events,
+          dateClick: (info) => renderAttendanceDetail(info.dateStr), eventClick: (info) => renderAttendanceDetail(info.event.startStr.split('T')[0])
         });
         calendarInstance.render();
-      } else {
-        calendarInstance.removeAllEvents();
-        calendarInstance.addEventSource(events);
-      }
+      } else { calendarInstance.removeAllEvents(); calendarInstance.addEventSource(events); }
     }
 
     function renderAttendanceDetail(dateStr) {
-      const record = attendanceDataMap[dateStr];
-      const detailCard = document.getElementById('att-detail-card');
-      
+      const record = attendanceDataMap[dateStr]; const detailCard = document.getElementById('att-detail-card');
       document.getElementById('att-detail-date').textContent = dateStr;
-      
       if (record) {
         document.getElementById('att-detail-in').textContent = record.check_in ? new Date(record.check_in).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '無';
         document.getElementById('att-detail-out').textContent = record.check_out ? new Date(record.check_out).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '無';
-        const statusEl = document.getElementById('att-detail-status');
-        statusEl.textContent = record.status;
-        statusEl.style.color = record.status === '請假' ? 'var(--warning)' : 'var(--success)';
+        const statusEl = document.getElementById('att-detail-status'); statusEl.textContent = record.status; statusEl.style.color = record.status === '請假' ? 'var(--warning)' : 'var(--success)';
       } else {
-        document.getElementById('att-detail-in').textContent = '--:--';
-        document.getElementById('att-detail-out').textContent = '--:--';
-        document.getElementById('att-detail-status').textContent = '無紀錄';
-        document.getElementById('att-detail-status').style.color = 'var(--text-muted)';
+        document.getElementById('att-detail-in').textContent = '--:--'; document.getElementById('att-detail-out').textContent = '--:--'; document.getElementById('att-detail-status').textContent = '無紀錄'; document.getElementById('att-detail-status').style.color = 'var(--text-muted)';
       }
       detailCard.style.display = 'block';
     }
 
     async function fetchGrades() {
       const container = document.getElementById('grades-container');
-      const { data, error } = await supabase.from('grades')
-        .select('*, class_exams(exam_name, subject, exam_date)')
-        .eq('student_id', currentStudent.id).order('created_at', {ascending: false});
-
-      if (error || !data || data.length === 0) {
-        container.innerHTML = '<div class="empty-state">目前尚無成績紀錄</div>';
-        return;
-      }
-
+      const { data, error } = await supabase.from('grades').select('*, class_exams(exam_name, subject, exam_date)').eq('student_id', currentStudent.id).order('created_at', {ascending: false});
+      if (error || !data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無成績紀錄</div>'; return; }
       container.innerHTML = '';
       data.forEach(g => {
         const div = document.createElement('div'); div.className = 'card';
-        div.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <div style="font-weight:bold; font-size:16px;">${g.class_exams.exam_name}</div>
-              <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${g.class_exams.subject} · ${g.class_exams.exam_date}</div>
-            </div>
-            <div style="font-size:24px; font-weight:bold; color:var(--primary);">${g.score ?? '缺考'}</div>
-          </div>
-          ${g.note ? `<div style="background:#27272a; padding:10px; border-radius:8px; margin-top:12px; font-size:13px; color:#cbd5e1;">老師評語：${g.note}</div>` : ''}
-        `;
+        div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><div><div style="font-weight:bold; font-size:16px;">${g.class_exams.exam_name}</div><div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${g.class_exams.subject} · ${g.class_exams.exam_date}</div></div><div style="font-size:24px; font-weight:bold; color:var(--primary);">${g.score ?? '缺'}</div></div>${g.note ? `<div style="background:#27272a; padding:10px; border-radius:8px; margin-top:12px; font-size:13px; color:#cbd5e1;">評語：${g.note}</div>` : ''}`;
         container.appendChild(div);
       });
     }
 
     async function fetchNotifications() {
       const container = document.getElementById('notis-container');
-      const { data, error } = await supabase.from('notifications')
-        .select('*').order('created_at', {ascending: false});
-
-      if (error || !data || data.length === 0) {
-        container.innerHTML = '<div class="empty-state">目前尚無班級公告</div>';
-        return;
-      }
-
+      const { data, error } = await supabase.from('notifications').select('*').order('created_at', {ascending: false});
+      if (error || !data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無班級公告</div>'; return; }
       container.innerHTML = '';
       data.forEach(n => {
-        const div = document.createElement('div'); div.className = 'card';
-        div.style.padding = '16px'; div.style.cursor = 'pointer';
-        div.innerHTML = `
-          <div style="display:flex; gap:12px; align-items:center;">
-            <div style="background:#2563eb30; padding:12px; border-radius:12px; color:var(--primary);"><span class="material-symbols-outlined">campaign</span></div>
-            <div style="flex:1; overflow:hidden;">
-              <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">${new Date(n.created_at).toLocaleDateString('zh-TW')}</div>
-              <div style="font-weight:bold; font-size:15px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.title}</div>
-              <div style="font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.content}</div>
-            </div>
-          </div>
-        `;
-        div.addEventListener('click', () => showNotificationModal(n));
+        const div = document.createElement('div'); div.className = 'list-item';
+        div.innerHTML = `<div style="background:#2563eb30; padding:12px; border-radius:12px; color:var(--primary);"><span class="material-symbols-outlined">campaign</span></div><div style="flex:1; overflow:hidden;"><div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">${new Date(n.created_at).toLocaleDateString('zh-TW')}</div><div style="font-weight:bold; font-size:15px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.title}</div><div style="font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.content}</div></div>`;
+        div.addEventListener('click', () => {
+          document.getElementById('modal-title').textContent = n.title; document.getElementById('modal-time').textContent = new Date(n.created_at).toLocaleString('zh-TW'); document.getElementById('modal-body').textContent = n.content; document.getElementById('noti-modal').style.display = 'flex';
+        });
         container.appendChild(div);
       });
-    }
-
-    function showNotificationModal(noti) {
-      document.getElementById('modal-title').textContent = noti.title;
-      document.getElementById('modal-time').textContent = new Date(noti.created_at).toLocaleString('zh-TW');
-      document.getElementById('modal-body').textContent = noti.content;
-      document.getElementById('noti-modal').style.display = 'flex';
     }
   </script>
 </body>
