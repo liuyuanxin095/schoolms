@@ -9,31 +9,59 @@
   <style>
     .view-section { display: none; animation: fadeIn 0.3s ease; }
     .view-section.active { display: block; }
-    .schedule-badge { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; margin: 0 5px 5px 0; }
-    .schedule-badge .material-symbols-outlined { font-size: 14px; cursor: pointer; color: #ef4444; }
-    .schedule-builder { display: flex; gap: 10px; align-items: center; background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 10px; flex-wrap: wrap; }
-    .schedule-builder select, .schedule-builder input { padding: 8px; border-radius: 6px; border: 1px solid var(--border); font-family: inherit; }
+    
+    /* 排課視覺化標籤 */
+    .schedule-badge { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; margin: 0 8px 8px 0; }
+    .schedule-badge .material-symbols-outlined { font-size: 16px; cursor: pointer; color: #94a3b8; transition: 0.2s; }
+    .schedule-badge .material-symbols-outlined:hover { color: #ef4444; }
+    
+    /* 排課選擇器器 */
+    .schedule-builder { display: flex; gap: 10px; align-items: center; background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 12px; flex-wrap: wrap; }
+    .schedule-builder select, .schedule-builder input { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); font-family: inherit; outline: none; }
+    .schedule-builder select:focus, .schedule-builder input:focus { border-color: var(--primary); }
+
+    /* 雙向選單 (Dual Listbox) */
+    .dual-listbox { display: flex; gap: 20px; align-items: stretch; width: 100%; margin-bottom: 20px; }
+    .list-col { flex: 1; display: flex; flex-direction: column; gap: 10px; background: var(--surface); padding: 15px; border: 1px solid var(--border); border-radius: 8px; }
+    .dual-listbox select[multiple] { height: 350px; padding: 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 14px; width: 100%; outline: none; font-family: inherit; }
+    .dual-listbox select[multiple] option { padding: 8px; margin-bottom: 4px; border-radius: 4px; cursor: pointer; }
+    .dual-listbox select[multiple] option:checked { background: var(--primary); color: white; }
+    .list-actions { display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+    .list-actions button { background: #f8fafc; border: 1px solid var(--border); padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; color: var(--text-main); display: flex; align-items: center; justify-content: center; }
+    .list-actions button:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    
+    @media (max-width: 768px) {
+      .dual-listbox { flex-direction: column; }
+      .list-actions { flex-direction: row; }
+      .list-actions button { transform: rotate(90deg); }
+    }
   </style>
 </head>
 <body>
   <main class="main-wrapper">
     <header class="header">
-      <div class="header-left"><span class="material-symbols-outlined" style="font-size: 28px; color: var(--primary);">class</span><h1>班級與排課管理</h1></div>
+      <div class="header-left">
+        <span class="material-symbols-outlined" style="font-size: 28px; color: var(--primary);">class</span>
+        <h1>班級與排課管理</h1>
+      </div>
       <div class="header-right"><span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span></div>
     </header>
 
     <div class="container">
+      
       <div id="view-list" class="view-section active">
         <div class="card">
           <div class="toolbar">
             <h2 class="toolbar-title"><span class="material-symbols-outlined">class</span>班級列表</h2>
             <button class="btn btn-primary" onclick="window.openEditor()"><span class="material-symbols-outlined">add</span>新增班級</button>
           </div>
+          
           <div class="filter-bar">
             <span class="material-symbols-outlined" style="color: var(--text-light);">search</span>
             <input type="text" id="search-input" placeholder="搜尋班級名稱或老師...">
             <select id="branch-filter"><option value="all">所有分校</option></select>
           </div>
+          
           <div class="table-responsive">
             <table>
               <thead><tr><th>班級名稱</th><th>開課學期</th><th>所屬分校</th><th>師資陣容</th><th>上課時段 / 教室</th><th>操作</th></tr></thead>
@@ -46,15 +74,15 @@
       <div id="view-editor" class="view-section">
         <div class="toolbar" style="background: var(--surface); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px;">
           <div style="display: flex; align-items: center; gap: 15px;">
-            <button class="btn btn-cancel" onclick="window.switchView('list')"><span class="material-symbols-outlined">arrow_back</span>返回</button>
+            <button class="btn btn-cancel" onclick="window.switchView('list')"><span class="material-symbols-outlined">arrow_back</span>返回列表</button>
             <h2 class="toolbar-title" id="editor-title" style="margin: 0;">新增班級</h2>
           </div>
         </div>
 
         <div class="card">
           <div class="form-tabs">
-            <button type="button" class="form-tab active" id="tab-btn-basic" onclick="window.switchFormTab('basic')">班級基本資料</button>
-            <button type="button" class="form-tab" id="tab-btn-students" onclick="window.switchFormTab('students')">管理學生名單</button>
+            <button type="button" class="form-tab active" id="tab-btn-basic" onclick="window.switchFormTab('basic')"><span class="material-symbols-outlined" style="font-size:16px; vertical-align:text-bottom;">info</span> 班級基本資料</button>
+            <button type="button" class="form-tab" id="tab-btn-students" onclick="window.switchFormTab('students')"><span class="material-symbols-outlined" style="font-size:16px; vertical-align:text-bottom;">group</span> 管理學生名單</button>
           </div>
 
           <div id="tab-basic" class="form-tab-content active">
@@ -71,12 +99,15 @@
                 <div class="form-group full-width">
                   <label>建立上課時段 <span style="color:red">*</span></label>
                   <div class="schedule-builder">
-                    <select id="sched-day"><option value="週一">週一</option><option value="週二">週二</option><option value="週三">週三</option><option value="週四">週四</option><option value="週五">週五</option><option value="週六">週六</option><option value="週日">週日</option></select>
-                    <span>開始</span><input type="time" id="sched-start" value="18:30">
-                    <span>結束</span><input type="time" id="sched-end" value="21:30">
-                    <button type="button" class="btn btn-cancel" onclick="window.addScheduleSlot()" style="background: white;"><span class="material-symbols-outlined">add_task</span>加入時段</button>
+                    <select id="sched-day">
+                      <option value="週一">週一</option><option value="週二">週二</option><option value="週三">週三</option>
+                      <option value="週四">週四</option><option value="週五">週五</option><option value="週六">週六</option><option value="週日">週日</option>
+                    </select>
+                    <span style="font-size: 14px; font-weight: 600;">時間：</span><input type="time" id="sched-start" value="18:30">
+                    <span style="font-size: 14px; font-weight: 600;">至</span><input type="time" id="sched-end" value="21:30">
+                    <button type="button" class="btn btn-cancel" onclick="window.addScheduleSlot()" style="background: white;"><span class="material-symbols-outlined">add</span> 加入時段</button>
                   </div>
-                  <div id="schedule-container" style="min-height: 40px; padding: 10px; border: 1px dashed var(--border); border-radius: 8px; background: #f8fafc;">
+                  <div id="schedule-container" style="min-height: 40px; padding: 15px; border: 1px dashed var(--border); border-radius: 8px; background: #f8fafc;">
                     <span style="color: var(--text-light); font-size: 13px;">尚未加入任何時段</span>
                   </div>
                   <input type="hidden" id="schedule" required>
@@ -85,26 +116,39 @@
                 <div class="form-group"><label>開課日期</label><input type="date" id="start_date"></div>
                 <div class="form-group"><label>結業日期</label><input type="date" id="end_date"></div>
               </div>
-              <div class="actions" style="margin-top: 25px;"><button type="submit" class="btn btn-primary" id="submit-btn" style="font-size: 16px; padding: 12px 24px;"><span class="material-symbols-outlined">save</span> 儲存班級資料</button></div>
+              <div class="actions" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
+                <button type="submit" class="btn btn-primary" id="submit-btn" style="font-size: 16px; padding: 12px 24px;"><span class="material-symbols-outlined">save</span> 儲存班級資料</button>
+              </div>
             </form>
           </div>
 
           <div id="tab-students" class="form-tab-content">
             <div id="roster-overlay" style="background: #fffbeb; border: 1px solid #fde68a; padding: 20px; border-radius: 8px; color: #b45309; text-align: center; margin-bottom: 20px;">
               <span class="material-symbols-outlined" style="font-size: 32px; display: block; margin-bottom: 10px;">info</span>
-              請先儲存班級基本資料後，才能管理學生名單。
+              請先儲存「班級基本資料」後，才能開始管理學生名單。
             </div>
             
             <div id="roster-content" style="display: none;">
-              <div style="display: flex; gap: 10px; margin-bottom: 20px; background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
-                <select id="roster-student-select" style="flex-grow: 1; padding: 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 15px;"><option value="" disabled selected>載入學生中...</option></select>
-                <button class="btn btn-primary" onclick="window.addStudentToClass()"><span class="material-symbols-outlined">person_add</span> 加入此班級</button>
+              <div class="dual-listbox">
+                <div class="list-col">
+                  <label style="font-weight: bold; color: var(--text-main);"><span class="material-symbols-outlined" style="vertical-align: bottom; font-size: 18px;">person_search</span> 待選學生清單</label>
+                  <input type="text" id="search-avail" placeholder="輸入學號或姓名搜尋..." oninput="window.filterAvail()" style="padding: 10px; border-radius: 6px; border: 1px solid var(--border); outline: none;">
+                  <select multiple id="avail-students"></select>
+                </div>
+                
+                <div class="list-actions">
+                  <button type="button" onclick="window.moveToSelected()" title="加入班級"><span class="material-symbols-outlined">keyboard_double_arrow_right</span></button>
+                  <button type="button" onclick="window.moveToAvail()" title="移出班級"><span class="material-symbols-outlined">keyboard_double_arrow_left</span></button>
+                </div>
+                
+                <div class="list-col">
+                  <label style="font-weight: bold; color: var(--primary);"><span class="material-symbols-outlined" style="vertical-align: bottom; font-size: 18px;">how_to_reg</span> 已加入班級學生</label>
+                  <div style="font-size: 12px; color: var(--text-light); margin-bottom: -5px;">(點選並按左箭頭可移出)</div>
+                  <select multiple id="selected-students"></select>
+                </div>
               </div>
-              <div class="table-responsive">
-                <table>
-                  <thead><tr><th>學生姓名</th><th>學號</th><th width="80">操作</th></tr></thead>
-                  <tbody id="roster-list"><tr><td colspan="3" style="text-align: center; padding: 20px;">載入名單中...</td></tr></tbody>
-                </table>
+              <div class="actions" style="margin-top: 20px; text-align: center;">
+                <button class="btn btn-primary" onclick="window.saveClassRoster()" style="font-size: 16px; padding: 12px 30px;"><span class="material-symbols-outlined">save_as</span> 儲存班級名單</button>
               </div>
             </div>
           </div>
