@@ -48,7 +48,6 @@ async function initData() {
 }
 
 async function fetchNotifications() {
-  // 💡 讀取發送者名稱
   let query = supabase.from('notifications').select('*, sender:staff!sender_id(name)').order('created_at', { ascending: false })
   
   const { data, error } = await query
@@ -56,21 +55,34 @@ async function fetchNotifications() {
   if (error || !data || data.length === 0) { notificationList.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">尚無通知發送紀錄</td></tr>'; return }
   
   data.forEach(n => {
-    const dateStr = new Date(n.created_at).toLocaleString('zh-TW')
+    const dateStr = new Date(n.created_at).toLocaleString('zh-TW', {hour12: false})
     const imgHtml = n.image_url ? `<a href="${n.image_url}" target="_blank" style="color:#8b5cf6;"><span class="material-symbols-outlined" style="font-size:24px;">image</span></a>` : '-'
-    // 💡 顯示發送者
-    const senderName = n.sender ? n.sender.name : '系統自動'
+    const senderName = n.sender ? n.sender.name : '系統'
+    
+    // 安全將陣列轉為 JSON 字串給按鈕使用
+    const studentsJson = encodeURIComponent(JSON.stringify(n.target_students || []))
 
     notificationList.innerHTML += `
       <tr>
         <td>${dateStr}</td>
-        <td><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle; color:var(--text-light);">person</span> ${senderName}</td>
+        <td><span class="material-symbols-outlined" style="font-size:14px; vertical-align:text-bottom; color:var(--text-light);">person</span> ${senderName}</td>
         <td><div style="font-weight:bold;">${n.title}</div><div style="font-size:12px; color:var(--text-light); max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.content}</div></td>
         <td>${imgHtml}</td>
-        <td><span style="background:#f3f4f6; padding:2px 8px; border-radius:12px; font-weight:bold; color:#475569;">${n.target_count || 0} 人</span></td>
+        <td><button class="btn-icon" title="查看名單" onclick="window.showRecipients('${studentsJson}')" style="background:#f1f5f9; color:#334155; padding:4px 10px; border-radius:12px; font-weight:bold; font-size:12px;"><span class="material-symbols-outlined" style="font-size:14px; vertical-align:text-bottom;">group</span> ${n.target_count || 0} 人</button></td>
         <td><button class="btn-icon" style="color:var(--danger);" onclick="window.deleteNotification('${n.id}')"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button></td>
       </tr>`
   })
+}
+
+window.showRecipients = (jsonStr) => {
+  const students = JSON.parse(decodeURIComponent(jsonStr));
+  const list = document.getElementById('recipients-list');
+  if (students.length === 0) {
+    list.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-light);">無名單資料</div>';
+  } else {
+    list.innerHTML = students.map((s, idx) => `<div style="padding:12px 15px; border-bottom:1px solid var(--border); font-size:14px;">${idx+1}. <strong style="color:var(--text-main);">${s.name}</strong></div>`).join('');
+  }
+  document.getElementById('recipients-modal').style.display = 'flex';
 }
 
 window.handleFilterChange = async () => {
@@ -92,7 +104,7 @@ window.handleFilterChange = async () => {
     studentList.innerHTML += `
       <label class="roster-item">
         <input type="checkbox" class="student-cb" value="${s.id}" onchange="window.updateCount()">
-        <span style="font-weight:600;">${s.name} <span style="font-size:12px; color:var(--text-light); font-weight:normal;">(${s.student_number || '無'})</span></span>
+        <span class="student-name-label" style="font-weight:600;">${s.name}</span> <span style="font-size:12px; color:var(--text-light); font-weight:normal;">(${s.student_number || '無'})</span>
       </label>`
   })
   window.updateCount()
@@ -103,6 +115,7 @@ window.toggleSelectAll = () => {
   document.querySelectorAll('.student-cb').forEach(cb => cb.checked = isChecked)
   window.updateCount()
 }
+
 window.updateCount = () => {
   const count = document.querySelectorAll('.student-cb:checked').length
   document.getElementById('selected-count').textContent = count
@@ -111,7 +124,10 @@ window.updateCount = () => {
 
 window.sendNotification = async () => {
   const title = document.getElementById('noti_title').value; const content = document.getElementById('noti_content').value
-  const selectedIds = Array.from(document.querySelectorAll('.student-cb:checked')).map(cb => cb.value)
+  const selectedCbs = Array.from(document.querySelectorAll('.student-cb:checked'))
+  const selectedIds = selectedCbs.map(cb => cb.value)
+  const selectedNames = selectedCbs.map(cb => cb.nextElementSibling.textContent)
+  
   if (!title || !content) return window.showCustomDialog('提示', '請填寫通知主旨與內文！', 'alert', 'info')
   if (selectedIds.length === 0) return window.showCustomDialog('提示', '請至少選擇一位發送對象！', 'alert', 'info')
 
@@ -125,10 +141,10 @@ window.sendNotification = async () => {
       const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName); finalPhotoUrl = publicUrlData.publicUrl
     }
 
-    // 💡 寫入發送者
     const senderId = window.currentUser ? window.currentUser.id : null
+    const targetStudents = selectedIds.map((id, index) => ({ id: id, name: selectedNames[index] }))
 
-    const payload = { title: title, content: content, image_url: finalPhotoUrl, target_count: selectedIds.length, sender_id: senderId }
+    const payload = { title: title, content: content, image_url: finalPhotoUrl, target_count: selectedIds.length, target_students: targetStudents, sender_id: senderId }
     const { error } = await supabase.from('notifications').insert([payload])
     if (error) throw error
 
