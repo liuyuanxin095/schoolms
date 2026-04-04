@@ -12,7 +12,7 @@
     <header class="header">
       <div class="header-left">
         <span class="material-symbols-outlined" style="font-size: 28px; color: var(--primary);">badge</span>
-        <h1>人事管理系統 (HR)</h1>
+        <h1>人事管理系統</h1>
       </div>
       <div class="header-right"><span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span></div>
     </header>
@@ -26,7 +26,7 @@
         
         <div class="filter-bar">
           <span class="material-symbols-outlined" style="color: var(--text-light);">search</span>
-          <input type="text" id="search-input" placeholder="搜尋姓名或電話...">
+          <input type="text" id="search-input" placeholder="搜尋姓名或編號...">
           <select id="status-filter">
             <option value="all">所有狀態</option>
             <option value="在職">在職中</option>
@@ -36,7 +36,7 @@
         
         <div class="table-responsive">
           <table>
-            <thead><tr><th>照片與姓名 (身分證)</th><th>狀態</th><th>聯絡電話</th><th>到職日期</th><th>主要分校</th><th>操作</th></tr></thead>
+            <thead><tr><th>照片與姓名 (編號/身分證)</th><th>狀態</th><th>聯絡電話</th><th>到職日期</th><th>主要分校</th><th>操作</th></tr></thead>
             <tbody id="staff-list"><tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr></tbody>
           </table>
         </div>
@@ -56,23 +56,37 @@
           <div><label style="font-size: 13px; color: var(--text-light); display: block; margin-bottom: 5px;">上傳照片 (選填)</label><input type="file" id="photo" accept="image/*" onchange="window.previewPhoto(event)"></div>
         </div>
 
-        <div class="form-grid">
-          <div class="form-group"><label>人員姓名 <span style="color:red">*</span></label><input type="text" id="name" required></div>
-          <div class="form-group"><label>身分證字號</label><input type="text" id="id_number" placeholder="身分證字號"></div>
-          
-          <div class="form-group"><label>主要所屬分校 <span style="color:red">*</span></label><select id="branch_id" required><option value="" disabled selected>載入中...</option></select></div>
-          <div class="form-group"><label>支援分校 (可多選，按住 Ctrl/Cmd)</label><select id="branch_ids" multiple style="height: 80px;"></select></div>
-
-          <div class="form-group"><label>底薪 (薪資計算預留)</label><input type="number" id="base_salary" value="0"></div>
-          <div class="form-group"><label>時薪 (薪資計算預留)</label><input type="number" id="hourly_rate" value="0"></div>
-
-          <div class="form-group"><label>本人手機</label><input type="text" id="phone" placeholder="手機號碼"></div>
-          <div class="form-group"><label>到職日期</label><input type="date" id="hire_date"></div>
-          <div class="form-group"><label>在職狀態</label><select id="status"><option value="在職">在職</option><option value="離職">離職</option></select></div>
-          <div class="form-group"><label>緊急聯絡人</label><input type="text" id="emergency_contact" placeholder="姓名"></div>
-          <div class="form-group full-width"><label>緊急聯絡電話</label><input type="text" id="emergency_phone" placeholder="電話"></div>
-          <div class="form-group full-width"><label>通訊地址</label><input type="text" id="address" placeholder="詳細地址"></div>
+        <div class="form-tabs">
+          <button type="button" class="form-tab active" id="tab-btn-basic" onclick="window.switchFormTab('basic')">基本資料</button>
+          <button type="button" class="form-tab" id="tab-btn-salary" onclick="window.switchFormTab('salary')">薪資與狀態</button>
         </div>
+
+        <div id="tab-basic" class="form-tab-content active">
+          <div class="form-grid">
+            <div class="form-group"><label>人員姓名 <span style="color:red">*</span></label><input type="text" id="name" required></div>
+            <div class="form-group"><label>人事編號</label><input type="text" id="staff_number" placeholder="例：T001"></div>
+            <div class="form-group"><label>身分證字號</label><input type="text" id="id_number"></div>
+            <div class="form-group"><label>本人手機</label><input type="text" id="phone"></div>
+            <div class="form-group"><label>主要所屬分校 <span style="color:red">*</span></label><select id="branch_id" required><option value="" disabled selected>載入中...</option></select></div>
+            <div class="form-group"><label>支援分校 (可多選，按住 Ctrl)</label><select id="branch_ids" multiple style="height: 70px;"></select></div>
+            <div class="form-group"><label>緊急聯絡人</label><input type="text" id="emergency_contact"></div>
+            <div class="form-group"><label>緊急聯絡電話</label><input type="text" id="emergency_phone"></div>
+            <div class="form-group full-width"><label>通訊地址</label><input type="text" id="address"></div>
+          </div>
+        </div>
+
+        <div id="tab-salary" class="form-tab-content">
+          <div class="form-grid">
+            <div class="form-group"><label>在職狀態</label><select id="status"><option value="在職">在職</option><option value="離職">離職</option></select></div>
+            <div class="form-group"><label>到職日期</label><input type="date" id="hire_date"></div>
+            <div class="form-group full-width" style="border-top: 1px dashed var(--border); margin-top: 10px; padding-top: 15px;">
+              <label style="color: var(--primary);">薪資計算參數設定 (HR專用)</label>
+            </div>
+            <div class="form-group"><label>固定底薪</label><input type="number" id="base_salary" value="0"></div>
+            <div class="form-group"><label>授課時薪</label><input type="number" id="hourly_rate" value="0"></div>
+          </div>
+        </div>
+
         <div class="actions" style="margin-top: 25px;"><button type="button" class="btn btn-cancel" onclick="window.closeFormModal()">取消</button><button type="submit" class="btn btn-primary" id="submit-btn">儲存資料</button></div>
       </form>
     </div>
