@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>首頁儀表板 - 補習班管理系統</title>
+  <title>首頁總覽 - 陽禾文理補習班管理系統</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="./style.css" />
   <style>
-    /* 首頁儀表板專屬微調 */
     .dashboard-layout { display: flex; flex-direction: column; gap: 20px; }
     .stat-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
@@ -17,9 +16,7 @@
     .stat-info { display: flex; flex-direction: column; }
     .stat-label { font-size: 14px; color: var(--text-light); font-weight: 500; margin-bottom: 4px; }
     .stat-number { font-size: 28px; font-weight: bold; color: var(--text-main); font-family: monospace; }
-
     .bottom-layout { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; }
-    
     .class-schedule-list { display: flex; flex-direction: column; gap: 10px; max-height: 600px; overflow-y: auto; padding-right: 5px; }
     .schedule-item { border: 1px solid var(--border); border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center; background: #fff; transition: 0.2s; }
     .schedule-item:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(37,99,235,0.05); }
@@ -27,16 +24,13 @@
     .schedule-detail { flex-grow: 1; margin: 0 15px; }
     .schedule-name { font-weight: bold; font-size: 16px; color: var(--text-main); margin-bottom: 4px; }
     .schedule-sub { font-size: 12px; color: var(--text-light); }
-    
     .status-btn, .att-status-btn { border: none; cursor: pointer; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px; transition: 0.2s; font-family: inherit; user-select: none; }
     .status-btn:hover, .att-status-btn:hover { opacity: 0.8; transform: scale(1.05); }
     .status-btn:active, .att-status-btn:active { transform: scale(0.95); }
-    
     .live-btn { background: #ef4444; color: white; animation: pulse 2s infinite; }
     .ended-btn { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
     .auto-btn { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); } 70% { box-shadow: 0 0 0 6px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
-
     .att-roster-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border); }
     .att-roster-item:last-child { border-bottom: none; }
     .status-in { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
@@ -46,50 +40,13 @@
   </style>
 </head>
 <body>
-
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <span class="material-symbols-outlined" style="font-size: 32px; color: #60a5fa;">school</span>
-      <h2>補習班管理系統</h2>
-    </div>
-    
-    <div class="sidebar-menu">
-      <div style="font-size: 11px; color: #64748b; font-weight: bold; margin: 10px 0 5px 15px; text-transform: uppercase;">核心模組</div>
-      <a href="./index.html" class="menu-item active"><span class="material-symbols-outlined">dashboard</span> 首頁儀表板</a>
-      <a href="./students/index.html" class="menu-item"><span class="material-symbols-outlined">group</span> 學生管理</a>
-      <a href="./classes/index.html" class="menu-item"><span class="material-symbols-outlined">class</span> 班級與排課</a>
-      <a href="./attendance/index.html" class="menu-item"><span class="material-symbols-outlined">how_to_reg</span> 考勤打卡</a>
-      
-      <div style="font-size: 11px; color: #64748b; font-weight: bold; margin: 20px 0 5px 15px; text-transform: uppercase;">教務與財務</div>
-      <a href="./grades/index.html" class="menu-item"><span class="material-symbols-outlined">quiz</span> 成績管理</a>
-      <a href="./payments/index.html" class="menu-item"><span class="material-symbols-outlined">payments</span> 繳費管理</a>
-      <a href="./meals/index.html" class="menu-item"><span class="material-symbols-outlined">restaurant</span> 餐費與訂餐</a>
-      
-      <div style="font-size: 11px; color: #64748b; font-weight: bold; margin: 20px 0 5px 15px; text-transform: uppercase;">行政系統</div>
-      <a href="./staff/index.html" class="menu-item"><span class="material-symbols-outlined">badge</span> 教職員管理</a>
-      <a href="./classrooms/index.html" class="menu-item"><span class="material-symbols-outlined">meeting_room</span> 教室與行事曆</a>
-      <a href="./notifications/index.html" class="menu-item"><span class="material-symbols-outlined">campaign</span> 班級通知</a>
-      
-      <div style="font-size: 11px; color: #64748b; font-weight: bold; margin: 20px 0 5px 15px; text-transform: uppercase;">系統設定</div>
-      <a href="#" class="menu-item" onclick="alert('下個階段即將解鎖帳號管理功能！')"><span class="material-symbols-outlined">manage_accounts</span> 系統帳號管理</a>
-    </div>
-    
-    <div class="sidebar-footer">
-      <button class="btn" style="width: 100%; background: #334155; color: #f8fafc; display: flex; justify-content: center; gap: 8px; border: 1px solid #475569;" onclick="window.logout()">
-        <span class="material-symbols-outlined" style="font-size: 18px;">logout</span> 登出系統
-      </button>
-    </div>
-  </aside>
-
   <main class="main-wrapper">
     <header class="header">
       <div class="header-left">
         <span class="material-symbols-outlined" style="font-size: 28px; color: var(--primary);">dashboard</span>
         <h1>首頁總覽</h1>
       </div>
-      <div class="header-right">
-        <span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span>
-      </div>
+      <div class="header-right"><span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span></div>
     </header>
     
     <div class="container dashboard-layout">
@@ -98,7 +55,6 @@
         <div class="stat-box"><div class="stat-icon success"><span class="material-symbols-outlined" style="font-size: 32px;">how_to_reg</span></div><div class="stat-info"><span class="stat-label">今日目前在班人數</span><span class="stat-number" id="stat-checked-in">-</span></div></div>
         <div class="stat-box"><div class="stat-icon warning"><span class="material-symbols-outlined" style="font-size: 32px;">payments</span></div><div class="stat-info"><span class="stat-label">待繳費未結清單據</span><span class="stat-number" id="stat-unpaid">-</span></div></div>
       </div>
-
       <div class="bottom-layout">
         <div class="card" style="padding: 20px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -124,255 +80,30 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="custom-dialog" style="z-index: 9999;">
-    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
-      <div id="dialog-icon" style="margin-bottom: 15px;"></div>
-      <h3 id="dialog-title" style="margin-top: 0; color: var(--text-main); font-size: 20px;">提示</h3>
-      <p id="dialog-message" style="color: var(--text-light); margin-bottom: 25px; line-height: 1.5; font-size: 15px;"></p>
-      <div style="display: flex; gap: 10px; justify-content: center;"><button class="btn btn-cancel" id="dialog-btn-cancel" style="display: none;">取消</button><button class="btn btn-primary" id="dialog-btn-confirm">確定</button></div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="custom-prompt" style="z-index: 9999;">
-    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
-      <span class="material-symbols-outlined" style="font-size: 48px; color: #f59e0b; margin-bottom: 15px;">edit_document</span>
-      <h3 id="prompt-title" style="margin-top: 0; color: var(--text-main); font-size: 20px;">提示</h3>
-      <p id="prompt-message" style="color: var(--text-light); margin-bottom: 20px; font-size: 14px;"></p>
-      <input type="text" id="prompt-input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 25px; box-sizing: border-box;">
-      <div style="display: flex; gap: 10px; justify-content: center;"><button class="btn btn-cancel" id="prompt-btn-cancel">取消</button><button class="btn btn-primary" id="prompt-btn-confirm">確定</button></div>
-    </div>
-  </div>
+  <div class="modal-overlay" id="custom-dialog" style="z-index: 9999;"><div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;"><div id="dialog-icon" style="margin-bottom: 15px;"></div><h3 id="dialog-title" style="margin-top: 0; color: var(--text-main); font-size: 20px;">提示</h3><p id="dialog-message" style="color: var(--text-light); margin-bottom: 25px; line-height: 1.5; font-size: 15px;"></p><div style="display: flex; gap: 10px; justify-content: center;"><button class="btn btn-cancel" id="dialog-btn-cancel" style="display: none;">取消</button><button class="btn btn-primary" id="dialog-btn-confirm">確定</button></div></div></div>
+  <div class="modal-overlay" id="custom-prompt" style="z-index: 9999;"><div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;"><span class="material-symbols-outlined" style="font-size: 48px; color: #f59e0b; margin-bottom: 15px;">edit_document</span><h3 id="prompt-title" style="margin-top: 0; color: var(--text-main); font-size: 20px;">提示</h3><p id="prompt-message" style="color: var(--text-light); margin-bottom: 20px; font-size: 14px;"></p><input type="text" id="prompt-input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 25px; box-sizing: border-box;"><div style="display: flex; gap: 10px; justify-content: center;"><button class="btn btn-cancel" id="prompt-btn-cancel">取消</button><button class="btn btn-primary" id="prompt-btn-confirm">確定</button></div></div></div>
 
   <script type="module">
     import { supabase } from './config.js'
-
     const todayStr = new Date().toISOString().split('T')[0]
     document.getElementById('header-date').textContent = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })
 
-    // ==========================================
-    // 💡 0. 全域客製化視窗系統
-    // ==========================================
-    window.showCustomDialog = (title, message, type = 'alert', icon = 'info') => {
-      return new Promise((resolve) => {
-        const dialog = document.getElementById('custom-dialog')
-        document.getElementById('dialog-title').textContent = title
-        document.getElementById('dialog-message').innerHTML = message.replace(/\n/g, '<br>')
-        const iconColor = type === 'confirm' ? '#f59e0b' : (type === 'error' ? '#dc2626' : '#3b82f6')
-        document.getElementById('dialog-icon').innerHTML = `<span class="material-symbols-outlined" style="font-size: 48px; color: ${iconColor};">${icon}</span>`
-        const btnCancel = document.getElementById('dialog-btn-cancel'); const btnConfirm = document.getElementById('dialog-btn-confirm')
-        btnCancel.style.display = type === 'confirm' ? 'block' : 'none'
-        const cleanup = () => { dialog.style.display = 'none'; btnConfirm.onclick = null; btnCancel.onclick = null }
-        btnConfirm.onclick = () => { cleanup(); resolve(true) }
-        btnCancel.onclick = () => { cleanup(); resolve(false) }
-        dialog.style.display = 'flex'
-      })
-    }
+    window.showCustomDialog = (title, message, type = 'alert', icon = 'info') => { return new Promise((resolve) => { const dialog = document.getElementById('custom-dialog'); document.getElementById('dialog-title').textContent = title; document.getElementById('dialog-message').innerHTML = message.replace(/\n/g, '<br>'); const iconColor = type === 'confirm' ? '#f59e0b' : (type === 'error' ? '#dc2626' : '#3b82f6'); document.getElementById('dialog-icon').innerHTML = `<span class="material-symbols-outlined" style="font-size: 48px; color: ${iconColor};">${icon}</span>`; const btnCancel = document.getElementById('dialog-btn-cancel'); const btnConfirm = document.getElementById('dialog-btn-confirm'); btnCancel.style.display = type === 'confirm' ? 'block' : 'none'; const cleanup = () => { dialog.style.display = 'none'; btnConfirm.onclick = null; btnCancel.onclick = null }; btnConfirm.onclick = () => { cleanup(); resolve(true) }; btnCancel.onclick = () => { cleanup(); resolve(false) }; dialog.style.display = 'flex' }) }
+    window.showCustomPrompt = (title, message, placeholder = '') => { return new Promise((resolve) => { const dialog = document.getElementById('custom-prompt'); document.getElementById('prompt-title').textContent = title; document.getElementById('prompt-message').innerHTML = message.replace(/\n/g, '<br>'); const input = document.getElementById('prompt-input'); input.value = ''; input.placeholder = placeholder; const btnCancel = document.getElementById('prompt-btn-cancel'); const btnConfirm = document.getElementById('prompt-btn-confirm'); const cleanup = () => { dialog.style.display = 'none'; btnConfirm.onclick = null; btnCancel.onclick = null }; btnConfirm.onclick = () => { cleanup(); resolve(input.value) }; btnCancel.onclick = () => { cleanup(); resolve(null) }; dialog.style.display = 'flex'; input.focus() }) }
+    window.logout = async () => { const confirmLogout = await window.showCustomDialog('系統登出', '確定要登出系統嗎？', 'confirm', 'logout'); if (!confirmLogout) return; await supabase.auth.signOut(); window.location.href = './login.html' }
 
-    window.showCustomPrompt = (title, message, placeholder = '') => {
-      return new Promise((resolve) => {
-        const dialog = document.getElementById('custom-prompt')
-        document.getElementById('prompt-title').textContent = title
-        document.getElementById('prompt-message').innerHTML = message.replace(/\n/g, '<br>')
-        const input = document.getElementById('prompt-input'); input.value = ''; input.placeholder = placeholder
-        const btnCancel = document.getElementById('prompt-btn-cancel'); const btnConfirm = document.getElementById('prompt-btn-confirm')
-        const cleanup = () => { dialog.style.display = 'none'; btnConfirm.onclick = null; btnCancel.onclick = null }
-        btnConfirm.onclick = () => { cleanup(); resolve(input.value) }
-        btnCancel.onclick = () => { cleanup(); resolve(null) }
-        dialog.style.display = 'flex'; input.focus()
-      })
-    }
+    window.fetchDashboardStats = async () => { try { const [studentRes, checkedInRes, unpaidRes] = await Promise.all([ supabase.from('students').select('*', { count: 'exact', head: true }), supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('record_date', todayStr).eq('user_type', 'student').not('check_in', 'is', null).is('check_out', null).neq('status', '請假'), supabase.from('payments').select('*', { count: 'exact', head: true }).eq('status', '未繳') ]); document.getElementById('stat-total-students').textContent = studentRes.count || 0; document.getElementById('stat-checked-in').textContent = checkedInRes.count || 0; document.getElementById('stat-unpaid').textContent = unpaidRes.count || 0 } catch (err) { console.error(err) } }
+    window.fetchTodayClasses = async () => { const listContainer = document.getElementById('today-classes-list'); const daysMap = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']; const now = new Date(); const todayName = daysMap[now.getDay()]; document.getElementById('today-display').textContent = `今天是 ${todayName}`; try { const [classesRes, sessionsRes] = await Promise.all([ supabase.from('classes').select('id, name, schedule, classrooms(name), teacher:staff!classes_teacher_id_fkey(name)'), supabase.from('class_sessions').select('class_id, status').eq('session_date', todayStr) ]); if (classesRes.error) throw classesRes.error; const manualStatusMap = {}; if (sessionsRes.data) sessionsRes.data.forEach(s => manualStatusMap[s.class_id] = s.status); const todayClasses = []; classesRes.data.forEach(c => { if (!c.schedule) return; const slots = c.schedule.split(', '); slots.forEach(slot => { if (slot.includes(todayName) || slot.includes(`星期${todayName.charAt(1)}`)) { const timeMatch = slot.match(/(\d{2}:\d{2})~(\d{2}:\d{2})/); if (timeMatch) todayClasses.push({ id: c.id, name: c.name, startTime: timeMatch[1], endTime: timeMatch[2], teacher: c.teacher ? c.teacher.name : '未指派', room: c.classrooms ? c.classrooms.name : '未定教室', manualStatus: manualStatusMap[c.id] || 'auto' }) } }) }); todayClasses.sort((a, b) => a.startTime.localeCompare(b.startTime)); listContainer.innerHTML = ''; if (todayClasses.length === 0) { listContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-light);">今日無排定課程 🎉</div>'; return } const currentMinutes = now.getHours() * 60 + now.getMinutes(); todayClasses.forEach(tc => { const [startH, startM] = tc.startTime.split(':').map(Number); const [endH, endM] = tc.endTime.split(':').map(Number); const startMin = startH * 60 + startM; const endMin = endH * 60 + endM; let displayStatus = '', badgeClass = '', iconHtml = ''; if (tc.manualStatus === 'live') { displayStatus = '上課中'; badgeClass = 'live-btn'; iconHtml = '<span class="material-symbols-outlined" style="font-size:14px;">sensors</span> ' } else if (tc.manualStatus === 'ended') { displayStatus = '已下課'; badgeClass = 'ended-btn' } else { if (currentMinutes >= startMin && currentMinutes <= endMin) { displayStatus = '上課中'; badgeClass = 'live-btn'; iconHtml = '<span class="material-symbols-outlined" style="font-size:14px;">sensors</span> ' } else if (currentMinutes > endMin) { displayStatus = '已下課'; badgeClass = 'ended-btn' } else { displayStatus = '尚未開始'; badgeClass = 'auto-btn' } } listContainer.innerHTML += ` <div class="schedule-item"> <div class="schedule-time"><div>${tc.startTime}</div><div style="font-size:12px; color:var(--text-light); font-weight:normal;">${tc.endTime}</div></div> <div class="schedule-detail"> <div class="schedule-name">${tc.name}</div> <div class="schedule-sub"><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">school</span> ${tc.teacher} &nbsp;|&nbsp; <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">meeting_room</span> ${tc.room}</div> </div> <div style="display:flex; align-items:center; gap:8px;"> <button class="status-btn ${badgeClass}" onclick="window.toggleClassStatus('${tc.id}', '${tc.manualStatus}')" title="點擊切換狀態">${iconHtml}${displayStatus}</button> <button class="btn-icon" title="學生點名簿" onclick="window.openAttendance('${tc.id}', '${tc.name}')" style="background:#eff6ff; padding:6px; border-radius:6px;"><span class="material-symbols-outlined" style="font-size:20px; color:var(--primary);">checklist</span></button> </div> </div> ` }) } catch (err) { listContainer.innerHTML = `<div style="text-align:center; color:red; padding:20px;">課表載入失敗</div>` } }
+    window.toggleClassStatus = async (classId, currentManualStatus) => { let nextStatus = 'live'; if (currentManualStatus === 'live') nextStatus = 'ended'; else if (currentManualStatus === 'ended') nextStatus = 'auto'; try { if (nextStatus === 'auto') await supabase.from('class_sessions').delete().match({ class_id: classId, session_date: todayStr }); else await supabase.from('class_sessions').upsert([{ class_id: classId, session_date: todayStr, status: nextStatus }], { onConflict: 'class_id, session_date' }); window.fetchTodayClasses() } catch (err) { await window.showCustomDialog('錯誤', '切換狀態失敗：' + err.message, 'alert', 'error') } }
 
-    window.logout = async () => {
-      const confirmLogout = await window.showCustomDialog('系統登出', '確定要登出系統嗎？', 'confirm', 'logout')
-      if (!confirmLogout) return
-      await supabase.auth.signOut()
-      window.location.href = './login.html'
-    }
-
-    // ==========================================
-    // 1. 取得上方三大數據 (Promise.all 優化載入速度)
-    // ==========================================
-    window.fetchDashboardStats = async () => {
-      try {
-        const [studentRes, checkedInRes, unpaidRes] = await Promise.all([
-          supabase.from('students').select('*', { count: 'exact', head: true }),
-          supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('record_date', todayStr).eq('user_type', 'student').not('check_in', 'is', null).is('check_out', null).neq('status', '請假'),
-          supabase.from('payments').select('*', { count: 'exact', head: true }).eq('status', '未繳')
-        ])
-
-        document.getElementById('stat-total-students').textContent = studentRes.count || 0
-        document.getElementById('stat-checked-in').textContent = checkedInRes.count || 0
-        document.getElementById('stat-unpaid').textContent = unpaidRes.count || 0
-      } catch (err) { console.error('數據抓取失敗:', err) }
-    }
-
-    // ==========================================
-    // 2. 獲取並解析今日課表 (完整邏輯)
-    // ==========================================
-    window.fetchTodayClasses = async () => {
-      const listContainer = document.getElementById('today-classes-list')
-      const daysMap = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']; const now = new Date(); const todayName = daysMap[now.getDay()]
-      document.getElementById('today-display').textContent = `今天是 ${todayName}`
-
-      try {
-        const [classesRes, sessionsRes] = await Promise.all([
-          supabase.from('classes').select('id, name, schedule, classrooms(name), teacher:staff!classes_teacher_id_fkey(name)'),
-          supabase.from('class_sessions').select('class_id, status').eq('session_date', todayStr)
-        ])
-
-        if (classesRes.error) throw classesRes.error
-        const manualStatusMap = {}
-        if (sessionsRes.data) sessionsRes.data.forEach(s => manualStatusMap[s.class_id] = s.status)
-
-        const todayClasses = []
-        classesRes.data.forEach(c => {
-          if (!c.schedule) return
-          const slots = c.schedule.split(', ')
-          slots.forEach(slot => {
-            if (slot.includes(todayName) || slot.includes(`星期${todayName.charAt(1)}`)) {
-              const timeMatch = slot.match(/(\d{2}:\d{2})~(\d{2}:\d{2})/)
-              if (timeMatch) todayClasses.push({
-                id: c.id, name: c.name, startTime: timeMatch[1], endTime: timeMatch[2],
-                teacher: c.teacher ? c.teacher.name : '未指派', room: c.classrooms ? c.classrooms.name : '未定教室', manualStatus: manualStatusMap[c.id] || 'auto'
-              })
-            }
-          })
-        })
-
-        todayClasses.sort((a, b) => a.startTime.localeCompare(b.startTime))
-        listContainer.innerHTML = ''
-        if (todayClasses.length === 0) { listContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-light);">今日無排定課程 🎉</div>'; return }
-
-        const currentMinutes = now.getHours() * 60 + now.getMinutes()
-        todayClasses.forEach(tc => {
-          const [startH, startM] = tc.startTime.split(':').map(Number); const [endH, endM] = tc.endTime.split(':').map(Number)
-          const startMin = startH * 60 + startM; const endMin = endH * 60 + endM
-
-          let displayStatus = '', badgeClass = '', iconHtml = ''
-          if (tc.manualStatus === 'live') { displayStatus = '上課中'; badgeClass = 'live-btn'; iconHtml = '<span class="material-symbols-outlined" style="font-size:14px;">sensors</span> ' } 
-          else if (tc.manualStatus === 'ended') { displayStatus = '已下課'; badgeClass = 'ended-btn' } 
-          else {
-            if (currentMinutes >= startMin && currentMinutes <= endMin) { displayStatus = '上課中'; badgeClass = 'live-btn'; iconHtml = '<span class="material-symbols-outlined" style="font-size:14px;">sensors</span> ' }
-            else if (currentMinutes > endMin) { displayStatus = '已下課'; badgeClass = 'ended-btn' }
-            else { displayStatus = '尚未開始'; badgeClass = 'auto-btn' }
-          }
-
-          listContainer.innerHTML += `
-            <div class="schedule-item">
-              <div class="schedule-time"><div>${tc.startTime}</div><div style="font-size:12px; color:var(--text-light); font-weight:normal;">${tc.endTime}</div></div>
-              <div class="schedule-detail">
-                <div class="schedule-name">${tc.name}</div>
-                <div class="schedule-sub"><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">school</span> ${tc.teacher} &nbsp;|&nbsp; <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">meeting_room</span> ${tc.room}</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <button class="status-btn ${badgeClass}" onclick="window.toggleClassStatus('${tc.id}', '${tc.manualStatus}')" title="點擊切換狀態">${iconHtml}${displayStatus}</button>
-                <button class="btn-icon" title="學生點名簿" onclick="window.openAttendance('${tc.id}', '${tc.name}')" style="background:#eff6ff; padding:6px; border-radius:6px;"><span class="material-symbols-outlined" style="font-size:20px; color:var(--primary);">checklist</span></button>
-              </div>
-            </div>
-          `
-        })
-      } catch (err) { listContainer.innerHTML = `<div style="text-align:center; color:red; padding:20px;">課表載入失敗</div>` }
-    }
-
-    window.toggleClassStatus = async (classId, currentManualStatus) => {
-      let nextStatus = 'live'; if (currentManualStatus === 'live') nextStatus = 'ended'; else if (currentManualStatus === 'ended') nextStatus = 'auto'
-      try {
-        if (nextStatus === 'auto') await supabase.from('class_sessions').delete().match({ class_id: classId, session_date: todayStr })
-        else await supabase.from('class_sessions').upsert([{ class_id: classId, session_date: todayStr, status: nextStatus }], { onConflict: 'class_id, session_date' })
-        window.fetchTodayClasses()
-      } catch (err) { await window.showCustomDialog('錯誤', '切換狀態失敗：' + err.message, 'alert', 'error') }
-    }
-
-    // ==========================================
-    // 3. 班級專屬點名簿與請假邏輯
-    // ==========================================
-    let currentAttClassId = null
-    const attModal = document.getElementById('attendance-modal')
-
-    window.openAttendance = async (classId, className) => {
-      currentAttClassId = classId; document.getElementById('att-class-name').textContent = className
-      document.getElementById('att-student-list').innerHTML = '<div style="padding: 30px; text-align: center; color: var(--text-light);">載入名單中...</div>'
-      attModal.style.display = 'flex'; await window.reloadAttendanceList()
-    }
+    let currentAttClassId = null; const attModal = document.getElementById('attendance-modal')
+    window.openAttendance = async (classId, className) => { currentAttClassId = classId; document.getElementById('att-class-name').textContent = className; document.getElementById('att-student-list').innerHTML = '<div style="padding: 30px; text-align: center; color: var(--text-light);">載入名單中...</div>'; attModal.style.display = 'flex'; await window.reloadAttendanceList() }
     window.closeAttendanceModal = () => { attModal.style.display = 'none' }
+    window.reloadAttendanceList = async () => { try { const { data: roster } = await supabase.from('class_students').select('student_id, students(name, student_number)').eq('class_id', currentAttClassId); if (!roster || roster.length === 0) { document.getElementById('att-student-list').innerHTML = '<div style="padding: 20px; text-align: center;">班上尚無學生</div>'; return } const studentIds = roster.map(r => r.student_id); const { data: todayAtt } = await supabase.from('attendance').select('*').eq('record_date', todayStr).in('student_id', studentIds); const attMap = {}; if (todayAtt) todayAtt.forEach(a => attMap[a.student_id] = a); const listContainer = document.getElementById('att-student-list'); listContainer.innerHTML = ''; roster.sort((a, b) => (a.students?.student_number || '').localeCompare(b.students?.student_number || '', 'zh-TW', { numeric: true })); roster.forEach(r => { const s = r.students; if (!s) return; const att = attMap[r.student_id]; let statusText = '未到班', statusClass = 'status-none', currentStatusMode = 'none'; if (att) { if (att.status === '請假') { statusText = '已請假'; statusClass = 'status-leave'; currentStatusMode = 'leave' } else if (att.check_out) { statusText = '已離班'; statusClass = 'status-out'; currentStatusMode = 'out' } else if (att.check_in) { statusText = '在班上'; statusClass = 'status-in'; currentStatusMode = 'in' } } const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) : '-'; const inTime = att && att.check_in ? formatTime(att.check_in) : '-'; const outTime = att && att.check_out ? formatTime(att.check_out) : '-'; const timeOrReasonHtml = att && att.status === '請假' ? `事由：<span style="color:#b45309;">${att.leave_reason || '無'}</span>` : `進：${inTime} | 離：${outTime}`; listContainer.innerHTML += ` <div class="att-roster-item"> <div> <div style="font-weight: 600;">${s.name} <span style="font-size:12px; font-weight:normal; color:var(--text-light);">${s.student_number || ''}</span></div> <div style="font-size: 12px; color: var(--text-light); margin-top:4px;">${timeOrReasonHtml}</div> </div> <div style="display:flex; align-items:center; gap:12px;"> <button class="att-status-btn ${statusClass}" onclick="window.toggleAttendance('${r.student_id}', '${currentStatusMode}')">${statusText}</button> <button class="btn-icon" title="請假登記" onclick="window.markLeave('${r.student_id}')" style="background:#fffbeb; padding:6px; border-radius:6px; border:1px solid #fde68a;"> <span class="material-symbols-outlined" style="font-size:18px; color:#b45309;">medical_information</span> </button> </div> </div> ` }) } catch (err) { console.error('點名表載入失敗', err) } }
+    window.toggleAttendance = async (studentId, currentStatusMode) => { try { const nowIso = new Date().toISOString(); const { data: existing } = await supabase.from('attendance').select('id').match({ student_id: studentId, record_date: todayStr }).maybeSingle(); if (currentStatusMode === 'none' || currentStatusMode === 'leave') { if (existing) await supabase.from('attendance').update({ check_in: nowIso, check_out: null, status: '正常', leave_reason: null }).eq('id', existing.id); else await supabase.from('attendance').insert([{ user_type: 'student', student_id: studentId, record_date: todayStr, check_in: nowIso, status: '正常' }]) } else if (currentStatusMode === 'in') { await supabase.from('attendance').update({ check_out: nowIso, status: '正常' }).eq('id', existing.id) } else if (currentStatusMode === 'out') { await supabase.from('attendance').delete().eq('id', existing.id) } await window.reloadAttendanceList(); window.fetchDashboardStats() } catch (err) { await window.showCustomDialog('錯誤', '操作失敗：' + err.message, 'alert', 'error') } }
+    window.markLeave = async (studentId) => { const reason = await window.showCustomPrompt('請假登記', '請輸入今日請假事由：\n(若不填寫可直接按確定留空)', '例：病假、事假、學校補課...'); if (reason === null) return; try { const { data: existing } = await supabase.from('attendance').select('id').match({ student_id: studentId, record_date: todayStr }).maybeSingle(); if (existing) await supabase.from('attendance').update({ status: '請假', leave_reason: reason, check_in: null, check_out: null }).eq('id', existing.id); else await supabase.from('attendance').insert([{ user_type: 'student', student_id: studentId, record_date: todayStr, status: '請假', leave_reason: reason }]); await window.reloadAttendanceList(); window.fetchDashboardStats() } catch (err) { await window.showCustomDialog('錯誤', '請假登記失敗：' + err.message, 'alert', 'error') } }
 
-    window.reloadAttendanceList = async () => {
-      try {
-        const { data: roster } = await supabase.from('class_students').select('student_id, students(name, student_number)').eq('class_id', currentAttClassId)
-        if (!roster || roster.length === 0) { document.getElementById('att-student-list').innerHTML = '<div style="padding: 20px; text-align: center;">班上尚無學生</div>'; return }
-
-        const studentIds = roster.map(r => r.student_id)
-        const { data: todayAtt } = await supabase.from('attendance').select('*').eq('record_date', todayStr).in('student_id', studentIds)
-        const attMap = {}; if (todayAtt) todayAtt.forEach(a => attMap[a.student_id] = a)
-
-        const listContainer = document.getElementById('att-student-list'); listContainer.innerHTML = ''
-        roster.sort((a, b) => (a.students?.student_number || '').localeCompare(b.students?.student_number || '', 'zh-TW', { numeric: true }))
-
-        roster.forEach(r => {
-          const s = r.students; if (!s) return
-          const att = attMap[r.student_id]
-          
-          let statusText = '未到班', statusClass = 'status-none', currentStatusMode = 'none'
-          if (att) {
-            if (att.status === '請假') { statusText = '已請假'; statusClass = 'status-leave'; currentStatusMode = 'leave' }
-            else if (att.check_out) { statusText = '已離班'; statusClass = 'status-out'; currentStatusMode = 'out' }
-            else if (att.check_in) { statusText = '在班上'; statusClass = 'status-in'; currentStatusMode = 'in' }
-          }
-
-          const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) : '-'
-          const inTime = att && att.check_in ? formatTime(att.check_in) : '-'; const outTime = att && att.check_out ? formatTime(att.check_out) : '-'
-          
-          const timeOrReasonHtml = att && att.status === '請假' ? `事由：<span style="color:#b45309;">${att.leave_reason || '無'}</span>` : `進：${inTime} | 離：${outTime}`
-
-          listContainer.innerHTML += `
-            <div class="att-roster-item">
-              <div>
-                <div style="font-weight: 600;">${s.name} <span style="font-size:12px; font-weight:normal; color:var(--text-light);">${s.student_number || ''}</span></div>
-                <div style="font-size: 12px; color: var(--text-light); margin-top:4px;">${timeOrReasonHtml}</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:12px;">
-                <button class="att-status-btn ${statusClass}" onclick="window.toggleAttendance('${r.student_id}', '${currentStatusMode}')">${statusText}</button>
-                <button class="btn-icon" title="請假登記" onclick="window.markLeave('${r.student_id}')" style="background:#fffbeb; padding:6px; border-radius:6px; border:1px solid #fde68a;">
-                  <span class="material-symbols-outlined" style="font-size:18px; color:#b45309;">medical_information</span>
-                </button>
-              </div>
-            </div>
-          `
-        })
-      } catch (err) { console.error('點名表載入失敗', err) }
-    }
-
-    window.toggleAttendance = async (studentId, currentStatusMode) => {
-      try {
-        const nowIso = new Date().toISOString()
-        const { data: existing } = await supabase.from('attendance').select('id').match({ student_id: studentId, record_date: todayStr }).maybeSingle()
-
-        if (currentStatusMode === 'none' || currentStatusMode === 'leave') {
-          if (existing) await supabase.from('attendance').update({ check_in: nowIso, check_out: null, status: '正常', leave_reason: null }).eq('id', existing.id)
-          else await supabase.from('attendance').insert([{ user_type: 'student', student_id: studentId, record_date: todayStr, check_in: nowIso, status: '正常' }])
-        } 
-        else if (currentStatusMode === 'in') { await supabase.from('attendance').update({ check_out: nowIso, status: '正常' }).eq('id', existing.id) } 
-        else if (currentStatusMode === 'out') { await supabase.from('attendance').delete().eq('id', existing.id) }
-        await window.reloadAttendanceList(); window.fetchDashboardStats()
-      } catch (err) { await window.showCustomDialog('錯誤', '操作失敗：' + err.message, 'alert', 'error') }
-    }
-
-    window.markLeave = async (studentId) => {
-      const reason = await window.showCustomPrompt('請假登記', '請輸入今日請假事由：\n(若不填寫可直接按確定留空)', '例：病假、事假、學校補課...')
-      if (reason === null) return 
-      
-      try {
-        const { data: existing } = await supabase.from('attendance').select('id').match({ student_id: studentId, record_date: todayStr }).maybeSingle()
-        if (existing) await supabase.from('attendance').update({ status: '請假', leave_reason: reason, check_in: null, check_out: null }).eq('id', existing.id)
-        else await supabase.from('attendance').insert([{ user_type: 'student', student_id: studentId, record_date: todayStr, status: '請假', leave_reason: reason }])
-        
-        await window.reloadAttendanceList(); window.fetchDashboardStats()
-      } catch (err) { await window.showCustomDialog('錯誤', '請假登記失敗：' + err.message, 'alert', 'error') }
-    }
-
-    // 初始化執行
-    fetchDashboardStats(); fetchTodayClasses()
-    setInterval(() => { fetchDashboardStats(); fetchTodayClasses() }, 60000)
+    fetchDashboardStats(); fetchTodayClasses(); setInterval(() => { fetchDashboardStats(); fetchTodayClasses() }, 60000)
   </script>
 </body>
 </html>
