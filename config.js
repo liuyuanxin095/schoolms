@@ -18,7 +18,13 @@ window.currentUser = null;
 // 🛡️ 權限防護罩與身分載入引擎 (Auth Guard & RBAC)
 // ==========================================
 async function initializeSystem() {
-  const currentPath = window.location.pathname
+  const currentPath = window.location.pathname.toLowerCase()
+  
+  // 💡 新增：判斷是否為家長專區
+  const isParentApp = currentPath.includes('parent')
+  // 💡 新增：如果是家長專區，直接停止執行防護罩，不跳轉、不產生側邊欄！
+  if (isParentApp) return;
+
   const isLoginPage = currentPath.includes('login.html')
   const isInSubfolder = currentPath.match(/\/(students|staff|classes|attendance|grades|payments|notifications|classrooms|meals|accounts)\//)
   
