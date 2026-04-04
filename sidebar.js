@@ -2,9 +2,7 @@
 
 export function initSidebar(supabase) {
   const currentPath = window.location.pathname;
-  
-  // 💡 關鍵修復：如果是登入頁或「家長端 APP (parent)」，直接停止執行，不產生側邊欄！
-  if (currentPath.includes('login.html') || currentPath.includes('/parent/')) return; 
+  if (currentPath.includes('login.html')) return; 
 
   const isSubfolder = currentPath.match(/\/(students|staff|classes|attendance|grades|payments|notifications|classrooms|meals|accounts|branches)\//);
   const basePath = isSubfolder ? '../' : './';
@@ -101,13 +99,36 @@ export function initSidebar(supabase) {
     } catch (err) { window.showCustomDialog ? window.showCustomDialog('失敗', err.message, 'alert', 'error') : alert(err.message); btn.disabled = false; btn.textContent = '確認變更'; }
   });
 
+  // ==========================================
+  // 🛡️ 核彈級安全登出引擎 (清除所有快取與存儲)
+  // ==========================================
   window.performSecureLogout = async () => {
-    const confirmLogout = window.showCustomDialog ? await window.showCustomDialog('系統登出', '確定要登出系統嗎？\n登出後系統將自動清除瀏覽器快取與暫存資料，以保障補習班資訊安全。', 'confirm', 'logout') : confirm('確定要登出系統嗎？登出後將清除快取。');
+    // 💡 補回完整的警告文字
+    const confirmLogout = window.showCustomDialog 
+      ? await window.showCustomDialog('系統登出', '確定要登出系統嗎？\n登出後系統將自動清除瀏覽器快取與暫存資料，以保障補習班資訊安全。', 'confirm', 'logout') 
+      : confirm('確定要登出系統嗎？登出後將清除快取。');
+      
     if (!confirmLogout) return;
+
     try {
-      await supabase.auth.signOut(); localStorage.clear(); sessionStorage.clear(); window.currentUser = null;
-      if ('caches' in window) { const cacheNames = await caches.keys(); await Promise.all(cacheNames.map(name => caches.delete(name))); }
+      // 1. 註銷伺服器 Token
+      await supabase.auth.signOut();
+      
+      // 2. 清除瀏覽器本地存儲 (防範資料殘留)
+      localStorage.clear(); 
+      sessionStorage.clear(); 
+      window.currentUser = null;
+      
+      // 3. 清空瀏覽器 Cache API
+      if ('caches' in window) { 
+        const cacheNames = await caches.keys(); 
+        await Promise.all(cacheNames.map(name => caches.delete(name))); 
+      }
+      
+      // 4. 強制跳轉並加上隨機時間戳防快取
       window.location.replace(basePath + 'login.html?nocache=' + new Date().getTime());
-    } catch (err) { window.location.replace(basePath + 'login.html'); }
+    } catch (err) { 
+      window.location.replace(basePath + 'login.html'); 
+    }
   };
 }
