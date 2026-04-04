@@ -1,4 +1,4 @@
-// sidebar.js - 陽禾文理補習班 側邊導覽列 (支援 RBAC 權限與 RWD)
+// sidebar.js - 陽禾文理補習班 側邊導覽列 (支援 RBAC 權限、RWD 與 安全登出)
 
 export function initSidebar(supabase) {
   const currentPath = window.location.pathname;
@@ -61,7 +61,7 @@ export function initSidebar(supabase) {
           <button class="btn" title="變更密碼" style="flex: 1; background: #334155; color: #cbd5e1; border: 1px solid #475569; padding: 8px;" id="btn-global-pwd">
             <span class="material-symbols-outlined" style="font-size: 18px;">key</span>
           </button>
-          <button class="btn" title="登出系統" style="flex: 1; background: #7f1d1d; color: #fca5a5; border: 1px solid #991b1b; padding: 8px;" onclick="window.logout()">
+          <button class="btn" title="安全登出" style="flex: 1; background: #7f1d1d; color: #fca5a5; border: 1px solid #991b1b; padding: 8px;" onclick="window.performSecureLogout()">
             <span class="material-symbols-outlined" style="font-size: 18px;">logout</span>
           </button>
         </div>
@@ -93,6 +93,7 @@ export function initSidebar(supabase) {
     toggleBtn.addEventListener('click', toggleSidebar); overlay.addEventListener('click', toggleSidebar);
   }
 
+  // 修改密碼邏輯
   const pwdModal = document.getElementById('global-pwd-modal');
   document.getElementById('btn-global-pwd').onclick = () => { document.getElementById('global-pwd-form').reset(); pwdModal.style.display = 'flex'; };
   document.getElementById('close-pwd-modal').onclick = () => { pwdModal.style.display = 'none'; };
@@ -104,7 +105,46 @@ export function initSidebar(supabase) {
     try {
       const { error } = await supabase.auth.updateUser({ password: pwd1 }); if (error) throw error;
       if (window.showCustomDialog) await window.showCustomDialog('成功', '密碼變更成功，請重新登入。', 'alert', 'check_circle'); else alert('成功');
-      await supabase.auth.signOut(); window.location.reload();
+      window.performSecureLogout(); // 密碼變更後，呼叫核彈級登出
     } catch (err) { window.showCustomDialog ? window.showCustomDialog('失敗', err.message, 'alert', 'error') : alert(err.message); btn.disabled = false; btn.textContent = '確認變更'; }
   });
+
+  // ==========================================
+  // 🛡️ 核彈級安全登出引擎 (清除所有快取與存儲)
+  // ==========================================
+  window.performSecureLogout = async () => {
+    const confirmLogout = window.showCustomDialog 
+      ? await window.showCustomDialog('系統登出', '確定要登出系統嗎？\n登出後將自動清除瀏覽器快取，以保障資訊安全。', 'confirm', 'logout')
+      : confirm('確定要登出系統嗎？');
+      
+    if (!confirmLogout) return;
+
+    try {
+      // 1. 註銷 Supabase 登入狀態 (刪除伺服器 Token)
+      await supabase.auth.signOut();
+
+      // 2. 清除瀏覽器本地存儲 (防範資料殘留)
+      localStorage.clear();
+      sessionStorage.clear();
+      window.currentUser = null;
+
+      // 3. 清空瀏覽器 Cache Storage API (解決快取畫面不一致的問題)
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+
+      // 4. 取得登入頁路徑，並加上隨機參數 (?nocache=...) 強迫瀏覽器重新下載最新畫面
+      const loginUrl = basePath + 'login.html';
+      const noCacheUrl = loginUrl + '?nocache=' + new Date().getTime();
+      
+      // 5. 導回登入頁
+      window.location.replace(noCacheUrl);
+
+    } catch (err) {
+      console.error('清除快取時發生錯誤:', err);
+      // 發生異常仍強制導回登入頁
+      window.location.replace(basePath + 'login.html');
+    }
+  };
 }
