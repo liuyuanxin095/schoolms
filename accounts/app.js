@@ -1,83 +1,55 @@
 import { supabase, adminAuthClient } from '../config.js'
+const accountList = document.getElementById('account-list'); const accountModal = document.getElementById('account-modal'); const accountForm = document.getElementById('account-form'); const branchSelect = document.getElementById('branch_id');
 
-const accountList = document.getElementById('account-list')
-const accountModal = document.getElementById('account-modal')
-const accountForm = document.getElementById('account-form')
-const staffSelect = document.getElementById('staff_id')
-
-let allStaff = []
-
-window.showCustomDialog = (title, message, type = 'alert', icon = 'info') => { return new Promise((resolve) => { const dialog = document.getElementById('custom-dialog'); document.getElementById('dialog-title').textContent = title; document.getElementById('dialog-message').innerHTML = message.replace(/\n/g, '<br>'); const iconColor = type === 'confirm' ? '#f59e0b' : (type === 'error' ? '#dc2626' : '#3b82f6'); document.getElementById('dialog-icon').innerHTML = `<span class="material-symbols-outlined" style="font-size: 48px; color: ${iconColor};">${icon}</span>`; const btnCancel = document.getElementById('dialog-btn-cancel'); const btnConfirm = document.getElementById('dialog-btn-confirm'); btnCancel.style.display = type === 'confirm' ? 'block' : 'none'; const cleanup = () => { dialog.style.display = 'none'; btnConfirm.onclick = null; btnCancel.onclick = null }; btnConfirm.onclick = () => { cleanup(); resolve(true) }; btnCancel.onclick = () => { cleanup(); resolve(false) }; dialog.style.display = 'flex' }) }
+window.showCustomDialog = (title, message, type = 'alert', icon = 'info') => { return new Promise((resolve) => { const dialog = document.getElementById('custom-dialog'); document.getElementById('dialog-title').textContent = title; document.getElementById('dialog-message').innerHTML = message.replace(/\n/g, '<br>'); document.getElementById('dialog-icon').innerHTML = `<span class="material-symbols-outlined" style="font-size: 48px; color: ${type==='confirm'?'#f59e0b':type==='error'?'#dc2626':'#3b82f6'};">${icon}</span>`; const btnCancel = document.getElementById('dialog-btn-cancel'); const btnConfirm = document.getElementById('dialog-btn-confirm'); btnCancel.style.display = type === 'confirm' ? 'block' : 'none'; const cleanup = () => { dialog.style.display = 'none'; btnConfirm.onclick = null; btnCancel.onclick = null }; btnConfirm.onclick = () => { cleanup(); resolve(true) }; btnCancel.onclick = () => { cleanup(); resolve(false) }; dialog.style.display = 'flex' }) }
 
 async function initData() {
-  const { data } = await supabase.from('staff').select('*, branches(name)').order('name', { ascending: true })
-  allStaff = data || []
-  
-  staffSelect.innerHTML = '<option value="" disabled selected>請選擇尚未開通的人員...</option>'
-  allStaff.filter(s => !s.auth_id).forEach(s => {
-    staffSelect.appendChild(new Option(`${s.name} (HR: ${s.staff_number || s.id_number || '無編號'})`, s.id))
-  })
+  const { data: bData } = await supabase.from('branches').select('id, name'); if (bData) bData.forEach(b => branchSelect.appendChild(new Option(b.name, b.id)))
   renderTable()
 }
 
-function renderTable() {
-  accountList.innerHTML = '<tr><td colspan="6" style="text-align: center;">載入中...</td></tr>'
-  const accountStaff = allStaff.filter(s => s.auth_id)
-  
-  if (accountStaff.length === 0) { accountList.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">目前尚無已開通的帳號</td></tr>'; return }
-
-  accountList.innerHTML = ''
-  const roleMap = { 'teacher': '教師', 'admin': '分校櫃檯', 'manager': '分校主任', 'superadmin': '總管理員' }
-  const roleColor = { 'teacher': '#3b82f6', 'admin': '#8b5cf6', 'manager': '#f59e0b', 'superadmin': '#dc2626' }
-
-  accountStaff.forEach(s => {
-    const branchName = s.branches ? s.branches.name : '全域'
-    const roleDisplay = `<span style="background:${roleColor[s.role] || '#000'}20; color:${roleColor[s.role] || '#000'}; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">${roleMap[s.role] || s.role}</span>`
-
-    accountList.innerHTML += `
-      <tr>
-        <td><strong>${s.name}</strong></td>
-        <td><span style="font-weight:600;">${s.email}</span></td>
-        <td>${roleDisplay}</td>
-        <td>${branchName}</td>
-        <td><span style="color:#15803d; font-weight:bold; font-size:12px; display:inline-flex; align-items:center; gap:4px;"><span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>正常啟用</span></td>
-        <td><button class="btn-icon" style="color:var(--danger);" title="撤銷系統帳號" onclick="window.revokeAccount('${s.id}', '${s.name}')"><span class="material-symbols-outlined" style="font-size:18px;">no_accounts</span></button></td>
-      </tr>`
+async function renderTable() {
+  const { data: staff, error } = await supabase.from('staff').select('*, branches(name)').not('auth_id', 'is', null).order('name')
+  accountList.innerHTML = ''; if (!staff || staff.length === 0) return accountList.innerHTML = '<tr><td colspan="5" style="text-align:center;">尚無帳號</td></tr>'
+  const roleMap = { 'teacher':'教師', 'admin':'櫃檯', 'manager':'主任', 'superadmin':'管理員' };
+  staff.forEach(s => {
+    accountList.innerHTML += `<tr>
+      <td><strong>${s.name}</strong> ${s.staff_number ? `<span style="font-size:12px; color:#64748b;">(${s.staff_number})</span>`:''}</td>
+      <td>${s.email}</td><td><span style="background:#eff6ff; color:#2563eb; padding:4px 8px; border-radius:12px; font-size:12px; font-weight:bold;">${roleMap[s.role]||s.role}</span></td>
+      <td>${s.branches?.name||'全域'}</td>
+      <td style="display:flex; gap:5px;">
+        <button class="btn-icon" style="color:var(--warning);" title="還原密碼" onclick="window.resetPassword('${s.id}', '${s.id_number||''}', '${s.name}')"><span class="material-symbols-outlined">lock_reset</span></button>
+        <button class="btn-icon" style="color:var(--danger);" title="刪除帳號" onclick="window.revokeAccount('${s.id}', '${s.name}')"><span class="material-symbols-outlined">delete</span></button>
+      </td></tr>`
   })
 }
 
-// 選擇人員時，自動帶入他的身分證作為預設密碼
-window.autoFillAccountInfo = () => {
-  const targetStaff = allStaff.find(s => s.id === staffSelect.value)
-  if (targetStaff) { document.getElementById('id_number').value = targetStaff.id_number || '123456'; document.getElementById('role').value = targetStaff.role || 'teacher'; }
-}
-
 window.openAccountModal = () => { accountForm.reset(); accountModal.style.display = 'flex' }
-window.closeAccountModal = () => accountModal.style.display = 'none'
+window.closeAccountModal = () => { accountModal.style.display = 'none' }
 
 accountForm.addEventListener('submit', async (e) => {
-  e.preventDefault(); const btn = document.getElementById('submit-btn'); btn.disabled = true; btn.textContent = '開通中...'
+  e.preventDefault(); const btn = document.getElementById('submit-btn'); btn.disabled = true; btn.textContent = '建立中...'
   try {
-    const staffId = document.getElementById('staff_id').value; const email = document.getElementById('email').value.trim()
-    const idNumber = document.getElementById('id_number').value.trim(); const role = document.getElementById('role').value
-    
-    const { data: authData, error: authError } = await adminAuthClient.auth.signUp({ email: email, password: idNumber })
-    if (authError) throw new Error('系統帳號建立失敗：' + authError.message)
-    
-    // 只更新 HR 檔案的 auth_id 與 email
-    const { error: updateError } = await supabase.from('staff').update({ auth_id: authData.user.id, email: email, role: role }).eq('id', staffId)
-    if (updateError) throw updateError
-
-    await window.showCustomDialog('開通成功', `已成功為該人員綁定帳號。\n登入信箱：${email}\n預設密碼：${idNumber}`, 'alert', 'check_circle')
-    window.closeAccountModal(); await initData()
-  } catch (err) { await window.showCustomDialog('錯誤', err.message, 'alert', 'error') } finally { btn.disabled = false; btn.textContent = '確認建立帳號' }
+    const email = document.getElementById('email').value; const name = document.getElementById('acc_name').value; const branchId = document.getElementById('branch_id').value; const role = document.getElementById('role').value;
+    let pwd = document.getElementById('password').value; if(!pwd) pwd = Math.random().toString(36).slice(-8);
+    const { data: auth, error: authErr } = await adminAuthClient.auth.signUp({ email, password: pwd }); if (authErr) throw authErr;
+    await supabase.from('staff').insert([{ auth_id: auth.user.id, email, name, role, branch_id: branchId }]);
+    await window.showCustomDialog('建立成功', `帳號：${email}\n預設密碼：${pwd}\n請妥善保存。`, 'alert', 'check_circle'); window.closeAccountModal(); renderTable();
+  } catch(err) { await window.showCustomDialog('錯誤', err.message, 'alert', 'error') } finally { btn.disabled = false; btn.textContent = '建立帳號' }
 })
 
 window.revokeAccount = async (id, name) => {
-  const confirm = await window.showCustomDialog('撤銷帳號', `確定要撤銷 ${name} 的系統登入權限嗎？\n(他的人事檔案不會被刪除)`, 'confirm', 'warning')
-  if (!confirm) return
-  await supabase.from('staff').update({ auth_id: null, email: null, role: null }).eq('id', id)
-  await initData()
+  if (await window.showCustomDialog('確認撤銷', `確定撤銷 ${name} 的系統帳號？`, 'confirm', 'warning')) {
+    await supabase.from('staff').update({ auth_id: null, email: null, role: null }).eq('id', id); renderTable()
+  }
 }
 
+// 💡 密碼還原功能 (需配合後端 Service Role，此處為前端模擬提示)
+window.resetPassword = async (staffId, idNumber, name) => {
+  let newPwd = idNumber ? idNumber : Math.random().toString(36).slice(-8);
+  const msg = idNumber ? `該人員有人事資料，將還原為身分證：\n${newPwd}` : `無人事資料，將產生隨機密碼：\n${newPwd}`;
+  if(await window.showCustomDialog('還原密碼', `確定要還原 ${name} 的密碼？\n\n${msg}\n\n(注意：前端無法直接修改他人密碼，需在後端串接 auth.admin 啟用此功能)`, 'confirm', 'lock_reset')){
+     /* 實務上在此呼叫 supabase.auth.admin.updateUserById() */
+  }
+}
 initData()
