@@ -13,12 +13,12 @@
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; min-height: 100vh; }
+body { margin: 0; font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; min-height: 100vh; overflow-x: hidden; }
 
 /* =========================================
-   💡 全新：全域側邊欄 (Sidebar)
+   全域側邊欄 (Sidebar)
 ========================================= */
-.sidebar { width: var(--sidebar-width); background-color: #1e293b; color: #f8fafc; display: flex; flex-direction: column; position: fixed; height: 100vh; left: 0; top: 0; z-index: 100; transition: 0.3s; }
+.sidebar { width: var(--sidebar-width); background-color: #1e293b; color: #f8fafc; display: flex; flex-direction: column; position: fixed; height: 100vh; left: 0; top: 0; z-index: 1000; transition: transform 0.3s ease; }
 .sidebar-header { padding: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #334155; }
 .sidebar-header h2 { margin: 0; font-size: 18px; font-weight: bold; letter-spacing: 1px; }
 .sidebar-menu { flex-grow: 1; padding: 15px 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
@@ -28,28 +28,34 @@ body { margin: 0; font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; 
 .menu-item .material-symbols-outlined { font-size: 22px; }
 .sidebar-footer { padding: 15px 10px; border-top: 1px solid #334155; }
 
+/* 💡 RWD: 手機版側邊欄遮罩 */
+.sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 999; backdrop-filter: blur(2px); opacity: 0; transition: opacity 0.3s ease; }
+.sidebar-overlay.active { display: block; opacity: 1; }
+
 /* =========================================
    右側主內容區 (Main Content)
 ========================================= */
-.main-wrapper { margin-left: var(--sidebar-width); flex: 1; display: flex; flex-direction: column; min-height: 100vh; width: calc(100% - var(--sidebar-width)); }
+.main-wrapper { margin-left: var(--sidebar-width); flex: 1; display: flex; flex-direction: column; min-height: 100vh; width: calc(100% - var(--sidebar-width)); transition: margin 0.3s ease, width 0.3s ease; }
 
-/* 頂部導覽列 (Header) */
 .header { background: var(--surface); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 90; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
 .header-left { display: flex; align-items: center; gap: 15px; }
 .header-left h1 { margin: 0; font-size: 20px; color: var(--text-main); }
 .header-right { display: flex; align-items: center; gap: 15px; }
 
-/* 內容容器 */
+/* 💡 RWD: 漢堡選單按鈕 */
+.menu-toggle { display: none; background: none; border: none; color: var(--primary); cursor: pointer; padding: 5px; border-radius: 6px; align-items: center; justify-content: center; transition: 0.2s; margin-right: 5px; }
+.menu-toggle:hover { background-color: #eff6ff; }
+
 .container { padding: 25px 30px; flex: 1; }
 
 /* =========================================
-   統一的 UI 元件 (Card, Button, Table)
+   統一的 UI 元件
 ========================================= */
 .card { background: var(--surface); border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid var(--border); margin-bottom: 20px; }
-.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
 .toolbar-title { font-size: 20px; margin: 0; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
 
-.btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; font-family: inherit; }
+.btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; font-family: inherit; white-space: nowrap; }
 .btn-primary { background-color: var(--primary); color: white; }
 .btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 6px rgba(37,99,235,0.2); }
 .btn-cancel { background-color: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); }
@@ -57,27 +63,66 @@ body { margin: 0; font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; 
 .btn-icon { background: none; border: none; cursor: pointer; color: var(--text-light); transition: 0.2s; padding: 6px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; }
 .btn-icon:hover { background-color: #f1f5f9; color: var(--primary); }
 
-.filter-bar { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; background: #f8fafc; padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border); }
-.filter-bar input, .filter-bar select { padding: 10px 15px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; flex: 1; transition: 0.2s; }
+.filter-bar { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; background: #f8fafc; padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; }
+.filter-bar input, .filter-bar select { padding: 10px 15px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; flex: 1; min-width: 150px; transition: 0.2s; }
 .filter-bar input:focus, .filter-bar select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
 
-.table-responsive { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+.table-responsive { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; -webkit-overflow-scrolling: touch; }
 table { width: 100%; border-collapse: collapse; min-width: 600px; }
 th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); }
-th { background-color: #f8fafc; font-weight: 600; color: var(--text-light); position: sticky; top: 0; z-index: 10; font-size: 14px; }
+th { background-color: #f8fafc; font-weight: 600; color: var(--text-light); position: sticky; top: 0; z-index: 10; font-size: 14px; white-space: nowrap; }
 tr:hover td { background-color: #f8fafc; }
 td { font-size: 15px; }
 
 /* 模態視窗 Modal */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; animation: fadeIn 0.2s; }
-.modal-content { background: var(--surface); padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); position: relative; max-height: 90vh; overflow-y: auto; }
-.modal-close { position: absolute; top: 20px; right: 20px; cursor: pointer; color: var(--text-light); transition: 0.2s; background: #f1f5f9; border-radius: 50%; padding: 4px; }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; animation: fadeIn 0.2s; }
+.modal-content { background: var(--surface); padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); position: relative; max-height: 90vh; overflow-y: auto; }
+.modal-close { position: absolute; top: 20px; right: 20px; cursor: pointer; color: var(--text-light); transition: 0.2s; background: #f1f5f9; border-radius: 50%; padding: 4px; z-index: 10; }
 .modal-close:hover { background: #e2e8f0; color: var(--danger); transform: rotate(90deg); }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* 表單 Form */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .form-group { display: flex; flex-direction: column; gap: 8px; }
 .form-group.full-width { grid-column: span 2; }
 .form-group label { font-size: 14px; font-weight: 600; color: var(--text-main); }
-.form-group input, .form-group select, .form-group textarea { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; font-family: inherit; transition: 0.2s; }
+.form-group input, .form-group select, .form-group textarea { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; font-family: inherit; box-sizing: border-box; }
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+/* =========================================
+   💡 RWD 響應式佈局設定 (手機與平板)
+========================================= */
+@media (max-width: 992px) {
+  /* 側邊欄隱藏，由漢堡選單呼叫 */
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); box-shadow: 4px 0 15px rgba(0,0,0,0.2); }
+  
+  /* 主內容展開 100% 寬度 */
+  .main-wrapper { margin-left: 0; width: 100%; }
+  
+  /* 顯示漢堡選單按鈕 */
+  .menu-toggle { display: inline-flex; }
+  
+  /* 首頁數據與模組卡片單欄排列 */
+  .stat-container { grid-template-columns: 1fr !important; }
+  .bottom-layout { grid-template-columns: 1fr !important; }
+  .editor-layout { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 768px) {
+  /* 手機版極限縮減 */
+  .header { padding: 12px 15px; }
+  .container { padding: 15px; }
+  .header-left h1 { font-size: 18px; }
+  .header-right { font-size: 12px; }
+  .card { padding: 15px; }
+  
+  /* 表單、搜尋列改為全部上下疊加 */
+  .form-grid { grid-template-columns: 1fr; }
+  .form-group.full-width { grid-column: span 1; }
+  .filter-bar { flex-direction: column; align-items: stretch; }
+  
+  /* 模組上方頁籤按鈕在手機上可以滾動 */
+  .module-tabs { overflow-x: auto; white-space: nowrap; padding-bottom: 10px; }
+  .tab-btn { font-size: 14px; padding: 8px 12px; }
+}
