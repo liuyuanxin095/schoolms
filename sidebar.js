@@ -1,4 +1,4 @@
-// sidebar.js - 陽禾文理補習班 側邊導覽列 (單一列表、動態大頭貼)
+// sidebar.js - 陽禾文理補習班 側邊導覽列 (單一列表、動態大頭貼、核彈級安全登出)
 
 export function initSidebar(supabase) {
   const currentPath = window.location.pathname;
@@ -13,12 +13,10 @@ export function initSidebar(supabase) {
   const userRoleText = roleNameMap[user.role] || '教職員';
   const userBranchText = user.branches ? user.branches.name : (user.role === 'superadmin' ? '全域總部' : '未綁定');
 
-  // 💡 讀取大頭貼，若無則產生預設圖片
   const avatarUrl = user.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=3b82f6&color=fff`;
 
   const showAdminMenu = user.role === 'superadmin' || user.role === 'manager';
 
-  // 💡 取消分類，將所有模組顯示在同一列表
   const sidebarHTML = `
     <aside class="sidebar" id="global-sidebar">
       <div class="sidebar-header">
@@ -101,13 +99,36 @@ export function initSidebar(supabase) {
     } catch (err) { window.showCustomDialog ? window.showCustomDialog('失敗', err.message, 'alert', 'error') : alert(err.message); btn.disabled = false; btn.textContent = '確認變更'; }
   });
 
+  // ==========================================
+  // 🛡️ 核彈級安全登出引擎 (清除所有快取與存儲)
+  // ==========================================
   window.performSecureLogout = async () => {
-    const confirmLogout = window.showCustomDialog ? await window.showCustomDialog('系統登出', '確定要登出系統嗎？', 'confirm', 'logout') : confirm('確定要登出系統嗎？');
+    // 💡 補回完整的警告文字
+    const confirmLogout = window.showCustomDialog 
+      ? await window.showCustomDialog('系統登出', '確定要登出系統嗎？\n登出後系統將自動清除瀏覽器快取與暫存資料，以保障補習班資訊安全。', 'confirm', 'logout') 
+      : confirm('確定要登出系統嗎？登出後將清除快取。');
+      
     if (!confirmLogout) return;
+
     try {
-      await supabase.auth.signOut(); localStorage.clear(); sessionStorage.clear(); window.currentUser = null;
-      if ('caches' in window) { const cacheNames = await caches.keys(); await Promise.all(cacheNames.map(name => caches.delete(name))); }
+      // 1. 註銷伺服器 Token
+      await supabase.auth.signOut();
+      
+      // 2. 清除瀏覽器本地存儲 (防範資料殘留)
+      localStorage.clear(); 
+      sessionStorage.clear(); 
+      window.currentUser = null;
+      
+      // 3. 清空瀏覽器 Cache API
+      if ('caches' in window) { 
+        const cacheNames = await caches.keys(); 
+        await Promise.all(cacheNames.map(name => caches.delete(name))); 
+      }
+      
+      // 4. 強制跳轉並加上隨機時間戳防快取
       window.location.replace(basePath + 'login.html?nocache=' + new Date().getTime());
-    } catch (err) { window.location.replace(basePath + 'login.html'); }
+    } catch (err) { 
+      window.location.replace(basePath + 'login.html'); 
+    }
   };
 }
