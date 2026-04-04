@@ -1,52 +1,128 @@
 <!DOCTYPE html>
-<html lang="zh-TW"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>學生管理 - 陽禾文理補習班</title><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" /><link rel="stylesheet" href="../style.css" /><script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script></head>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>學生管理 - 陽禾文理補習班管理系統</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="../style.css" />
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+  <style>
+    .view-section { display: none; animation: fadeIn 0.3s ease; }
+    .view-section.active { display: block; }
+  </style>
+</head>
 <body>
   <main class="main-wrapper">
-    <header class="header"><div class="header-left"><span class="material-symbols-outlined" style="font-size:28px; color:var(--primary);">group</span><h1>學生管理</h1></div></header>
+    <header class="header">
+      <div class="header-left">
+        <span class="material-symbols-outlined" style="font-size: 28px; color: var(--primary);">group</span>
+        <h1>學生管理</h1>
+      </div>
+      <div class="header-right"><span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span></div>
+    </header>
+
     <div class="container">
+      
       <div id="view-list" class="view-section active">
         <div class="card">
-          <div class="toolbar"><h2 class="toolbar-title">學生名冊</h2><button class="btn btn-primary" onclick="window.openEditor()"><span class="material-symbols-outlined">add</span>新增學生</button></div>
-          <div class="table-responsive"><table><thead><tr><th>姓名 (學號)</th><th>分校</th><th>家長姓名</th><th>電話</th><th>操作</th></tr></thead><tbody id="student-list"><tr><td colspan="5" style="text-align:center;">載入中...</td></tr></tbody></table></div>
+          <div class="toolbar">
+            <h2 class="toolbar-title"><span class="material-symbols-outlined">groups</span>學生名冊</h2>
+            <button class="btn btn-primary" onclick="window.openEditor()"><span class="material-symbols-outlined">person_add</span>新增學生</button>
+          </div>
+          <div class="filter-bar">
+            <span class="material-symbols-outlined">search</span>
+            <input type="text" id="search-input" placeholder="搜尋學號或姓名...">
+            <select id="branch-filter"><option value="all">所有分校</option></select>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead><tr><th>照片與姓名 (學號)</th><th>所屬分校</th><th>家長姓名</th><th>聯絡電話</th><th>操作</th></tr></thead>
+              <tbody id="student-list"><tr><td colspan="5" style="text-align: center; padding: 30px;">載入中...</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <div id="view-editor" class="view-section">
-        <div class="toolbar" style="background:var(--surface); padding:20px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
-          <button class="btn btn-cancel" onclick="window.switchView('list')"><span class="material-symbols-outlined">arrow_back</span>返回</button>
-          <h2 class="toolbar-title" id="editor-title" style="margin:0;">編輯學生</h2>
+        <div class="toolbar" style="background: var(--surface); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <button class="btn btn-cancel" onclick="window.switchView('list')"><span class="material-symbols-outlined">arrow_back</span>返回列表</button>
+            <h2 class="toolbar-title" id="editor-title" style="margin: 0;">編輯學生資料</h2>
+          </div>
         </div>
+
         <div class="card">
+          
+          <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+            <img id="avatar-preview" src="https://via.placeholder.com/60" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border);">
+            <div>
+              <label style="font-size: 14px; font-weight: bold; color: var(--text-main); display: block; margin-bottom: 5px;">上傳照片 (選填)</label>
+              <input type="file" id="photo" accept="image/*" onchange="window.previewPhoto(event)" style="font-size: 13px;">
+            </div>
+          </div>
+
           <div class="form-tabs">
-            <button class="form-tab active" id="tab-btn-basic" onclick="window.switchFormTab('basic')">基本資料</button>
-            <button class="form-tab" id="tab-btn-att" onclick="window.switchFormTab('att')">考勤紀錄與請假</button>
+            <button class="form-tab active" id="tab-btn-basic" onclick="window.switchFormTab('basic')"><span class="material-symbols-outlined" style="font-size:16px; vertical-align:text-bottom;">info</span> 基本資料</button>
+            <button class="form-tab" id="tab-btn-att" onclick="window.switchFormTab('att')"><span class="material-symbols-outlined" style="font-size:16px; vertical-align:text-bottom;">calendar_month</span> 考勤與請假</button>
           </div>
           
           <div id="tab-basic" class="form-tab-content active">
             <form id="student-form">
               <input type="hidden" id="student-id">
               <div class="form-grid">
-                <div class="form-group"><label>學生姓名 *</label><input type="text" id="name" required></div>
+                <div class="form-group"><label>學生姓名 <span style="color:red">*</span></label><input type="text" id="name" required></div>
                 <div class="form-group"><label>學號</label><input type="text" id="student_number"></div>
-                <div class="form-group"><label>分校 *</label><select id="branch_id" required></select></div>
+                <div class="form-group full-width"><label>主要所屬分校 <span style="color:red">*</span></label><select id="branch_id" required><option value="" disabled selected>載入中...</option></select></div>
+                <div class="form-group"><label>就讀學校</label><input type="text" id="school"></div>
                 <div class="form-group"><label>學生電話</label><input type="text" id="phone"></div>
                 <div class="form-group"><label>家長姓名</label><input type="text" id="parent_name"></div>
                 <div class="form-group"><label>家長電話</label><input type="text" id="parent_phone"></div>
+                <div class="form-group full-width"><label>通訊地址</label><input type="text" id="address"></div>
               </div>
-              <div class="actions" style="margin-top:20px;"><button type="submit" class="btn btn-primary">儲存</button></div>
+              <div class="actions" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
+                <button type="submit" class="btn btn-primary" id="submit-btn" style="font-size: 16px; padding: 12px 24px;"><span class="material-symbols-outlined">save</span> 儲存學生檔案</button>
+              </div>
             </form>
           </div>
           
           <div id="tab-att" class="form-tab-content">
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;"><h3>出缺席行事曆</h3><button class="btn btn-warning" style="background:#f59e0b; color:white; border:none;" onclick="window.markLeave()"><span class="material-symbols-outlined">medical_information</span> 登記請假</button></div>
-            <div id="calendar" style="background:#fff; padding:10px; border:1px solid var(--border); border-radius:8px; margin-bottom:20px;"></div>
-            <h3>打卡明細</h3>
-            <div class="table-responsive"><table><thead><tr><th>日期</th><th>狀態</th><th>進班</th><th>離班/事由</th></tr></thead><tbody id="att-list"></tbody></table></div>
+            <div id="att-overlay" style="background: #fffbeb; border: 1px solid #fde68a; padding: 20px; border-radius: 8px; color: #b45309; text-align: center; margin-bottom: 20px;">
+              <span class="material-symbols-outlined" style="font-size: 32px; display: block; margin-bottom: 10px;">info</span>
+              請先儲存基本資料後，才能查看與登記考勤。
+            </div>
+            
+            <div id="att-content" style="display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><span class="material-symbols-outlined" style="color: var(--primary);">calendar_view_month</span> 考勤紀錄 (月曆檢視)</h3>
+                <button type="button" class="btn btn-warning" onclick="window.markLeave()"><span class="material-symbols-outlined">medical_information</span> 登記請假</button>
+              </div>
+              
+              <div style="display: flex; gap: 20px; flex-direction: column;">
+                <div id="calendar" style="background: #fff; padding: 20px; border: 1px solid var(--border); border-radius: 12px;"></div>
+                
+                <div class="daily-detail-card" id="daily-detail-container" style="display: none;">
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 15px;">
+                    <span class="material-symbols-outlined" style="color: #60a5fa;">description</span>
+                    <h3 style="margin: 0; color: #f8fafc;">當日詳情</h3>
+                  </div>
+                  
+                  <div class="daily-detail-header" id="detail-date">日期</div>
+                  <div class="daily-detail-row"><span class="daily-detail-label">到班</span><span class="daily-detail-value" id="detail-in">尚未紀錄</span></div>
+                  <div class="daily-detail-row"><span class="daily-detail-label">離班</span><span class="daily-detail-value" id="detail-out">尚未紀錄</span></div>
+                  <div class="daily-detail-row"><span class="daily-detail-label">狀態</span><span class="daily-detail-value" id="detail-status" style="color: #3b82f6;">-</span></div>
+                  <div class="daily-detail-row" id="detail-reason-row" style="display: none;"><span class="daily-detail-label">事由</span><span class="daily-detail-value" id="detail-reason" style="color: #f59e0b;">-</span></div>
+                </div>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </div>
   </main>
+
   <div class="modal-overlay" id="custom-dialog"><div class="modal-content" style="max-width:400px; text-align:center; padding:30px;"><div id="dialog-icon"></div><h3 id="dialog-title" style="margin-top:0;"></h3><p id="dialog-message"></p><div style="display:flex; gap:10px; justify-content:center;"><button class="btn btn-cancel" id="dialog-btn-cancel" style="display:none;">取消</button><button class="btn btn-primary" id="dialog-btn-confirm">確定</button></div></div></div>
   <script type="module" src="./app.js"></script>
-</body></html>
+</body>
+</html>
