@@ -3,15 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>學生管理 - 補習班系統</title>
+  <title>學生管理 - 陽禾文理補習班管理系統</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css" />
   <style>
-    /* 學生模組專屬樣式 */
     .avatar-preview { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); }
     .avatar-sm { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
-    
-    /* 檢視資料的卡片樣式 */
     .profile-header { display: flex; gap: 20px; align-items: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
     .profile-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
     .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -21,52 +18,13 @@
   </style>
 </head>
 <body>
-
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <span class="material-symbols-outlined" style="font-size: 32px; color: #60a5fa;">school</span>
-      <h2>補習班管理系統</h2>
-    </div>
-    
-    <div class="sidebar-menu">
-      <div style="font-size: 11px; color: #64748b; font-weight: bold; margin: 10px 0 5px 15px; text-transform: uppercase;">核心模組</div>
-      <a href="../index.html" class="menu-item"><span class="material-symbols-outlined">dashboard</span> 首頁儀表板</a>
-      <a href="./index.html" class="menu-item active"><span class="material-symbols-outlined">group</span> 學生管理</a>
-      <a href="../classes/index.html" class="menu-item"><span class="material-symbols-outlined">class</span> 班級與排課</a>
-      <a href="../attendance/index.html" class="menu-item"><span class="material-symbols-outlined">how_to_reg</span> 考勤打卡</a>
-      
-      <div style="font-size: 11px; color: #64748b; font-weight: bold; margin: 20px 0 5px 15px; text-transform: uppercase;">教務與財務</div>
-      <a href="../grades/index.html" class="menu-item"><span class="material-symbols-outlined">quiz</span> 成績管理</a>
-      <a href="../payments/index.html" class="menu-item"><span class="material-symbols-outlined">payments</span> 繳費管理</a>
-      <a href="../meals/index.html" class="menu-item"><span class="material-symbols-outlined">restaurant</span> 餐費與訂餐</a>
-      
-      <div style="font-size: 11px; color: #64748b; font-weight: bold; margin: 20px 0 5px 15px; text-transform: uppercase;">行政系統</div>
-      <a href="../staff/index.html" class="menu-item"><span class="material-symbols-outlined">badge</span> 教職員管理</a>
-      <a href="../classrooms/index.html" class="menu-item"><span class="material-symbols-outlined">meeting_room</span> 教室與行事曆</a>
-      <a href="../notifications/index.html" class="menu-item"><span class="material-symbols-outlined">campaign</span> 班級通知</a>
-      
-      <div style="font-size: 11px; color: #64748b; font-weight: bold; margin: 20px 0 5px 15px; text-transform: uppercase;">系統設定</div>
-      <a href="#" class="menu-item" onclick="window.showCustomDialog('系統提示', '下個階段即將解鎖帳號管理功能！', 'alert', 'manage_accounts')">
-        <span class="material-symbols-outlined">manage_accounts</span> 系統帳號管理
-      </a>
-    </div>
-    
-    <div class="sidebar-footer">
-      <button class="btn" style="width: 100%; background: #334155; color: #f8fafc; display: flex; justify-content: center; gap: 8px; border: 1px solid #475569;" onclick="window.logout()">
-        <span class="material-symbols-outlined" style="font-size: 18px;">logout</span> 登出系統
-      </button>
-    </div>
-  </aside>
-
   <main class="main-wrapper">
     <header class="header">
       <div class="header-left">
         <span class="material-symbols-outlined" style="font-size: 28px; color: var(--primary);">group</span>
         <h1>學生管理</h1>
       </div>
-      <div class="header-right">
-        <span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span>
-      </div>
+      <div class="header-right"><span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span></div>
     </header>
 
     <div class="container">
@@ -92,109 +50,14 @@
     </div>
   </main>
 
-  <div class="modal-overlay" id="form-modal">
-    <div class="modal-content" style="max-width: 600px;">
-      <span class="material-symbols-outlined modal-close" onclick="window.closeFormModal()">close</span>
-      <h2 id="form-title" style="margin-top: 0; color: var(--primary);">新增學生</h2>
-      <form id="student-form">
-        <input type="hidden" id="student-id">
-        
-        <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
-          <img id="avatar-preview" src="https://via.placeholder.com/60" class="avatar-preview" alt="預覽圖">
-          <div>
-            <label style="font-size: 13px; color: var(--text-light); display: block; margin-bottom: 5px;">上傳學生照片 (選填)</label>
-            <input type="file" id="photo" accept="image/*" onchange="window.previewPhoto(event)">
-          </div>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-group"><label>學生姓名 <span style="color:red">*</span></label><input type="text" id="name" required></div>
-          <div class="form-group"><label>學號</label><input type="text" id="student_number" placeholder="例：SD1001"></div>
-          <div class="form-group full-width"><label>所屬分校 <span style="color:red">*</span></label><select id="branch_id" required><option value="" disabled selected>載入中...</option></select></div>
-          
-          <div class="form-group"><label>就讀學校</label><input type="text" id="school" placeholder="例：建國中學"></div>
-          <div class="form-group"><label>學生電話</label><input type="text" id="phone" placeholder="學生手機"></div>
-          
-          <div class="form-group"><label>家長/聯絡人姓名</label><input type="text" id="parent_name" placeholder="例：王大明"></div>
-          <div class="form-group"><label>家長電話</label><input type="text" id="parent_phone" placeholder="家長手機"></div>
-          
-          <div class="form-group full-width"><label>通訊地址</label><input type="text" id="address" placeholder="例：台北市中正區..."></div>
-        </div>
-        <div class="actions" style="margin-top: 25px;"><button type="button" class="btn btn-cancel" onclick="window.closeFormModal()">取消</button><button type="submit" class="btn btn-primary" id="submit-btn">儲存</button></div>
-      </form>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="view-modal">
-    <div class="modal-content" style="max-width: 500px;">
-      <span class="material-symbols-outlined modal-close" onclick="window.closeViewModal()">close</span>
-      <div class="profile-header">
-        <img id="view-avatar" src="" class="profile-avatar">
-        <div>
-          <h2 id="view-name" style="margin: 0 0 5px 0; color: var(--text-main);">姓名</h2>
-          <div style="color: var(--text-light); font-size: 14px;"><span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">domain</span> <span id="view-branch">分校</span></div>
-        </div>
-      </div>
-      <div class="profile-grid">
-        <div class="profile-item"><div class="profile-label">學號</div><div class="profile-value" id="view-student-number">-</div></div>
-        <div class="profile-item"><div class="profile-label">就讀學校</div><div class="profile-value" id="view-school">-</div></div>
-        <div class="profile-item"><div class="profile-label">學生電話</div><div class="profile-value" id="view-phone">-</div></div>
-        <div class="profile-item"><div class="profile-label">家長姓名</div><div class="profile-value" id="view-parent-name">-</div></div>
-        <div class="profile-item"><div class="profile-label">家長電話</div><div class="profile-value" id="view-parent-phone">-</div></div>
-        <div class="profile-item" style="grid-column: span 2;"><div class="profile-label">通訊地址</div><div class="profile-value" id="view-address">-</div></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="attendance-modal">
-    <div class="modal-content" style="max-width: 600px; background: #f9fafb;">
-      <span class="material-symbols-outlined modal-close" onclick="window.closeAttendanceModal()">close</span>
-      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid var(--border);">
-        <div><h2 id="att-student-name" style="margin: 0 0 5px 0; color: var(--primary);">學生姓名</h2><div style="color: var(--text-light); font-size: 14px;">個人考勤紀錄歷史</div></div>
-        <button class="btn btn-primary" onclick="window.openLeaveModal()" style="background: #f59e0b; border: none;"><span class="material-symbols-outlined">medical_information</span> 登記請假</button>
-      </div>
-      <div style="background: white; border: 1px solid var(--border); border-radius: 8px; max-height: 350px; overflow-y: auto;">
-        <table style="margin: 0; width: 100%;">
-          <thead style="position: sticky; top: 0; background: var(--input-bg);"><tr><th>日期</th><th>狀態</th><th>進班時間</th><th>離班時間 / 事由</th></tr></thead>
-          <tbody id="att-history-list"><tr><td colspan="4" style="text-align: center; padding: 20px;">載入中...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="leave-modal" style="z-index: 1000;">
-    <div class="modal-content" style="max-width: 400px;">
-      <span class="material-symbols-outlined modal-close" onclick="window.closeLeaveModal()">close</span>
-      <h2 style="margin-top: 0; color: #b45309;"><span class="material-symbols-outlined" style="vertical-align: middle;">medical_information</span> 登記請假</h2>
-      <form id="leave-form">
-        <div class="form-grid" style="grid-template-columns: 1fr;">
-          <div class="form-group"><label>請假日期 <span style="color:red">*</span></label><input type="date" id="leave-date" required></div>
-          <div class="form-group"><label>請假事由</label><input type="text" id="leave-reason" placeholder="例：病假、事假、學校活動..."></div>
-        </div>
-        <div class="actions" style="margin-top: 25px;"><button type="button" class="btn btn-cancel" onclick="window.closeLeaveModal()">取消</button><button type="submit" class="btn btn-primary" style="background: #d97706; border: none;">確認登記</button></div>
-      </form>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="custom-dialog" style="z-index: 9999;">
-    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
-      <div id="dialog-icon" style="margin-bottom: 15px;"></div>
-      <h3 id="dialog-title" style="margin-top: 0; color: var(--text-main); font-size: 20px;">提示</h3>
-      <p id="dialog-message" style="color: var(--text-light); margin-bottom: 25px; line-height: 1.5; font-size: 15px;"></p>
-      <div style="display: flex; gap: 10px; justify-content: center;"><button class="btn btn-cancel" id="dialog-btn-cancel" style="display: none;">取消</button><button class="btn btn-primary" id="dialog-btn-confirm">確定</button></div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="custom-prompt" style="z-index: 9999;">
-    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
-      <span class="material-symbols-outlined" style="font-size: 48px; color: #f59e0b; margin-bottom: 15px;">edit_document</span>
-      <h3 id="prompt-title" style="margin-top: 0; color: var(--text-main); font-size: 20px;">提示</h3>
-      <p id="prompt-message" style="color: var(--text-light); margin-bottom: 20px; font-size: 14px;"></p>
-      <input type="text" id="prompt-input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 25px; box-sizing: border-box;">
-      <div style="display: flex; gap: 10px; justify-content: center;"><button class="btn btn-cancel" id="prompt-btn-cancel">取消</button><button class="btn btn-primary" id="prompt-btn-confirm">確定</button></div>
-    </div>
-  </div>
+  <div class="modal-overlay" id="form-modal"><div class="modal-content" style="max-width: 600px;"><span class="material-symbols-outlined modal-close" onclick="window.closeFormModal()">close</span><h2 id="form-title" style="margin-top: 0; color: var(--primary);">新增學生</h2><form id="student-form"><input type="hidden" id="student-id"><div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;"><img id="avatar-preview" src="https://via.placeholder.com/60" class="avatar-preview" alt="預覽圖"><div><label style="font-size: 13px; color: var(--text-light); display: block; margin-bottom: 5px;">上傳學生照片 (選填)</label><input type="file" id="photo" accept="image/*" onchange="window.previewPhoto(event)"></div></div><div class="form-grid"><div class="form-group"><label>學生姓名 <span style="color:red">*</span></label><input type="text" id="name" required></div><div class="form-group"><label>學號</label><input type="text" id="student_number" placeholder="例：SD1001"></div><div class="form-group full-width"><label>所屬分校 <span style="color:red">*</span></label><select id="branch_id" required><option value="" disabled selected>載入中...</option></select></div><div class="form-group"><label>就讀學校</label><input type="text" id="school" placeholder="例：建國中學"></div><div class="form-group"><label>學生電話</label><input type="text" id="phone" placeholder="學生手機"></div><div class="form-group"><label>家長/聯絡人姓名</label><input type="text" id="parent_name" placeholder="例：王大明"></div><div class="form-group"><label>家長電話</label><input type="text" id="parent_phone" placeholder="家長手機"></div><div class="form-group full-width"><label>通訊地址</label><input type="text" id="address" placeholder="例：台北市中正區..."></div></div><div class="actions" style="margin-top: 25px;"><button type="button" class="btn btn-cancel" onclick="window.closeFormModal()">取消</button><button type="submit" class="btn btn-primary" id="submit-btn">儲存</button></div></form></div></div>
+  <div class="modal-overlay" id="view-modal"><div class="modal-content" style="max-width: 500px;"><span class="material-symbols-outlined modal-close" onclick="window.closeViewModal()">close</span><div class="profile-header"><img id="view-avatar" src="" class="profile-avatar"><div><h2 id="view-name" style="margin: 0 0 5px 0; color: var(--text-main);">姓名</h2><div style="color: var(--text-light); font-size: 14px;"><span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">domain</span> <span id="view-branch">分校</span></div></div></div><div class="profile-grid"><div class="profile-item"><div class="profile-label">學號</div><div class="profile-value" id="view-student-number">-</div></div><div class="profile-item"><div class="profile-label">就讀學校</div><div class="profile-value" id="view-school">-</div></div><div class="profile-item"><div class="profile-label">學生電話</div><div class="profile-value" id="view-phone">-</div></div><div class="profile-item"><div class="profile-label">家長姓名</div><div class="profile-value" id="view-parent-name">-</div></div><div class="profile-item"><div class="profile-label">家長電話</div><div class="profile-value" id="view-parent-phone">-</div></div><div class="profile-item" style="grid-column: span 2;"><div class="profile-label">通訊地址</div><div class="profile-value" id="view-address">-</div></div></div></div></div>
+  <div class="modal-overlay" id="attendance-modal"><div class="modal-content" style="max-width: 600px; background: #f9fafb;"><span class="material-symbols-outlined modal-close" onclick="window.closeAttendanceModal()">close</span><div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid var(--border);"><div><h2 id="att-student-name" style="margin: 0 0 5px 0; color: var(--primary);">學生姓名</h2><div style="color: var(--text-light); font-size: 14px;">個人考勤紀錄歷史</div></div><button class="btn btn-primary" onclick="window.openLeaveModal()" style="background: #f59e0b; border: none;"><span class="material-symbols-outlined">medical_information</span> 登記請假</button></div><div style="background: white; border: 1px solid var(--border); border-radius: 8px; max-height: 350px; overflow-y: auto;"><table style="margin: 0; width: 100%;"><thead style="position: sticky; top: 0; background: var(--input-bg);"><tr><th>日期</th><th>狀態</th><th>進班時間</th><th>離班時間 / 事由</th></tr></thead><tbody id="att-history-list"><tr><td colspan="4" style="text-align: center; padding: 20px;">載入中...</td></tr></tbody></table></div></div></div>
+  <div class="modal-overlay" id="leave-modal" style="z-index: 1000;"><div class="modal-content" style="max-width: 400px;"><span class="material-symbols-outlined modal-close" onclick="window.closeLeaveModal()">close</span><h2 style="margin-top: 0; color: #b45309;"><span class="material-symbols-outlined" style="vertical-align: middle;">medical_information</span> 登記請假</h2><form id="leave-form"><div class="form-grid" style="grid-template-columns: 1fr;"><div class="form-group"><label>請假日期 <span style="color:red">*</span></label><input type="date" id="leave-date" required></div><div class="form-group"><label>請假事由</label><input type="text" id="leave-reason" placeholder="例：病假、事假、學校活動..."></div></div><div class="actions" style="margin-top: 25px;"><button type="button" class="btn btn-cancel" onclick="window.closeLeaveModal()">取消</button><button type="submit" class="btn btn-primary" style="background: #d97706; border: none;">確認登記</button></div></form></div></div>
+  <div class="modal-overlay" id="custom-dialog" style="z-index: 9999;"><div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;"><div id="dialog-icon" style="margin-bottom: 15px;"></div><h3 id="dialog-title" style="margin-top: 0; color: var(--text-main); font-size: 20px;">提示</h3><p id="dialog-message" style="color: var(--text-light); margin-bottom: 25px; line-height: 1.5; font-size: 15px;"></p><div style="display: flex; gap: 10px; justify-content: center;"><button class="btn btn-cancel" id="dialog-btn-cancel" style="display: none;">取消</button><button class="btn btn-primary" id="dialog-btn-confirm">確定</button></div></div></div>
+  <div class="modal-overlay" id="custom-prompt" style="z-index: 9999;"><div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;"><span class="material-symbols-outlined" style="font-size: 48px; color: #f59e0b; margin-bottom: 15px;">edit_document</span><h3 id="prompt-title" style="margin-top: 0; color: var(--text-main); font-size: 20px;">提示</h3><p id="prompt-message" style="color: var(--text-light); margin-bottom: 20px; font-size: 14px;"></p><input type="text" id="prompt-input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 25px; box-sizing: border-box;"><div style="display: flex; gap: 10px; justify-content: center;"><button class="btn btn-cancel" id="prompt-btn-cancel">取消</button><button class="btn btn-primary" id="prompt-btn-confirm">確定</button></div></div></div>
 
   <script type="module" src="./app.js"></script>
+  <script>document.getElementById('header-date').textContent = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });</script>
 </body>
 </html>
