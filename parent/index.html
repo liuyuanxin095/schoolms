@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -9,64 +9,100 @@
   
   <style>
     /* =========================================
-       📱 全域變數與暗黑模式設定
+       📱 主題變數 (支援深色/淺色模式)
     ========================================= */
     :root {
-      --primary: #3b82f6; --bg-dark: #121212; --card-bg: #1e1e1e;
-      --text-main: #f8fafc; --text-muted: #94a3b8;
-      --border-solid: #334155; --success: #10b981; --warning: #f59e0b;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --dot-color: #d97706;
+    }
+
+    [data-theme="light"] {
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-solid: #e2e8f0;
+      --nav-bg: rgba(255, 255, 255, 0.95);
+      --fc-today-bg: #e2e8f0;
+      --header-bg: linear-gradient(135deg, #3b82f6, #2563eb);
+      --header-text: #ffffff;
+      --detail-card-bg: #f8fafc;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #121212;
+      --card-bg: #1c1c1e;
+      --text-main: #f8fafc;
+      --text-muted: #8e8e93;
+      --border-solid: #2c2c2e;
+      --nav-bg: rgba(30, 30, 30, 0.95);
+      --fc-today-bg: #2c2c2e;
+      --header-bg: #1c1c1e;
+      --header-text: #f8fafc;
+      --detail-card-bg: #2c2c2e;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    /* 修復多餘黑邊：確保 body 完全貼合螢幕 */
     body {
-      background-color: var(--bg-dark); color: var(--text-main);
+      background-color: var(--bg-color); color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      margin: 0; min-height: 100vh; overflow-x: hidden;
+      margin: 0; min-height: 100vh; overflow-x: hidden; transition: background-color 0.3s, color 0.3s;
     }
 
+    /* 視圖切換動畫 */
     .view-section { display: none; opacity: 0; transition: opacity 0.3s ease; min-height: 100vh; }
     .view-section.active { display: block; opacity: 1; animation: slideUp 0.3s ease; }
     @keyframes slideUp { from { transform: translateY(10px); } to { transform: translateY(0); } }
 
-    /* 通用 UI 元件 */
-    .app-header { background: linear-gradient(135deg, #2563eb, #1d4ed8); padding: 40px 20px 30px 20px; border-radius: 0 0 24px 24px; margin-bottom: 20px; position: relative; }
-    .card { background-color: var(--card-bg); border-radius: 16px; padding: 20px; margin: 0 15px 15px 15px; border: 1px solid var(--border-solid); }
+    /* UI 元件 */
+    .app-header { background: var(--header-bg); color: var(--header-text); padding: 40px 20px 30px 20px; border-radius: 0 0 24px 24px; margin-bottom: 20px; transition: 0.3s; }
+    .card { background-color: var(--card-bg); border-radius: 16px; padding: 20px; margin: 0 15px 15px 15px; border: 1px solid var(--border-solid); transition: background-color 0.3s; }
     .card-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
+    
     .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:active { transform: scale(0.98); }
 
-    /* 底部導覽列 (使用 fixed 並保留底部安全距離) */
-    .bottom-nav {
-      position: fixed; bottom: 0; left: 0; width: 100%;
-      background: rgba(30, 30, 30, 0.95); backdrop-filter: blur(10px);
-      border-top: 1px solid var(--border-solid);
-      display: flex; justify-content: space-around;
-      padding: 10px 0 calc(10px + env(safe-area-inset-bottom)) 0;
-      z-index: 1000;
-    }
+    /* 底部導覽列 */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--nav-bg); backdrop-filter: blur(10px); border-top: 1px solid var(--border-solid); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)) 0; z-index: 1000; transition: 0.3s; }
     .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; font-size: 11px; }
     .nav-item.active { color: var(--primary); }
-
-    /* 確保有導覽列時，內容不會被擋住 */
     .has-bottom-nav { padding-bottom: 100px; }
 
-    /* 列表清單設計 */
-    .list-item { display: flex; align-items: center; gap: 12px; padding: 16px; background: #27272a; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-solid); cursor: pointer; }
-    .empty-state { text-align: center; color: var(--text-muted); padding: 40px 15px; }
+    .list-item { display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--card-bg); border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-solid); cursor: pointer; }
+    .empty-state { text-align: center; color: var(--text-muted); padding: 30px 15px; font-size: 14px; }
 
-    /* FullCalendar 暗黑模式 */
-    .fc { font-size: 14px; background: var(--card-bg); padding: 10px; border-radius: 12px; }
-    .fc-theme-standard td, .fc-theme-standard th { border-color: #334155; }
-    .fc-col-header-cell-cushion { color: var(--text-muted); font-weight: normal; }
-    .fc-daygrid-day-number { color: var(--text-main); }
-    .fc-day-today { background-color: #334155 !important; }
-    .fc .fc-button { background: transparent; border: 1px solid var(--border-solid); color: var(--text-main); }
+    /* =========================================
+       🗓️ FullCalendar 無邊框設計 (完全仿照截圖)
+    ========================================= */
+    .fc { font-family: inherit; }
+    .fc .fc-scrollgrid, .fc td, .fc th { border: none !important; } /* 移除所有邊框 */
+    .fc-theme-standard .fc-scrollgrid { border: none; }
+    .fc .fc-toolbar-title { font-size: 18px !important; font-weight: bold; color: var(--text-main); }
+    .fc .fc-button { background: transparent !important; border: none !important; color: var(--text-muted) !important; box-shadow: none !important; padding: 0 !important; }
+    .fc .fc-button:hover { color: var(--text-main) !important; }
+    .fc .fc-col-header-cell-cushion { color: var(--text-muted); font-weight: normal; font-size: 13px; padding-bottom: 10px; }
+    .fc-daygrid-day-number { color: var(--text-main); font-size: 15px; width: 100%; text-align: center; padding: 8px 0 !important; }
     
+    /* 當天與選中狀態的圓角背景 */
+    .fc-day-today .fc-daygrid-day-frame { background-color: transparent !important; }
+    .fc-day-today .fc-daygrid-day-number { background-color: var(--fc-today-bg); border-radius: 12px; display: inline-block; width: 32px; height: 32px; line-height: 16px; margin: 0 auto; }
+    .fc-daygrid-day-frame { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+
+    /* 客製化橘色小圓點 */
+    .event-dot { width: 5px; height: 5px; background-color: var(--dot-color); border-radius: 50%; margin: 2px auto 0 auto; }
+
+    /* 當日詳情卡片 */
+    .detail-card { background: var(--detail-card-bg); border-radius: 16px; padding: 20px; margin-top: 10px; transition: 0.3s; }
+    .detail-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; align-items: center; }
+    .detail-label { color: var(--text-muted); }
+    .detail-value { font-weight: bold; color: var(--text-main); }
+
     /* Modal 彈窗 */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 2000; }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 2000; }
     .modal-content { background: var(--card-bg); width: 90%; max-width: 400px; border-radius: 20px; padding: 24px; position: relative; border: 1px solid var(--border-solid); max-height: 80vh; overflow-y: auto; }
   </style>
 </head>
@@ -75,7 +111,6 @@
   <div id="view-loading" class="view-section active" style="display: flex; align-items: center; justify-content: center;">
     <div style="text-align: center; color: var(--primary);">
       <span class="material-symbols-outlined" style="font-size: 48px; animation: spin 2s linear infinite;">sync</span>
-      <p style="margin-top: 10px;">系統連線中...</p>
     </div>
   </div>
 
@@ -85,10 +120,10 @@
       <h1 style="margin: 16px 0 8px 0; font-size: 28px;">陽禾家長專區</h1>
       <p style="color: var(--text-muted); margin: 0;">輸入手機號碼，隨時掌握學習狀況</p>
     </div>
-    <div style="background: var(--card-bg); padding: 20px; border-radius: 16px; border: 1px solid var(--border-solid);">
+    <div class="card">
       <div style="margin-bottom: 20px;">
         <label style="display:block; color:var(--text-muted); font-size:13px; margin-bottom:8px;">家長手機號碼</label>
-        <input type="tel" id="input-phone" placeholder="例：0912345678" style="width:100%; padding:14px; border-radius:10px; background:#121212; border:1px solid #334155; color:white; font-size:16px; outline:none; text-align:center;">
+        <input type="tel" id="input-phone" placeholder="例：0912345678" style="width:100%; padding:14px; border-radius:10px; background:var(--bg-color); border:1px solid var(--border-solid); color:var(--text-main); font-size:16px; outline:none; text-align:center;">
       </div>
       <button id="btn-login" class="btn btn-primary">進入系統</button>
     </div>
@@ -115,43 +150,59 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
             <h1 id="header-name" style="margin: 0 0 4px 0; font-size: 22px;">同學</h1>
-            <p id="header-branch" style="margin: 0; font-size: 14px; opacity: 0.8;">陽禾文理補習班</p>
+            <p id="header-branch" style="margin: 0; font-size: 14px; opacity: 0.9;">陽禾文理補習班</p>
           </div>
-          <div style="display: flex; gap: 10px;">
-            <button id="btn-switch-child" style="display:none; background:rgba(255,255,255,0.2); border:none; color:white; padding:6px 12px; border-radius:20px; font-size:12px; cursor:pointer;"><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">swap_horiz</span> 切換孩子</button>
-            <button onclick="window.parentLogout()" style="background:rgba(0,0,0,0.2); border:none; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;"><span class="material-symbols-outlined" style="font-size:16px;">logout</span></button>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button id="btn-theme-toggle" style="background:transparent; border:none; color:var(--header-text); display:flex; align-items:center; justify-content:center; cursor:pointer;"><span class="material-symbols-outlined" id="theme-icon">light_mode</span></button>
+            <button id="btn-switch-child" style="display:none; background:rgba(255,255,255,0.2); border:none; color:white; padding:6px 12px; border-radius:20px; font-size:12px; cursor:pointer;"><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">swap_horiz</span> 切換</button>
+            <button onclick="window.parentLogout()" style="background:transparent; border:none; color:var(--header-text); display:flex; align-items:center; justify-content:center; cursor:pointer;"><span class="material-symbols-outlined">logout</span></button>
           </div>
         </div>
       </header>
 
       <div class="card">
-        <div class="card-title"><span class="material-symbols-outlined" style="color:var(--success);">history</span> 今日出勤</div>
-        <div style="display:flex; justify-content:space-around; text-align:center;">
-          <div><div style="font-size:12px; color:var(--text-muted);">到班時間</div><div id="home-in" style="font-size:20px; font-weight:bold; margin-top:4px;">--:--</div></div>
-          <div style="width:1px; background:var(--border-solid);"></div>
-          <div><div style="font-size:12px; color:var(--text-muted);">離班時間</div><div id="home-out" style="font-size:20px; font-weight:bold; margin-top:4px;">--:--</div></div>
+        <div class="card-title"><span class="material-symbols-outlined" style="color:var(--primary);">menu_book</span> 當日排定課程</div>
+        <div id="home-classes-container">
+          <div class="empty-state">今日無排定課程</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="material-symbols-outlined" style="color:var(--warning);">campaign</span> 最新公告</div>
+        <div id="home-latest-noti">
+          <div class="empty-state">載入中...</div>
         </div>
       </div>
     </div>
 
     <div id="tab-att" class="tab-content" style="display:none; padding-top:20px;">
-      <h2 style="margin: 0 15px 15px 15px;">出勤紀錄</h2>
-      <div class="card" style="padding:10px;"><div id="calendar"></div></div>
-      <div class="card" id="att-detail-card" style="display:none; background:#1c1c1e;">
-        <div id="att-detail-date" style="font-size:16px; font-weight:bold; margin-bottom:12px; color:var(--primary);"></div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span style="color:var(--text-muted);">到班</span><span id="att-detail-in" style="font-weight:bold;"></span></div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span style="color:var(--text-muted);">離班</span><span id="att-detail-out" style="font-weight:bold;"></span></div>
-        <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-muted);">狀態</span><span id="att-detail-status" style="font-weight:bold;"></span></div>
+      <div style="padding: 0 15px 15px 15px; display:flex; align-items:center; gap:10px; color:var(--text-main);">
+        <h2 style="margin:0; font-size:24px; font-weight:800;">出勤紀錄</h2>
+      </div>
+      
+      <div class="card" style="padding: 15px; margin-bottom: 10px;">
+        <div style="font-size:14px; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:5px;"><span class="material-symbols-outlined" style="font-size:16px;">calendar_month</span> 月曆檢視</div>
+        <div id="calendar"></div>
+      </div>
+
+      <div style="padding: 0 15px;">
+        <div style="font-size:14px; color:var(--text-muted); margin-bottom:5px; margin-top:20px; display:flex; align-items:center; gap:5px;"><span class="material-symbols-outlined" style="font-size:16px;">description</span> 當日詳情</div>
+        <div class="detail-card" id="att-detail-card">
+          <div id="att-detail-date" style="font-size:18px; font-weight:bold; margin-bottom:20px; color:var(--text-main);">4月1日 (三)</div>
+          <div class="detail-row"><span class="detail-label">到班</span><span id="att-detail-in" class="detail-value">--:--</span></div>
+          <div class="detail-row"><span class="detail-label">離班</span><span id="att-detail-out" class="detail-value">尚未紀錄</span></div>
+          <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">狀態</span><span id="att-detail-status" class="detail-value">無紀錄</span></div>
+        </div>
       </div>
     </div>
 
     <div id="tab-grades" class="tab-content" style="display:none; padding-top:20px;">
-      <h2 style="margin: 0 15px 15px 15px;">歷次成績</h2>
+      <h2 style="margin: 0 15px 15px 15px; font-size:24px; font-weight:800;">成績紀錄</h2>
       <div id="grades-container"></div>
     </div>
 
     <div id="tab-notis" class="tab-content" style="display:none; padding-top:20px;">
-      <h2 style="margin: 0 15px 15px 15px;">班級公告</h2>
+      <h2 style="margin: 0 15px 15px 15px; font-size:24px; font-weight:800;">班級公告</h2>
       <div id="notis-container"></div>
     </div>
   </div>
@@ -175,8 +226,34 @@
     let calendarInstance = null;
     let attendanceDataMap = {};
 
-    // 💡 初始化：檢查是否曾經登入過
+    // ==============================================
+    // 💡 日夜模式切換邏輯
+    // ==============================================
+    function initTheme() {
+      const savedTheme = localStorage.getItem('yh_parent_theme') || 'dark'; // 預設深色符合截圖
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      updateThemeIcon(savedTheme);
+
+      document.getElementById('btn-theme-toggle').addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('yh_parent_theme', next);
+        updateThemeIcon(next);
+      });
+    }
+
+    function updateThemeIcon(theme) {
+      const icon = document.getElementById('theme-icon');
+      icon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+    }
+
+    // ==============================================
+    // 初始化與記憶登入
+    // ==============================================
     document.addEventListener('DOMContentLoaded', async () => {
+      initTheme();
+
       const savedPhone = localStorage.getItem('yh_parent_phone');
       if (savedPhone) {
         await executeLogin(savedPhone, true);
@@ -184,7 +261,6 @@
         switchView('view-login');
       }
 
-      // 綁定事件
       document.getElementById('btn-login').addEventListener('click', () => {
         const phone = document.getElementById('input-phone').value.trim();
         if(!phone) return alert('請輸入家長手機號碼！');
@@ -204,7 +280,6 @@
       });
     });
 
-    // 💡 登出功能
     window.parentLogout = () => {
       if(confirm('確定要登出家長專區嗎？')) {
         localStorage.removeItem('yh_parent_phone');
@@ -213,7 +288,6 @@
       }
     };
 
-    // 執行登入與資料抓取
     async function executeLogin(phone, isAutoLogin = false) {
       const btn = document.getElementById('btn-login');
       if(!isAutoLogin) { btn.textContent = '連線中...'; btn.disabled = true; }
@@ -223,27 +297,20 @@
         const { data: students, error } = await supabase.from('students').select('*, branches(name)').eq('parent_phone', phone);
         if (error) throw error;
         if (!students || students.length === 0) {
-          localStorage.removeItem('yh_parent_phone'); // 清除錯誤的記憶
+          localStorage.removeItem('yh_parent_phone');
           throw new Error('查無此號碼綁定的孩子資料，請聯絡補習班。');
         }
 
-        // 成功抓到資料，記憶手機號碼
         localStorage.setItem('yh_parent_phone', phone);
         allMyKids = students;
 
         if (students.length === 1) {
-          // 單一孩子：直接進儀表板
           loadDashboard(students[0]);
         } else {
-          // 多個孩子：檢查有沒有記憶上次選誰
           const savedKidId = localStorage.getItem('yh_kid_id');
           const targetKid = students.find(s => s.id === savedKidId);
-          
-          if (targetKid && isAutoLogin) {
-            loadDashboard(targetKid);
-          } else {
-            renderChildSelection(students);
-          }
+          if (targetKid && isAutoLogin) loadDashboard(targetKid);
+          else renderChildSelection(students);
         }
       } catch (err) {
         alert(err.message);
@@ -254,10 +321,7 @@
     }
 
     function switchView(viewId) {
-      document.querySelectorAll('.view-section').forEach(v => {
-        v.classList.remove('active');
-        v.style.display = 'none'; 
-      });
+      document.querySelectorAll('.view-section').forEach(v => { v.classList.remove('active'); v.style.display = 'none'; });
       const target = document.getElementById(viewId);
       target.style.display = 'block';
       setTimeout(() => target.classList.add('active'), 10);
@@ -268,9 +332,9 @@
       container.innerHTML = '';
       students.forEach(student => {
         const div = document.createElement('div'); div.className = 'list-item';
-        div.innerHTML = `<div style="background:#2563eb30; padding:10px; border-radius:50%;"><span class="material-symbols-outlined" style="color:var(--primary);">face</span></div><div style="flex:1;"><div style="font-weight:bold; font-size:16px;">${student.name}</div><div style="font-size:12px; color:var(--text-muted);">學號：${student.student_number || '無'}</div></div><span class="material-symbols-outlined" style="color:var(--text-muted);">chevron_right</span>`;
+        div.innerHTML = `<div style="background:#2563eb30; padding:10px; border-radius:50%;"><span class="material-symbols-outlined" style="color:var(--primary);">face</span></div><div style="flex:1;"><div style="font-weight:bold; font-size:18px; color:var(--text-main);">${student.name}</div><div style="font-size:12px; color:var(--text-muted);">學號：${student.student_number || '無'}</div></div><span class="material-symbols-outlined" style="color:var(--text-muted);">chevron_right</span>`;
         div.addEventListener('click', () => {
-          localStorage.setItem('yh_kid_id', student.id); // 記憶選擇的孩子
+          localStorage.setItem('yh_kid_id', student.id);
           loadDashboard(student);
         });
         container.appendChild(div);
@@ -282,8 +346,6 @@
       currentStudent = student;
       document.getElementById('header-name').textContent = `${student.name} 同學`;
       document.getElementById('header-branch').textContent = student.branches?.name || '陽禾文理補習班';
-      
-      // 如果有多個孩子，顯示「切換孩子」按鈕
       document.getElementById('btn-switch-child').style.display = allMyKids.length > 1 ? 'inline-block' : 'none';
 
       switchView('view-main');
@@ -296,13 +358,15 @@
       document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
       document.getElementById(`tab-${tabId}`).style.display = 'block';
 
-      if (tabId === 'home') fetchHomeData();
+      if (tabId === 'home') { fetchHomeData(); fetchHomeNotis(); }
       if (tabId === 'att') initCalendar();
       if (tabId === 'grades') fetchGrades();
       if (tabId === 'notis') fetchNotifications();
     }
 
-    // -- 以下為資料抓取邏輯 (維持不變) --
+    // ==============================================
+    // 資料抓取與渲染
+    // ==============================================
     async function fetchHomeData() {
       const today = new Date().toISOString().split('T')[0];
       const { data } = await supabase.from('attendance').select('*').match({ student_id: currentStudent.id, record_date: today }).maybeSingle();
@@ -314,63 +378,87 @@
       } else { inEl.textContent = '--:--'; outEl.textContent = '--:--'; inEl.style.color = ''; }
     }
 
+    async function fetchHomeNotis() {
+      const container = document.getElementById('home-latest-noti');
+      const { data } = await supabase.from('notifications').select('*').order('created_at', {ascending:false}).limit(2);
+      if(!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無最新公告</div>'; return; }
+      container.innerHTML = data.map(n => `<div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border-solid);"><div style="font-size:12px; color:var(--text-muted);">${new Date(n.created_at).toLocaleDateString()}</div><div style="font-weight:bold; color:var(--text-main); font-size:15px; margin:4px 0;">${n.title}</div><div style="font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.content}</div></div>`).join('');
+    }
+
     async function initCalendar() {
       const { data } = await supabase.from('attendance').select('*').eq('student_id', currentStudent.id);
-      const events = []; attendanceDataMap = {};
-      if (data) {
-        data.forEach(record => {
-          attendanceDataMap[record.record_date] = record;
-          events.push({ start: record.record_date, display: 'background', backgroundColor: record.status === '請假' ? 'var(--warning)' : 'var(--primary)' });
-        });
-      }
+      attendanceDataMap = {};
+      if (data) data.forEach(r => attendanceDataMap[r.record_date] = r);
+
       if (!calendarInstance) {
         calendarInstance = new FullCalendar.Calendar(document.getElementById('calendar'), {
-          initialView: 'dayGridMonth', locale: 'zh-tw', height: 'auto', headerToolbar: { left: 'prev', center: 'title', right: 'next' }, events: events,
-          dateClick: (info) => renderAttendanceDetail(info.dateStr), eventClick: (info) => renderAttendanceDetail(info.event.startStr.split('T')[0])
+          initialView: 'dayGridMonth', locale: 'zh-tw', height: 'auto',
+          headerToolbar: { left: 'prev', center: 'title', right: 'next' },
+          dateClick: (info) => renderAttendanceDetail(info.dateStr),
+          dayCellDidMount: (info) => {
+            const dateStr = info.date.toISOString().split('T')[0];
+            if (attendanceDataMap[dateStr]) {
+              // 在日期數字下方加入橘色小圓點 (仿截圖)
+              const dot = document.createElement('div');
+              dot.className = 'event-dot';
+              info.el.querySelector('.fc-daygrid-day-frame').appendChild(dot);
+            }
+          }
         });
         calendarInstance.render();
-      } else { calendarInstance.removeAllEvents(); calendarInstance.addEventSource(events); }
+      } else {
+        calendarInstance.render(); // 強制重繪以更新圓點
+      }
+      // 預設顯示今天
+      renderAttendanceDetail(new Date().toISOString().split('T')[0]);
     }
 
     function renderAttendanceDetail(dateStr) {
-      const record = attendanceDataMap[dateStr]; const detailCard = document.getElementById('att-detail-card');
-      document.getElementById('att-detail-date').textContent = dateStr;
+      const record = attendanceDataMap[dateStr];
+      const d = new Date(dateStr); const days = ['日','一','二','三','四','五','六'];
+      document.getElementById('att-detail-date').textContent = `${d.getMonth()+1}月${d.getDate()}日 (${days[d.getDay()]})`;
+      
       if (record) {
-        document.getElementById('att-detail-in').textContent = record.check_in ? new Date(record.check_in).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '無';
-        document.getElementById('att-detail-out').textContent = record.check_out ? new Date(record.check_out).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '無';
-        const statusEl = document.getElementById('att-detail-status'); statusEl.textContent = record.status; statusEl.style.color = record.status === '請假' ? 'var(--warning)' : 'var(--success)';
+        document.getElementById('att-detail-in').textContent = record.check_in ? new Date(record.check_in).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '尚未紀錄';
+        document.getElementById('att-detail-out').textContent = record.check_out ? new Date(record.check_out).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '尚未紀錄';
+        const statusEl = document.getElementById('att-detail-status'); statusEl.textContent = record.status; statusEl.style.color = record.status === '請假' ? 'var(--warning)' : 'var(--text-main)';
       } else {
         document.getElementById('att-detail-in').textContent = '--:--'; document.getElementById('att-detail-out').textContent = '--:--'; document.getElementById('att-detail-status').textContent = '無紀錄'; document.getElementById('att-detail-status').style.color = 'var(--text-muted)';
       }
-      detailCard.style.display = 'block';
     }
 
     async function fetchGrades() {
       const container = document.getElementById('grades-container');
       const { data, error } = await supabase.from('grades').select('*, class_exams(exam_name, subject, exam_date)').eq('student_id', currentStudent.id).order('created_at', {ascending: false});
       if (error || !data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無成績紀錄</div>'; return; }
-      container.innerHTML = '';
-      data.forEach(g => {
-        const div = document.createElement('div'); div.className = 'card';
-        div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><div><div style="font-weight:bold; font-size:16px;">${g.class_exams.exam_name}</div><div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${g.class_exams.subject} · ${g.class_exams.exam_date}</div></div><div style="font-size:24px; font-weight:bold; color:var(--primary);">${g.score ?? '缺'}</div></div>${g.note ? `<div style="background:#27272a; padding:10px; border-radius:8px; margin-top:12px; font-size:13px; color:#cbd5e1;">評語：${g.note}</div>` : ''}`;
-        container.appendChild(div);
-      });
+      container.innerHTML = data.map(g => `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><div><div style="font-weight:bold; font-size:16px;">${g.class_exams.exam_name}</div><div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${g.class_exams.subject} · ${g.class_exams.exam_date}</div></div><div style="font-size:24px; font-weight:bold; color:var(--primary);">${g.score ?? '缺'}</div></div>${g.note ? `<div style="background:var(--detail-card-bg); padding:10px; border-radius:8px; margin-top:12px; font-size:13px; color:var(--text-muted);">評語：${g.note}</div>` : ''}</div>`).join('');
     }
 
     async function fetchNotifications() {
       const container = document.getElementById('notis-container');
       const { data, error } = await supabase.from('notifications').select('*').order('created_at', {ascending: false});
       if (error || !data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無班級公告</div>'; return; }
-      container.innerHTML = '';
-      data.forEach(n => {
-        const div = document.createElement('div'); div.className = 'list-item';
-        div.innerHTML = `<div style="background:#2563eb30; padding:12px; border-radius:12px; color:var(--primary);"><span class="material-symbols-outlined">campaign</span></div><div style="flex:1; overflow:hidden;"><div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">${new Date(n.created_at).toLocaleDateString('zh-TW')}</div><div style="font-weight:bold; font-size:15px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.title}</div><div style="font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.content}</div></div>`;
-        div.addEventListener('click', () => {
-          document.getElementById('modal-title').textContent = n.title; document.getElementById('modal-time').textContent = new Date(n.created_at).toLocaleString('zh-TW'); document.getElementById('modal-body').textContent = n.content; document.getElementById('noti-modal').style.display = 'flex';
-        });
-        container.appendChild(div);
-      });
+      
+      const studentBranch = currentStudent.branches?.name || '全校';
+      
+      container.innerHTML = data.map(n => `
+        <div class="list-item" onclick='window.openNoti(${JSON.stringify(n).replace(/'/g, "&apos;")})'>
+          <div style="background:#2563eb30; padding:12px; border-radius:12px; color:var(--primary);"><span class="material-symbols-outlined">campaign</span></div>
+          <div style="flex:1; overflow:hidden;">
+            <div style="font-size:12px; color:var(--primary); font-weight:bold; margin-bottom:4px;">給：${currentStudent.name} / ${studentBranch}</div>
+            <div style="font-weight:bold; font-size:15px; margin-bottom:4px; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.title}</div>
+            <div style="font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.content}</div>
+          </div>
+        </div>
+      `).join('');
     }
+
+    window.openNoti = (n) => {
+      document.getElementById('modal-title').textContent = n.title;
+      document.getElementById('modal-time').textContent = new Date(n.created_at).toLocaleString('zh-TW');
+      document.getElementById('modal-body').textContent = n.content;
+      document.getElementById('noti-modal').style.display = 'flex';
+    };
   </script>
 </body>
 </html>
