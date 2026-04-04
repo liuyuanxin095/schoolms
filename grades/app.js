@@ -6,16 +6,7 @@ const subjectModal = document.getElementById('subject-modal'); const subjectForm
 
 let currentClassId = null; let currentClassName = ''; let rosterData = []; let hasUnsavedChanges = false; let allClasses = [];
 
-window.showCustomDialog = (title, message, type = 'alert', icon = 'info') => {
-  return new Promise((resolve) => {
-    const dialog = document.getElementById('custom-dialog'); document.getElementById('dialog-title').textContent = title; document.getElementById('dialog-message').innerHTML = message.replace(/\n/g, '<br>')
-    const iconColor = type === 'confirm' ? '#f59e0b' : (type === 'error' ? '#dc2626' : '#3b82f6'); document.getElementById('dialog-icon').innerHTML = `<span class="material-symbols-outlined" style="font-size: 48px; color: ${iconColor};">${icon}</span>`
-    const btnCancel = document.getElementById('dialog-btn-cancel'); const btnConfirm = document.getElementById('dialog-btn-confirm')
-    btnCancel.style.display = type === 'confirm' ? 'block' : 'none'
-    const cleanup = () => { dialog.style.display = 'none'; btnConfirm.onclick = null; btnCancel.onclick = null }
-    btnConfirm.onclick = () => { cleanup(); resolve(true) }; btnCancel.onclick = () => { cleanup(); resolve(false) }; dialog.style.display = 'flex'
-  })
-}
+window.showCustomDialog = (title, message, type = 'alert', icon = 'info') => { return new Promise((resolve) => { const dialog = document.getElementById('custom-dialog'); document.getElementById('dialog-title').textContent = title; document.getElementById('dialog-message').innerHTML = message.replace(/\n/g, '<br>'); const iconColor = type === 'confirm' ? '#f59e0b' : (type === 'error' ? '#dc2626' : '#3b82f6'); document.getElementById('dialog-icon').innerHTML = `<span class="material-symbols-outlined" style="font-size: 48px; color: ${iconColor};">${icon}</span>`; const btnCancel = document.getElementById('dialog-btn-cancel'); const btnConfirm = document.getElementById('dialog-btn-confirm'); btnCancel.style.display = type === 'confirm' ? 'block' : 'none'; const cleanup = () => { dialog.style.display = 'none'; btnConfirm.onclick = null; btnCancel.onclick = null }; btnConfirm.onclick = () => { cleanup(); resolve(true) }; btnCancel.onclick = () => { cleanup(); resolve(false) }; dialog.style.display = 'flex' }) }
 
 window.switchView = (view) => {
   document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'))
@@ -37,6 +28,7 @@ async function loadSubjects() {
 async function loadClasses() {
   let query = supabase.from('classes').select('id, name, teacher_id, tutor_id, branches(name), staff!classes_teacher_id_fkey(name), tutor:staff!classes_tutor_id_fkey(name)')
   
+  // 💡 RBAC 權限過濾：老師與導師都能看到自己的班級
   const user = window.currentUser
   if (user) {
     if (user.role === 'teacher') {
@@ -63,7 +55,7 @@ async function loadClasses() {
         <td>${branchName}</td>
         <td><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle; color:var(--text-light);">person</span> ${teacherName}</td>
         <td><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle; color:var(--text-light);">assignment_ind</span> ${tutorName}</td>
-        <td><button class="btn btn-primary" style="padding: 6px 12px; font-size: 13px;" onclick="window.openClassExams('${c.id}', '${c.name}', '${branchName}', '${c.staff ? c.staff.name : '未指派'}')">進入登錄</button></td>
+        <td><button class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;" onclick="window.openClassExams('${c.id}', '${c.name}', '${branchName}', '${c.staff ? c.staff.name : '未指派'}')">進入登錄</button></td>
       </tr>`
   })
 }
@@ -93,9 +85,10 @@ async function loadExamsList() {
 window.openExamEditor = async (examId = null) => {
   document.getElementById('exam-form').reset(); document.getElementById('exam-id').value = examId || ''
   
+  // 💡 阻擋機制：若無導師且無教師，跳出紅色警告並禁止進入
   const c = allClasses.find(x => x.id === currentClassId);
   if (c && !c.teacher_id && !c.tutor_id) {
-    return window.showCustomDialog('無法登錄', '此班級尚未指派「授課教師」或「帶班導師」，無法登錄成績！\n請先至「班級與排課管理」進行設定。', 'alert', 'error');
+    return window.showCustomDialog('禁止登錄', '此班級尚未設定「帶班導師」或「授課教師」，無法登錄成績！\n請先至排課系統指派。', 'alert', 'error');
   }
 
   if (examId) {
@@ -117,6 +110,7 @@ window.openExamEditor = async (examId = null) => {
   const { data: students } = await supabase.from('class_students').select('student_id, students(id, name, student_number)').eq('class_id', currentClassId)
   let existingScores = {}
   
+  // 💡 確保讀取資料時，以 student_id 為 Key
   if (examId) { 
     const { data: scores } = await supabase.from('grades').select('*').eq('exam_id', examId); 
     if (scores) scores.forEach(s => existingScores[s.student_id] = s) 
@@ -134,7 +128,7 @@ window.openExamEditor = async (examId = null) => {
     rosterList.innerHTML += `
       <tr>
         <td><strong>${s.name}</strong> <span style="font-size:12px; color:var(--text-light);">${s.student_number||''}</span><input type="hidden" class="row-student-id" value="${s.student_id}"></td>
-        <td><input type="number" class="row-score" min="0" max="100" step="1" value="${scoreVal}" data-idx="${idx}" onchange="window.calcStats()"></td>
+        <td style="text-align:center;"><input type="number" class="row-score" min="0" max="100" step="1" value="${scoreVal}" data-idx="${idx}" onchange="window.calcStats()"></td>
         <td><input type="text" class="row-note" value="${noteVal}" placeholder="輸入個人評語..."></td>
       </tr>`
   })
@@ -189,6 +183,7 @@ window.closeSubjectModal = () => subjectModal.style.display = 'none'
 subjectForm.addEventListener('submit', async (e) => { e.preventDefault(); const val = document.getElementById('new-subject').value.trim(); if(val){ await supabase.from('subjects').insert([{name: val}]); document.getElementById('new-subject').value=''; loadSubjects() } })
 window.deleteSubject = async (id) => { const confirm = await window.showCustomDialog('刪除科目', '確定要刪除嗎？', 'confirm', 'delete'); if(confirm){ await supabase.from('subjects').delete().eq('id', id); loadSubjects() } }
 
+// 💡 列印成績單邏輯
 window.printReportCard = () => {
   const examName = document.getElementById('exam_name').value;
   if (!examName) return window.showCustomDialog('提示', '請先儲存測驗名稱！', 'alert', 'info');
@@ -199,24 +194,27 @@ window.printReportCard = () => {
     const num = tr.querySelector('span').textContent;
     const score = tr.querySelector('.row-score').value || '缺考';
     const note = tr.querySelector('.row-note').value || '';
-    rowsHtml += `<tr><td style="border:1px solid #cbd5e1; padding:8px;">${idx+1}</td><td style="border:1px solid #cbd5e1; padding:8px;">${name} ${num}</td><td style="border:1px solid #cbd5e1; padding:8px; text-align:center; font-weight:bold;">${score}</td><td style="border:1px solid #cbd5e1; padding:8px;">${note}</td></tr>`;
+    rowsHtml += `<tr><td style="border:1px solid #cbd5e1; padding:10px; font-size:14px; text-align:center;">${idx+1}</td><td style="border:1px solid #cbd5e1; padding:10px; font-size:14px;">${name} ${num}</td><td style="border:1px solid #cbd5e1; padding:10px; text-align:center; font-size:16px; font-weight:bold; color:#1e293b;">${score}</td><td style="border:1px solid #cbd5e1; padding:10px; font-size:14px;">${note}</td></tr>`;
   });
 
   const content = `
-    <h2 style="text-align:center; color:#1e293b;">${currentClassName} - ${examName} 測驗成績單</h2>
-    <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:14px; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">
-      <span>考試科目：${document.getElementById('subject').value}</span>
-      <span>考試日期：${document.getElementById('exam_date').value}</span>
+    <html><head><title>${currentClassName} 成績單列印</title></head><body style="font-family: sans-serif; padding: 20px;">
+    <h1 style="text-align:center; color:#1e293b; border-bottom: 2px solid #1e293b; padding-bottom: 10px;">${currentClassName} - ${examName} 成績單</h1>
+    <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:16px;">
+      <span><strong>考試科目：</strong>${document.getElementById('subject').value}</span>
+      <span><strong>考試日期：</strong>${document.getElementById('exam_date').value}</span>
     </div>
-    <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
-      <tr><th style="border:1px solid #cbd5e1; padding:8px; background:#f8fafc;">班級平均</th><th style="border:1px solid #cbd5e1; padding:8px; background:#f8fafc;">最高分</th><th style="border:1px solid #cbd5e1; padding:8px; background:#f8fafc;">最低分</th></tr>
-      <tr><td style="border:1px solid #cbd5e1; padding:8px; text-align:center;">${document.getElementById('stat-avg').textContent}</td><td style="border:1px solid #cbd5e1; padding:8px; text-align:center; color:#15803d;">${document.getElementById('stat-high').textContent}</td><td style="border:1px solid #cbd5e1; padding:8px; text-align:center; color:#b91c1c;">${document.getElementById('stat-low').textContent}</td></tr>
+    <table style="width:100%; border-collapse:collapse; margin-bottom:30px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+      <tr><th style="border:1px solid #cbd5e1; padding:12px; background:#f1f5f9; color:#475569;">班級平均</th><th style="border:1px solid #cbd5e1; padding:12px; background:#f1f5f9; color:#475569;">最高分</th><th style="border:1px solid #cbd5e1; padding:12px; background:#f1f5f9; color:#475569;">最低分</th></tr>
+      <tr><td style="border:1px solid #cbd5e1; padding:15px; text-align:center; font-size:18px; font-weight:bold;">${document.getElementById('stat-avg').textContent}</td><td style="border:1px solid #cbd5e1; padding:15px; text-align:center; color:#15803d; font-size:18px; font-weight:bold;">${document.getElementById('stat-high').textContent}</td><td style="border:1px solid #cbd5e1; padding:15px; text-align:center; color:#b91c1c; font-size:18px; font-weight:bold;">${document.getElementById('stat-low').textContent}</td></tr>
     </table>
-    <table style="width:100%; border-collapse:collapse;">
-      <tr><th style="border:1px solid #cbd5e1; padding:8px; background:#f8fafc; text-align:left;">項次</th><th style="border:1px solid #cbd5e1; padding:8px; background:#f8fafc; text-align:left;">姓名 (學號)</th><th style="border:1px solid #cbd5e1; padding:8px; background:#f8fafc; text-align:center;">分數</th><th style="border:1px solid #cbd5e1; padding:8px; background:#f8fafc; text-align:left;">評語備註</th></tr>
+    <table style="width:100%; border-collapse:collapse; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+      <tr><th style="border:1px solid #cbd5e1; padding:12px; background:#f1f5f9; text-align:center; width:60px; color:#475569;">項次</th><th style="border:1px solid #cbd5e1; padding:12px; background:#f1f5f9; text-align:left; color:#475569;">姓名 (學號)</th><th style="border:1px solid #cbd5e1; padding:12px; background:#f1f5f9; text-align:center; width:80px; color:#475569;">分數</th><th style="border:1px solid #cbd5e1; padding:12px; background:#f1f5f9; text-align:left; color:#475569;">評語備註</th></tr>
       ${rowsHtml}
     </table>
+    <div style="margin-top: 30px; text-align: right; font-size: 14px; color: #64748b;">列印時間：${new Date().toLocaleString()}</div>
     <script>window.onload = () => { setTimeout(() => { window.print(); window.close(); }, 500); }<\/script>
+    </body></html>
   `;
   const printWin = window.open('', '_blank'); printWin.document.write(content); printWin.document.close();
 }
