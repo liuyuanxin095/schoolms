@@ -1,20 +1,18 @@
-// sidebar.js - 全域側邊導覽列自動生成組件
+// sidebar.js - 全域側邊導覽列自動生成組件 (支援 RWD 響應式)
 
 export function initSidebar() {
   const currentPath = window.location.pathname;
   
-  // 💡 登入頁面不需要顯示側邊欄
+  // 登入頁面不需要顯示側邊欄
   if (currentPath.includes('login.html')) return; 
 
-  // 💡 自動判斷相對路徑：如果在子資料夾內，路徑要加 '../'
   const isSubfolder = currentPath.match(/\/(students|staff|classes|attendance|grades|payments|notifications|classrooms|meals)\//);
   const basePath = isSubfolder ? '../' : './';
-  
-  // 💡 自動判斷現在在哪個模組，用來讓選單按鈕亮起 (active)
   const currentModule = isSubfolder ? isSubfolder[1] : 'home';
 
+  // 💡 1. 建立側邊欄 HTML
   const sidebarHTML = `
-    <aside class="sidebar">
+    <aside class="sidebar" id="global-sidebar">
       <div class="sidebar-header">
         <span class="material-symbols-outlined" style="font-size: 32px; color: #60a5fa;">school</span>
         <h2>補習班管理系統</h2>
@@ -51,9 +49,37 @@ export function initSidebar() {
     </aside>
   `;
 
-  // 將側邊欄自動插入到網頁的最前面
   document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
+
+  // 💡 2. 動態生成 RWD 手機版需要的元素 (漢堡選單與黑底遮罩)
+  
+  // 建立黑底遮罩
+  const overlay = document.createElement('div');
+  overlay.className = 'sidebar-overlay';
+  document.body.appendChild(overlay);
+
+  // 尋找網頁的標題列 (header-left) 準備插入漢堡按鈕
+  const headerLeft = document.querySelector('.header-left');
+  if (headerLeft) {
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'menu-toggle';
+    toggleBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 28px;">menu</span>';
+    
+    // 把漢堡按鈕插在最前面
+    headerLeft.insertBefore(toggleBtn, headerLeft.firstChild);
+
+    const sidebar = document.getElementById('global-sidebar');
+    
+    // 切換選單的邏輯
+    const toggleSidebar = () => {
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('active');
+    };
+
+    // 綁定點擊事件：按漢堡圖示可以開關、點黑底遮罩可以關閉
+    toggleBtn.addEventListener('click', toggleSidebar);
+    overlay.addEventListener('click', toggleSidebar);
+  }
 }
 
-// 執行渲染
 initSidebar();
