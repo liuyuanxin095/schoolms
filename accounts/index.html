@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>系統帳號權限管理 - 陽禾文理補習班管理系統</title>
+  <title>系統帳號管理 - 陽禾文理補習班管理系統</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css" />
 </head>
@@ -12,7 +12,7 @@
     <header class="header">
       <div class="header-left">
         <span class="material-symbols-outlined" style="font-size: 28px; color: var(--primary);">manage_accounts</span>
-        <h1>系統帳號權限管理 (IT)</h1>
+        <h1>系統帳號管理</h1>
       </div>
       <div class="header-right"><span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span></div>
     </header>
@@ -21,12 +21,12 @@
       <div class="card">
         <div class="toolbar">
           <h2 class="toolbar-title"><span class="material-symbols-outlined">admin_panel_settings</span>系統存取帳號列表</h2>
-          <button class="btn btn-primary" onclick="window.openAccountModal()"><span class="material-symbols-outlined">key</span>開通新帳號權限</button>
+          <button class="btn btn-primary" onclick="window.openAccountModal()"><span class="material-symbols-outlined">key</span>獨立開通新帳號</button>
         </div>
         
         <div class="table-responsive">
           <table>
-            <thead><tr><th>綁定人員</th><th>登入 Email 帳號</th><th>系統權限角色</th><th>主要分校</th><th>狀態</th><th>操作</th></tr></thead>
+            <thead><tr><th>綁定人員姓名</th><th>登入 Email 帳號</th><th>系統權限角色</th><th>所屬分校</th><th>狀態</th><th>操作</th></tr></thead>
             <tbody id="account-list"><tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr></tbody>
           </table>
         </div>
@@ -41,30 +41,38 @@
       
       <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #1e3a8a; line-height: 1.5;">
         <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">info</span> 
-        系統將為該人員建立登入帳號。<b>預設密碼為該人員的身分證字號</b> (若無則預設為 123456)。請先確保已在「人事管理系統」建立該人員基本資料。
+        建立帳號時，系統會自動在「人事管理系統」中同步建立一筆基本檔案。<b>預設密碼建議使用身分證字號</b>。
       </div>
       
       <form id="account-form">
         <div class="form-grid" style="grid-template-columns: 1fr;">
           <div class="form-group">
-            <label>選擇人員 (HR 名冊) <span style="color:red">*</span></label>
-            <select id="staff_id" required onchange="window.autoFillStaffInfo()"><option value="" disabled selected>載入中...</option></select>
+            <label>設定登入 Email 帳號 <span style="color:red">*</span></label>
+            <input type="email" id="email" required placeholder="例：admin@yanghe.tw">
           </div>
           <div class="form-group">
-            <label>設定登入 Email 帳號 <span style="color:red">*</span></label>
-            <input type="email" id="email" required placeholder="例：teacher_wang@school.com">
+            <label>人員姓名 (顯示於系統) <span style="color:red">*</span></label>
+            <input type="text" id="acc_name" required placeholder="例：王小明">
+          </div>
+          <div class="form-group">
+            <label>預設登入密碼 (建議使用身分證) <span style="color:red">*</span></label>
+            <input type="text" id="id_number" required placeholder="請輸入預設密碼 / 身分證字號">
+          </div>
+          <div class="form-group">
+            <label>所屬主要分校 <span style="color:red">*</span></label>
+            <select id="branch_id" required><option value="" disabled selected>載入中...</option></select>
           </div>
           <div class="form-group">
             <label>指派系統權限 <span style="color:red">*</span></label>
             <select id="role" required>
-              <option value="teacher">授課教師 (僅能查看/管理自己任課的班級)</option>
-              <option value="admin">分校櫃檯 (可管理該分校所有教務與財務)</option>
-              <option value="manager">分校主任 (可管理該分校並開通帳號)</option>
-              <option value="superadmin">總部管理員 (擁有全域跨分校最高權限)</option>
+              <option value="teacher">授課教師 (僅能看自己班級)</option>
+              <option value="admin">分校櫃檯 (管理該分校所有教務)</option>
+              <option value="manager">分校主任 (管理該分校並開通帳號)</option>
+              <option value="superadmin">總部管理員 (全域最高權限)</option>
             </select>
           </div>
         </div>
-        <div class="actions" style="margin-top: 25px;"><button type="button" class="btn btn-cancel" onclick="window.closeAccountModal()">取消</button><button type="submit" class="btn btn-primary" id="submit-btn">確認開通帳號</button></div>
+        <div class="actions" style="margin-top: 25px;"><button type="button" class="btn btn-cancel" onclick="window.closeAccountModal()">取消</button><button type="submit" class="btn btn-primary" id="submit-btn">確認建立帳號</button></div>
       </form>
     </div>
   </div>
