@@ -19,7 +19,8 @@
     @media (max-width: 992px) { .editor-layout { grid-template-columns: 1fr; } } 
     .roster-table input[type="number"] { width: 90px; font-size: 18px; font-weight: bold; text-align: center; color: var(--primary); padding: 8px; border: 2px solid var(--border); border-radius: 6px; transition: 0.2s; }
     .roster-table input[type="number"]:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
-    .roster-table input[type="text"] { width: 100%; min-width: 150px; box-sizing: border-box; } 
+    .row-note { width: 100%; padding: 8px 12px !important; border: 1px solid var(--border) !important; border-radius: 6px !important; font-size: 14px; background: #f8fafc; transition: 0.2s; font-family: inherit; box-sizing: border-box; }
+    .row-note:focus { background: #fff; border-color: var(--primary) !important; outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
     .excel-hint { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 10px 15px; border-radius: 8px; font-size: 13px; display: flex; align-items: center; gap: 8px; margin-bottom: 15px; }
     .view-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border); justify-content: space-between; flex-wrap: wrap; }
     .view-title { font-size: 24px; font-weight: bold; color: var(--text-main); margin: 0; }
@@ -81,7 +82,10 @@
             <button class="btn btn-cancel" onclick="window.handleBackFromEditor()"><span class="material-symbols-outlined">arrow_back</span>返回列表</button>
             <h2 class="view-title" id="editor-title">新增班級測驗成績</h2>
           </div>
-          <button class="btn btn-primary" id="btn-save-exam" onclick="window.saveExamData()" style="font-size: 16px; padding: 12px 24px;"><span class="material-symbols-outlined">save</span> 儲存成績與發布</button>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-cancel" onclick="window.printReportCard()"><span class="material-symbols-outlined">print</span> 列印班級成績單</button>
+            <button class="btn btn-primary" id="btn-save-exam" onclick="window.saveExamData()" style="font-size: 16px; padding: 12px 24px;"><span class="material-symbols-outlined">save</span> 儲存成績與發布</button>
+          </div>
         </div>
 
         <div class="editor-layout">
@@ -92,6 +96,10 @@
               <div class="form-group"><label>測驗名稱 <span style="color:red">*</span></label><input type="text" id="exam_name" required placeholder="例：第二週隨堂考"></div>
               <div class="form-group"><label>考試科目 <span style="color:red">*</span></label><select id="subject" required><option value="" disabled selected>載入中...</option></select></div>
               <div class="form-group"><label>考試日期 <span style="color:red">*</span></label><input type="date" id="exam_date" required></div>
+              <div class="form-group full-width">
+                <label>班級通知 (將顯示於家長端)</label>
+                <textarea id="teacher_notice" rows="3" style="width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; resize: vertical;" placeholder="例：這次大家計算題粗心較多，請務必訂正..."></textarea>
+              </div>
             </form>
           </div>
 
