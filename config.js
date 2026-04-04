@@ -10,6 +10,9 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeHZnd3BjY3lka2t0YXZibGFvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDM0NzgwNiwiZXhwIjoyMDg5OTIzODA2fQ.fWHfq8mAURiCermtWiG0oCkCvJaEx8zLwUqlF3_-5mQ'
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+export const supabaseUrl = SUPABASE_URL;
+export const supabaseKey = SUPABASE_ANON_KEY;
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // 專供 accounts 模組使用的管理員連線 (不保留登入狀態)
 export const adminAuthClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
