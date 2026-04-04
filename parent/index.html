@@ -5,134 +5,257 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>陽禾家長專區</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
   <style>
-    :root { --primary: #3b82f6; --bg: #f8fafc; --surface: #ffffff; --text-main: #1e293b; --text-light: #64748b; --border: #e2e8f0; }
+    :root { --primary: #3b82f6; --bg: #f1f5f9; --surface: #ffffff; --text-main: #1e293b; --text-light: #64748b; --border: #e2e8f0; --accent: #8b5cf6; }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text-main); padding-bottom: 70px; }
-    .app-header { background: var(--primary); color: white; padding: 20px 20px 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(59,130,246,0.3); border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
-    .app-header h1 { margin: 0; font-size: 20px; font-weight: bold; }
-    .app-header p { margin: 5px 0 0 0; font-size: 13px; opacity: 0.9; }
-    .content { padding: 20px; }
-    .card { background: var(--surface); border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.02); }
-    .card-title { font-size: 16px; font-weight: bold; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
-    #login-screen { display: flex; flex-direction: column; justify-content: center; height: 80vh; padding: 30px; }
-    .input-box { width: 100%; padding: 15px; border: 2px solid var(--border); border-radius: 12px; font-size: 16px; margin-bottom: 20px; outline: none; transition: 0.2s; }
-    .input-box:focus { border-color: var(--primary); }
-    .btn-login { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(59,130,246,0.3); transition: 0.2s; }
-    .btn-login:active { transform: scale(0.98); }
-    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding-bottom: env(safe-area-inset-bottom); z-index: 100; }
-    .nav-item { flex: 1; text-align: center; padding: 12px 0; color: var(--text-light); font-size: 11px; cursor: pointer; }
-    .nav-item.active { color: var(--primary); }
-    .nav-item .material-symbols-outlined { display: block; font-size: 24px; margin-bottom: 4px; margin-left: auto; margin-right: auto; }
-    .view { display: none; animation: fadeIn 0.3s ease; }
+    body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background-color: var(--bg); color: var(--text-main); padding-bottom: 85px; }
+
+    /* 隱藏區塊 */
+    .view { display: none; padding: 20px; animation: slideUp 0.3s ease-out; }
     .view.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* 登入畫面 */
+    #login-screen { height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 40px; background: white; }
+    .input-box { width: 100%; padding: 18px; border: 2px solid var(--border); border-radius: 14px; font-size: 16px; margin-bottom: 20px; outline: none; }
+    .btn-login { width: 100%; background: var(--primary); color: white; border: none; padding: 18px; border-radius: 14px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+
+    /* 頂部標題 */
+    .app-header { background: var(--primary); color: white; padding: 30px 25px 40px 25px; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; margin-bottom: 10px; }
+    .app-header h1 { margin: 0; font-size: 22px; }
+    .app-header p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.8; }
+
+    /* 通用卡片樣式 */
+    .card { background: var(--surface); border-radius: 18px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02); }
+    .card-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+
+    /* 通知列表樣式 */
+    .noti-item { display: flex; gap: 15px; padding: 15px; border-radius: 12px; background: #fff; border: 1px solid var(--border); margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+    .noti-item:active { background: #f8fafc; transform: scale(0.98); }
+    .noti-icon { width: 45px; height: 45px; border-radius: 10px; background: #eef2ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .noti-body { flex: 1; }
+    .noti-time { font-size: 11px; color: var(--text-light); margin-bottom: 4px; }
+    .noti-subject { font-weight: bold; font-size: 15px; margin-bottom: 2px; }
+    .noti-summary { font-size: 13px; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 200px; }
+
+    /* 考勤暗色卡片 */
+    .daily-detail-card { background: #1c1c1e; color: #fff; border-radius: 20px; padding: 25px; margin-top: 20px; }
+    .detail-row { display: flex; justify-content: space-between; margin-bottom: 12px; }
+    .detail-label { color: #8e8e93; }
+
+    /* 底部導覽列 */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.9); backdrop-filter: blur(15px); border-top: 1px solid var(--border); display: flex; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)) 0; z-index: 1000; }
+    .nav-item { flex: 1; text-align: center; color: var(--text-light); font-size: 11px; }
+    .nav-item.active { color: var(--primary); }
+    .nav-item .material-symbols-outlined { display: block; font-size: 26px; margin-bottom: 4px; margin-left: auto; margin-right: auto; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+    .modal-content { background: white; border-radius: 20px; width: 100%; max-width: 400px; padding: 25px; position: relative; max-height: 80vh; overflow-y: auto; }
   </style>
 </head>
 <body>
 
   <div id="login-screen" class="view active">
-    <div style="text-align: center; margin-bottom: 30px;">
-      <span class="material-symbols-outlined" style="font-size: 64px; color: var(--primary);">school</span>
-      <h1 style="margin: 10px 0 5px 0;">陽禾家長專區</h1>
-      <p style="color: var(--text-light); margin: 0;">隨時掌握孩子的學習狀況</p>
+    <div style="text-align: center; margin-bottom: 40px;">
+      <span class="material-symbols-outlined" style="font-size: 70px; color: var(--primary);">account_balance</span>
+      <h1 style="margin: 15px 0 5px 0;">陽禾家長專區</h1>
+      <p style="color: var(--text-light);">請輸入學號以綁定孩子資料</p>
     </div>
-    <input type="text" id="student-number" class="input-box" placeholder="請輸入孩子學號 (例：SD1001)">
-    <button class="btn-login" id="login-btn" onclick="window.parentLogin()">綁定並登入</button>
+    <input type="text" id="student-number" class="input-box" placeholder="例：SD1001">
+    <button class="btn-login" onclick="window.parentLogin()">綁定並登入</button>
   </div>
 
-  <div id="main-screen" class="view">
-    <header class="app-header">
-      <h1 id="student-name">載入中...</h1>
-      <p id="student-branch">陽禾補習班</p>
-    </header>
-
-    <div class="content">
+  <div id="main-container" style="display: none;">
+    
+    <div id="view-home" class="view active">
+      <header class="app-header">
+        <h1 id="user-name">載入中...</h1>
+        <p id="user-branch">陽禾文理補習班</p>
+      </header>
       <div class="card">
-        <h2 class="card-title"><span class="material-symbols-outlined" style="color: #10b981;">how_to_reg</span> 今日出勤狀況</h2>
-        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px;">
-          <div>
-            <div style="font-size: 13px; color: var(--text-light); margin-bottom: 5px;">到班時間</div>
-            <div style="font-size: 18px; font-weight: bold; color: var(--text-main);" id="att-in">--:--</div>
-          </div>
-          <div style="width: 1px; height: 30px; background: var(--border);"></div>
-          <div style="text-align: right;">
-            <div style="font-size: 13px; color: var(--text-light); margin-bottom: 5px;">離班時間</div>
-            <div style="font-size: 18px; font-weight: bold; color: var(--text-main);" id="att-out">--:--</div>
-          </div>
+        <div class="card-title"><span class="material-symbols-outlined" style="color:var(--primary);">notifications_active</span> 最新動態</div>
+        <div id="home-latest-info" style="font-size: 14px; color: var(--text-light);">正在同步最新資料...</div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="material-symbols-outlined" style="color:#10b981;">history</span> 今日打卡</div>
+        <div style="display:flex; justify-content:space-between; text-align:center;">
+          <div style="flex:1;"><div style="font-size:12px; color:var(--text-light);">到班</div><div id="home-in" style="font-size:18px; font-weight:bold;">--:--</div></div>
+          <div style="flex:1; border-left:1px solid var(--border);"><div style="font-size:12px; color:var(--text-light);">離班</div><div id="home-out" style="font-size:18px; font-weight:bold;">--:--</div></div>
         </div>
       </div>
+    </div>
 
-      <div class="card">
-        <h2 class="card-title"><span class="material-symbols-outlined" style="color: #f59e0b;">workspace_premium</span> 最近一次測驗</h2>
-        <div id="latest-grade"><div style="text-align: center; color: var(--text-light); padding: 10px;">載入中...</div></div>
+    <div id="view-att" class="view">
+      <h2 style="margin-bottom:20px;">出勤紀錄</h2>
+      <div id="calendar" class="card" style="padding:10px;"></div>
+      <div class="daily-detail-card" id="detail-card" style="display:none;">
+        <div id="detail-date" style="font-size:18px; font-weight:bold; margin-bottom:15px; border-bottom:1px solid #334155; padding-bottom:10px;"></div>
+        <div class="detail-row"><span class="detail-label">到班時間</span><span id="detail-in">--:--</span></div>
+        <div class="detail-row"><span class="detail-label">離班時間</span><span id="detail-out">--:--</span></div>
+        <div class="detail-row"><span class="detail-label">狀態</span><span id="detail-status">-</span></div>
       </div>
+    </div>
+
+    <div id="view-grades" class="view">
+      <h2 style="margin-bottom:20px;">歷次成績</h2>
+      <div id="grades-list"></div>
+    </div>
+
+    <div id="view-notis" class="view">
+      <h2 style="margin-bottom:20px;">班級通知</h2>
+      <div id="notis-list"></div>
     </div>
 
     <nav class="bottom-nav">
-      <div class="nav-item active"><span class="material-symbols-outlined">home</span>首頁</div>
-      <div class="nav-item"><span class="material-symbols-outlined">campaign</span>通知</div>
-      <div class="nav-item" onclick="window.location.reload()"><span class="material-symbols-outlined">logout</span>登出</div>
+      <div class="nav-item active" onclick="window.switchTab('home')"><span class="material-symbols-outlined">home</span>首頁</div>
+      <div class="nav-item" onclick="window.switchTab('att')"><span class="material-symbols-outlined">calendar_month</span>考勤</div>
+      <div class="nav-item" onclick="window.switchTab('grades')"><span class="material-symbols-outlined">analytics</span>成績</div>
+      <div class="nav-item" onclick="window.switchTab('notis')"><span class="material-symbols-outlined">campaign</span>通知</div>
     </nav>
   </div>
 
+  <div class="modal-overlay" id="noti-modal" onclick="window.closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <span class="material-symbols-outlined" style="position:absolute; right:20px; top:20px; cursor:pointer;" onclick="window.closeModal()">close</span>
+      <h3 id="modal-title" style="margin-top:0; color:var(--primary); padding-right:30px;"></h3>
+      <div id="modal-time" style="font-size:12px; color:var(--text-light); margin-bottom:15px;"></div>
+      <img id="modal-img" src="" style="width:100%; border-radius:12px; margin-bottom:15px; display:none;">
+      <div id="modal-content" style="line-height:1.6; white-space:pre-wrap; font-size:15px; color:var(--text-main);"></div>
+    </div>
+  </div>
+
   <script type="module">
-    import { supabase } from '../config.js?v=999'; 
+    import { supabase } from '../config.js';
 
+    let currentStudentId = null;
+    let calendar = null;
+    let attendanceData = {};
+
+    // 1. 登入邏輯
     window.parentLogin = async () => {
-      const btn = document.getElementById('login-btn');
       const num = document.getElementById('student-number').value.trim();
-      if (!num) return alert('請輸入學號！');
+      if(!num) return alert('請輸入學號');
+      
+      const { data: s, error } = await supabase.from('students').select('*, branches(name)').eq('student_number', num).maybeSingle();
+      if(!s) return alert('查無此學號，請與補習班確認。');
 
-      btn.textContent = '連線中...';
-      btn.disabled = true;
-
-      try {
-        // 防呆：檢查 Supabase 有沒有正確載入
-        if (!supabase) throw new Error('資料庫無法連線，請檢查 config.js 裡的金鑰是否正確！');
-
-        const { data: student, error } = await supabase.from('students').select('*, branches(name)').eq('student_number', num).maybeSingle();
-        
-        if (error) throw error;
-        if (!student) {
-          throw new Error('查無此學號！\n\n(若確定學號無誤，請確認您是否有在 Supabase 執行「允許家長查詢學生」的 RLS 開放語法)');
-        }
-
-        document.getElementById('student-name').textContent = `${student.name} 同學`;
-        document.getElementById('student-branch').textContent = student.branches ? student.branches.name : '陽禾補習班';
-        document.getElementById('login-screen').classList.remove('active');
-        document.getElementById('main-screen').classList.add('active');
-
-        const todayStr = new Date().toISOString().split('T')[0];
-        const { data: att } = await supabase.from('attendance').select('*').match({ student_id: student.id, record_date: todayStr }).maybeSingle();
-        if (att) {
-          document.getElementById('att-in').textContent = att.check_in ? new Date(att.check_in).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
-          document.getElementById('att-out').textContent = att.check_out ? new Date(att.check_out).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
-          if (att.status === '請假') { document.getElementById('att-in').textContent = '已請假'; document.getElementById('att-out').textContent = '已請假'; document.getElementById('att-in').style.color = '#f59e0b'; }
-        }
-
-        const { data: grades } = await supabase.from('grades').select('score, note, class_exams(exam_name, subject)').eq('student_id', student.id).order('created_at', { ascending: false }).limit(1);
-        const gradeContainer = document.getElementById('latest-grade');
-        if (grades && grades.length > 0) {
-          const g = grades[0];
-          gradeContainer.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-              <div style="font-weight:bold;">${g.class_exams.exam_name}</div>
-              <div style="background:#eff6ff; color:#3b82f6; padding:4px 8px; border-radius:6px; font-size:12px;">${g.class_exams.subject}</div>
-            </div>
-            <div style="font-size:36px; font-weight:bold; color:var(--text-main); margin-bottom:10px;">${g.score !== null ? g.score : '缺考'} <span style="font-size:14px; font-weight:normal; color:var(--text-light);">分</span></div>
-            <div style="font-size:13px; color:var(--text-light); background:#f8fafc; padding:10px; border-radius:8px; border:1px solid var(--border);">老師評語：${g.note || '無'}</div>
-          `;
-        } else {
-          gradeContainer.innerHTML = '<div style="color:var(--text-light); text-align:center;">近期尚無測驗紀錄</div>';
-        }
-      } catch (err) {
-        alert(err.message);
-      } finally {
-        btn.textContent = '綁定並登入';
-        btn.disabled = false;
-      }
+      currentStudentId = s.id;
+      document.getElementById('user-name').textContent = `${s.name} 同學`;
+      document.getElementById('user-branch').textContent = s.branches?.name || '陽禾文理補習班';
+      
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('main-container').style.display = 'block';
+      
+      window.switchTab('home');
     };
+
+    // 2. 分頁切換邏輯
+    window.switchTab = (tab) => {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      
+      const targetView = document.getElementById(`view-${tab}`);
+      targetView.classList.add('active');
+      
+      const navItems = document.querySelectorAll('.nav-item');
+      if(tab === 'home') navItems[0].classList.add('active');
+      if(tab === 'att') { navItems[1].classList.add('active'); loadAtt(); }
+      if(tab === 'grades') { navItems[2].classList.add('active'); loadGrades(); }
+      if(tab === 'notis') { navItems[3].classList.add('active'); loadNotis(); }
+      
+      if(tab === 'home') loadHomeSummary();
+    };
+
+    // 3. 載入各項資料
+    async function loadHomeSummary() {
+      const today = new Date().toISOString().split('T')[0];
+      const { data: att } = await supabase.from('attendance').select('*').match({student_id: currentStudentId, record_date: today}).maybeSingle();
+      if(att) {
+        document.getElementById('home-in').textContent = att.check_in ? new Date(att.check_in).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
+        document.getElementById('home-out').textContent = att.check_out ? new Date(att.check_out).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
+      }
+      const { data: latestNoti } = await supabase.from('notifications').select('title').order('created_at', {ascending:false}).limit(1).maybeSingle();
+      document.getElementById('home-latest-info').textContent = latestNoti ? `最新通知：${latestNoti.title}` : '目前尚無新動態';
+    }
+
+    async function loadAtt() {
+      const { data } = await supabase.from('attendance').select('*').eq('student_id', currentStudentId);
+      const events = []; attendanceData = {};
+      data?.forEach(a => {
+        attendanceData[a.record_date] = a;
+        events.push({ title: a.status, start: a.record_date, color: a.status==='請假'?'#f59e0b':'#10b981' });
+      });
+
+      if(!calendar) {
+        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+          initialView: 'dayGridMonth', height: 'auto', events: events,
+          dateClick: (info) => showAttDetail(info.dateStr),
+          eventClick: (info) => showAttDetail(info.event.startStr.split('T')[0])
+        });
+        calendar.render();
+      } else {
+        calendar.removeAllEvents(); calendar.addEventSource(events);
+      }
+    }
+
+    function showAttDetail(date) {
+      const a = attendanceData[date];
+      const card = document.getElementById('detail-card');
+      document.getElementById('detail-date').textContent = date;
+      if(a) {
+        document.getElementById('detail-in').textContent = a.check_in ? new Date(a.check_in).toLocaleTimeString() : '--:--';
+        document.getElementById('detail-out').textContent = a.check_out ? new Date(a.check_out).toLocaleTimeString() : '--:--';
+        document.getElementById('detail-status').textContent = a.status;
+      } else {
+        document.getElementById('detail-in').textContent = '--:--'; document.getElementById('detail-out').textContent = '--:--'; document.getElementById('detail-status').textContent = '無紀錄';
+      }
+      card.style.display = 'block';
+    }
+
+    async function loadGrades() {
+      const { data } = await supabase.from('grades').select('*, class_exams(*)').eq('student_id', currentStudentId).order('created_at', {ascending:false});
+      const list = document.getElementById('grades-list');
+      list.innerHTML = data?.length ? data.map(g => `
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <strong style="font-size:16px;">${g.class_exams.exam_name}</strong>
+            <span style="color:var(--primary); font-weight:bold; font-size:20px;">${g.score??'缺'}分</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-light);">科目：${g.class_exams.subject} | 日期：${g.class_exams.exam_date}</div>
+          ${g.note ? `<div style="margin-top:10px; padding:10px; background:#f8fafc; border-radius:8px; font-size:13px; color:#475569;">評語：${g.note}</div>` : ''}
+        </div>
+      `).join('') : '<div style="text-align:center; padding:40px; color:var(--text-light);">尚無成績紀錄</div>';
+    }
+
+    async function loadNotis() {
+      const { data } = await supabase.from('notifications').select('*').order('created_at', {ascending:false});
+      const list = document.getElementById('notis-list');
+      list.innerHTML = data?.length ? data.map(n => `
+        <div class="noti-item" onclick='window.openNoti(${JSON.stringify(n).replace(/'/g, "&apos;")})'>
+          <div class="noti-icon"><span class="material-symbols-outlined">campaign</span></div>
+          <div class="noti-body">
+            <div class="noti-time">${new Date(n.created_at).toLocaleString()}</div>
+            <div class="noti-subject">${n.title}</div>
+            <div class="noti-summary">${n.content}</div>
+          </div>
+        </div>
+      `).join('') : '<div style="text-align:center; padding:40px; color:var(--text-light);">尚無通知</div>';
+    }
+
+    // 4. 通知點擊邏輯
+    window.openNoti = (n) => {
+      document.getElementById('modal-title').textContent = n.title;
+      document.getElementById('modal-time').textContent = new Date(n.created_at).toLocaleString();
+      document.getElementById('modal-content').textContent = n.content;
+      const img = document.getElementById('modal-img');
+      if(n.image_url) { img.src = n.image_url; img.style.display = 'block'; }
+      else { img.style.display = 'none'; }
+      document.getElementById('noti-modal').style.display = 'flex';
+    };
+
+    window.closeModal = () => document.getElementById('noti-modal').style.display = 'none';
   </script>
 </body>
 </html>
