@@ -46,26 +46,34 @@
       </div>
       
       <form id="account-form">
-        <div class="form-grid" style="grid-template-columns: 1fr;">
+        <div class="form-grid">
           <div class="form-group">
-            <label>選擇人員 (HR 名冊) <span style="color:red">*</span></label>
-            <select id="staff_id" required><option value="" disabled selected>載入中...</option></select>
-          </div>
-          <div class="form-group">
-            <label>設定登入 Email 帳號 <span style="color:red">*</span></label>
-            <input type="email" id="email" required placeholder="例：teacher_wang@school.com">
+            <label>人員姓名 <span style="color:red">*</span></label>
+            <input type="text" id="acc_name" required placeholder="例：王小明">
           </div>
           <div class="form-group">
             <label>指派系統權限 <span style="color:red">*</span></label>
             <select id="role" required>
-              <option value="teacher">授課教師 (僅能查看/管理自己任課的班級)</option>
-              <option value="admin">分校櫃檯 (可管理該分校所有教務與財務)</option>
-              <option value="manager">分校主任 (可管理該分校並開通帳號)</option>
-              <option value="superadmin">總部管理員 (擁有全域跨分校最高權限)</option>
+              <option value="teacher">授課教師 (僅能看自己班級)</option>
+              <option value="admin">分校櫃檯 (管理該分校所有教務)</option>
+              <option value="manager">分校主任 (管理該分校並開通帳號)</option>
+              <option value="superadmin">總部管理員 (全域最高權限)</option>
             </select>
           </div>
+          <div class="form-group full-width">
+            <label>登入 Email 帳號 <span style="color:red">*</span></label>
+            <input type="email" id="email" required placeholder="例：teacher@school.com">
+          </div>
+          <div class="form-group">
+            <label>身分證字號 (預設密碼) <span style="color:red">*</span></label>
+            <input type="text" id="id_number" required placeholder="請輸入身分證字號">
+          </div>
+          <div class="form-group">
+            <label>所屬主要分校 <span style="color:red">*</span></label>
+            <select id="branch_id" required><option value="" disabled selected>載入中...</option></select>
+          </div>
         </div>
-        <div class="actions" style="margin-top: 25px;"><button type="button" class="btn btn-cancel" onclick="window.closeAccountModal()">取消</button><button type="submit" class="btn btn-primary" id="submit-btn">確認開通帳號</button></div>
+        <div class="actions" style="margin-top: 25px;"><button type="button" class="btn btn-cancel" onclick="window.closeAccountModal()">取消</button><button type="submit" class="btn btn-primary" id="submit-btn">確認建立帳號</button></div>
       </form>
     </div>
   </div>
