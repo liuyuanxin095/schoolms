@@ -9,39 +9,20 @@
   
   <style>
     /* =========================================
-       📱 主題變數 (支援深色/淺色模式)
+       📱 主題與全域變數
     ========================================= */
     :root {
-      --primary: #3b82f6;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --dot-color: #d97706;
+      --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --dot-color: #d97706;
+      /* 預設深色模式 (仿截圖質感) */
+      --bg-color: #000000; --card-bg: #1c1c1e; --text-main: #ffffff; --text-muted: #8e8e93;
+      --border-solid: #2c2c2e; --nav-bg: rgba(30, 30, 30, 0.95);
+      --header-bg: #1c1c1e; --header-text: #ffffff; --detail-card-bg: #2c2c2e;
     }
 
     [data-theme="light"] {
-      --bg-color: #f1f5f9;
-      --card-bg: #ffffff;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border-solid: #e2e8f0;
-      --nav-bg: rgba(255, 255, 255, 0.95);
-      --fc-today-bg: #e2e8f0;
-      --header-bg: linear-gradient(135deg, #3b82f6, #2563eb);
-      --header-text: #ffffff;
-      --detail-card-bg: #f8fafc;
-    }
-
-    [data-theme="dark"] {
-      --bg-color: #121212;
-      --card-bg: #1c1c1e;
-      --text-main: #f8fafc;
-      --text-muted: #8e8e93;
-      --border-solid: #2c2c2e;
-      --nav-bg: rgba(30, 30, 30, 0.95);
-      --fc-today-bg: #2c2c2e;
-      --header-bg: #1c1c1e;
-      --header-text: #f8fafc;
-      --detail-card-bg: #2c2c2e;
+      --bg-color: #f1f5f9; --card-bg: #ffffff; --text-main: #0f172a; --text-muted: #64748b;
+      --border-solid: #e2e8f0; --nav-bg: rgba(255, 255, 255, 0.95);
+      --header-bg: linear-gradient(135deg, #3b82f6, #2563eb); --header-text: #ffffff; --detail-card-bg: #f8fafc;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -49,25 +30,23 @@
     body {
       background-color: var(--bg-color); color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      margin: 0; min-height: 100vh; overflow-x: hidden; transition: background-color 0.3s, color 0.3s;
+      margin: 0; min-height: 100vh; overflow-x: hidden; transition: 0.3s;
     }
 
-    /* 視圖切換動畫 */
-    .view-section { display: none; opacity: 0; transition: opacity 0.3s ease; min-height: 100vh; }
+    .view-section { display: none; opacity: 0; min-height: 100vh; }
     .view-section.active { display: block; opacity: 1; animation: slideUp 0.3s ease; }
     @keyframes slideUp { from { transform: translateY(10px); } to { transform: translateY(0); } }
 
-    /* UI 元件 */
-    .app-header { background: var(--header-bg); color: var(--header-text); padding: 40px 20px 30px 20px; border-radius: 0 0 24px 24px; margin-bottom: 20px; transition: 0.3s; }
-    .card { background-color: var(--card-bg); border-radius: 16px; padding: 20px; margin: 0 15px 15px 15px; border: 1px solid var(--border-solid); transition: background-color 0.3s; }
+    /* 通用 UI */
+    .app-header { background: var(--header-bg); color: var(--header-text); padding: 40px 20px 25px 20px; border-radius: 0 0 24px 24px; margin-bottom: 20px; }
+    .card { background-color: var(--card-bg); border-radius: 16px; padding: 20px; margin: 0 15px 15px 15px; border: 1px solid var(--border-solid); }
     .card-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
     
     .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .btn-primary { background: var(--primary); color: white; }
-    .btn-primary:active { transform: scale(0.98); }
 
     /* 底部導覽列 */
-    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--nav-bg); backdrop-filter: blur(10px); border-top: 1px solid var(--border-solid); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)) 0; z-index: 1000; transition: 0.3s; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--nav-bg); backdrop-filter: blur(10px); border-top: 1px solid var(--border-solid); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)) 0; z-index: 1000; }
     .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; font-size: 11px; }
     .nav-item.active { color: var(--primary); }
     .has-bottom-nav { padding-bottom: 100px; }
@@ -76,27 +55,44 @@
     .empty-state { text-align: center; color: var(--text-muted); padding: 30px 15px; font-size: 14px; }
 
     /* =========================================
-       🗓️ FullCalendar 無邊框設計 (完全仿照截圖)
+       🗓️ 行事曆究極美化 (完全仿製截圖)
     ========================================= */
-    .fc { font-family: inherit; }
-    .fc .fc-scrollgrid, .fc td, .fc th { border: none !important; } /* 移除所有邊框 */
-    .fc-theme-standard .fc-scrollgrid { border: none; }
-    .fc .fc-toolbar-title { font-size: 18px !important; font-weight: bold; color: var(--text-main); }
+    .fc { font-family: inherit; font-size: 14px; }
+    /* 拔掉所有醜陋的邊框 */
+    .fc .fc-scrollgrid, .fc td, .fc th, .fc-theme-standard .fc-scrollgrid { border: none !important; }
+    
+    /* 頂部月份標題與切換按鈕 */
+    .fc .fc-toolbar { margin-bottom: 20px !important; }
+    .fc .fc-toolbar-title { font-size: 18px !important; font-weight: bold; color: var(--text-main); letter-spacing: 1px; }
     .fc .fc-button { background: transparent !important; border: none !important; color: var(--text-muted) !important; box-shadow: none !important; padding: 0 !important; }
     .fc .fc-button:hover { color: var(--text-main) !important; }
-    .fc .fc-col-header-cell-cushion { color: var(--text-muted); font-weight: normal; font-size: 13px; padding-bottom: 10px; }
-    .fc-daygrid-day-number { color: var(--text-main); font-size: 15px; width: 100%; text-align: center; padding: 8px 0 !important; }
     
-    /* 當天與選中狀態的圓角背景 */
+    /* 星期標題 (日 一 二...) */
+    .fc .fc-col-header-cell-cushion { color: var(--text-muted); font-weight: normal; font-size: 13px; padding-bottom: 15px; text-transform: uppercase; }
+    
+    /* 日期數字的容器 */
+    .fc-daygrid-day-frame { 
+      display: flex !important; flex-direction: column; align-items: center; justify-content: flex-start; 
+      padding: 6px 0 !important; min-height: 48px !important; border-radius: 10px; border: 1px solid transparent; transition: 0.2s; cursor: pointer;
+    }
+    
+    /* 日期數字本身 */
+    .fc-daygrid-day-number { color: var(--text-main); font-size: 16px; width: 100%; text-align: center; padding: 0 !important; text-decoration: none !important; }
+    
+    /* 移除今天的預設背景，改為單純文字加亮 */
     .fc-day-today .fc-daygrid-day-frame { background-color: transparent !important; }
-    .fc-day-today .fc-daygrid-day-number { background-color: var(--fc-today-bg); border-radius: 12px; display: inline-block; width: 32px; height: 32px; line-height: 16px; margin: 0 auto; }
-    .fc-daygrid-day-frame { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+    .fc-day-today .fc-daygrid-day-number { font-weight: bold; color: var(--primary); }
 
-    /* 客製化橘色小圓點 */
-    .event-dot { width: 5px; height: 5px; background-color: var(--dot-color); border-radius: 50%; margin: 2px auto 0 auto; }
+    /* 💡 點擊選中時的綠色外框 (仿截圖的框線) */
+    .selected-date { border: 1px solid #4ade80 !important; background-color: rgba(74, 222, 128, 0.05); }
 
-    /* 當日詳情卡片 */
-    .detail-card { background: var(--detail-card-bg); border-radius: 16px; padding: 20px; margin-top: 10px; transition: 0.3s; }
+    /* 考勤橘色小圓點 */
+    .event-dot { width: 4px; height: 4px; background-color: var(--dot-color); border-radius: 50%; margin: 4px auto 0 auto; }
+
+    /* =========================================
+       📄 當日詳情卡片
+    ========================================= */
+    .detail-card { background: var(--detail-card-bg); border-radius: 16px; padding: 20px; margin-top: 10px; }
     .detail-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; align-items: center; }
     .detail-label { color: var(--text-muted); }
     .detail-value { font-weight: bold; color: var(--text-main); }
@@ -153,42 +149,41 @@
             <p id="header-branch" style="margin: 0; font-size: 14px; opacity: 0.9;">陽禾文理補習班</p>
           </div>
           <div style="display: flex; gap: 10px; align-items: center;">
-            <button id="btn-theme-toggle" style="background:transparent; border:none; color:var(--header-text); display:flex; align-items:center; justify-content:center; cursor:pointer;"><span class="material-symbols-outlined" id="theme-icon">light_mode</span></button>
+            <button id="btn-theme-toggle" style="background:transparent; border:none; color:var(--header-text); display:flex; align-items:center; cursor:pointer;"><span class="material-symbols-outlined" id="theme-icon">light_mode</span></button>
             <button id="btn-switch-child" style="display:none; background:rgba(255,255,255,0.2); border:none; color:white; padding:6px 12px; border-radius:20px; font-size:12px; cursor:pointer;"><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">swap_horiz</span> 切換</button>
-            <button onclick="window.parentLogout()" style="background:transparent; border:none; color:var(--header-text); display:flex; align-items:center; justify-content:center; cursor:pointer;"><span class="material-symbols-outlined">logout</span></button>
           </div>
         </div>
       </header>
 
       <div class="card">
-        <div class="card-title"><span class="material-symbols-outlined" style="color:var(--primary);">menu_book</span> 當日排定課程</div>
-        <div id="home-classes-container">
-          <div class="empty-state">今日無排定課程</div>
+        <div class="card-title"><span class="material-symbols-outlined" style="color:var(--success);">history</span> 今日出勤</div>
+        <div style="display:flex; justify-content:space-around; text-align:center;">
+          <div><div style="font-size:12px; color:var(--text-muted);">到班時間</div><div id="home-in" style="font-size:20px; font-weight:bold; margin-top:4px;">--:--</div></div>
+          <div style="width:1px; background:var(--border-solid);"></div>
+          <div><div style="font-size:12px; color:var(--text-muted);">離班時間</div><div id="home-out" style="font-size:20px; font-weight:bold; margin-top:4px;">--:--</div></div>
         </div>
       </div>
 
       <div class="card">
         <div class="card-title"><span class="material-symbols-outlined" style="color:var(--warning);">campaign</span> 最新公告</div>
-        <div id="home-latest-noti">
-          <div class="empty-state">載入中...</div>
-        </div>
+        <div id="home-latest-noti"><div class="empty-state">載入中...</div></div>
       </div>
     </div>
 
     <div id="tab-att" class="tab-content" style="display:none; padding-top:20px;">
-      <div style="padding: 0 15px 15px 15px; display:flex; align-items:center; gap:10px; color:var(--text-main);">
+      <div style="padding: 0 15px 15px 15px; color:var(--text-main);">
         <h2 style="margin:0; font-size:24px; font-weight:800;">出勤紀錄</h2>
       </div>
       
-      <div class="card" style="padding: 15px; margin-bottom: 10px;">
-        <div style="font-size:14px; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:5px;"><span class="material-symbols-outlined" style="font-size:16px;">calendar_month</span> 月曆檢視</div>
+      <div class="card" style="padding: 15px 10px; margin-bottom: 10px;">
+        <div style="font-size:14px; color:var(--text-muted); margin-bottom:5px; margin-left:5px; display:flex; align-items:center; gap:5px;"><span class="material-symbols-outlined" style="font-size:16px;">calendar_month</span> 月曆檢視</div>
         <div id="calendar"></div>
       </div>
 
       <div style="padding: 0 15px;">
-        <div style="font-size:14px; color:var(--text-muted); margin-bottom:5px; margin-top:20px; display:flex; align-items:center; gap:5px;"><span class="material-symbols-outlined" style="font-size:16px;">description</span> 當日詳情</div>
+        <div style="font-size:14px; color:var(--text-muted); margin-bottom:5px; margin-top:15px; display:flex; align-items:center; gap:5px;"><span class="material-symbols-outlined" style="font-size:16px;">description</span> 當日詳情</div>
         <div class="detail-card" id="att-detail-card">
-          <div id="att-detail-date" style="font-size:18px; font-weight:bold; margin-bottom:20px; color:var(--text-main);">4月1日 (三)</div>
+          <div id="att-detail-date" style="font-size:18px; font-weight:bold; margin-bottom:20px; color:var(--text-main);">--月--日</div>
           <div class="detail-row"><span class="detail-label">到班</span><span id="att-detail-in" class="detail-value">--:--</span></div>
           <div class="detail-row"><span class="detail-label">離班</span><span id="att-detail-out" class="detail-value">尚未紀錄</span></div>
           <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">狀態</span><span id="att-detail-status" class="detail-value">無紀錄</span></div>
@@ -230,7 +225,7 @@
     // 💡 日夜模式切換邏輯
     // ==============================================
     function initTheme() {
-      const savedTheme = localStorage.getItem('yh_parent_theme') || 'dark'; // 預設深色符合截圖
+      const savedTheme = localStorage.getItem('yh_parent_theme') || 'dark';
       document.documentElement.setAttribute('data-theme', savedTheme);
       updateThemeIcon(savedTheme);
 
@@ -244,8 +239,7 @@
     }
 
     function updateThemeIcon(theme) {
-      const icon = document.getElementById('theme-icon');
-      icon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+      document.getElementById('theme-icon').textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
     }
 
     // ==============================================
@@ -253,13 +247,9 @@
     // ==============================================
     document.addEventListener('DOMContentLoaded', async () => {
       initTheme();
-
       const savedPhone = localStorage.getItem('yh_parent_phone');
-      if (savedPhone) {
-        await executeLogin(savedPhone, true);
-      } else {
-        switchView('view-login');
-      }
+      if (savedPhone) await executeLogin(savedPhone, true);
+      else switchView('view-login');
 
       document.getElementById('btn-login').addEventListener('click', () => {
         const phone = document.getElementById('input-phone').value.trim();
@@ -271,13 +261,8 @@
         item.addEventListener('click', (e) => switchTab(e.currentTarget.dataset.tab));
       });
 
-      document.getElementById('close-modal').addEventListener('click', () => {
-        document.getElementById('noti-modal').style.display = 'none';
-      });
-
-      document.getElementById('btn-switch-child').addEventListener('click', () => {
-        renderChildSelection(allMyKids);
-      });
+      document.getElementById('close-modal').addEventListener('click', () => { document.getElementById('noti-modal').style.display = 'none'; });
+      document.getElementById('btn-switch-child').addEventListener('click', () => renderChildSelection(allMyKids));
     });
 
     window.parentLogout = () => {
@@ -365,52 +350,92 @@
     }
 
     // ==============================================
-    // 資料抓取與渲染
+    // 資料抓取與渲染 (增強防呆與錯誤捕捉)
     // ==============================================
+    
+    // 💡 1. 抓取首頁考勤
     async function fetchHomeData() {
-      const today = new Date().toISOString().split('T')[0];
-      const { data } = await supabase.from('attendance').select('*').match({ student_id: currentStudent.id, record_date: today }).maybeSingle();
-      const inEl = document.getElementById('home-in'); const outEl = document.getElementById('home-out');
-      if (data) {
-        inEl.textContent = data.check_in ? new Date(data.check_in).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
-        outEl.textContent = data.check_out ? new Date(data.check_out).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
-        if(data.status === '請假') { inEl.textContent = '請假'; outEl.textContent = '請假'; inEl.style.color = 'var(--warning)'; } else { inEl.style.color = ''; }
-      } else { inEl.textContent = '--:--'; outEl.textContent = '--:--'; inEl.style.color = ''; }
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const { data, error } = await supabase.from('attendance').select('*').eq('student_id', currentStudent.id).eq('record_date', today).maybeSingle();
+        if (error) throw error;
+
+        const inEl = document.getElementById('home-in'); const outEl = document.getElementById('home-out');
+        if (data) {
+          inEl.textContent = data.check_in ? new Date(data.check_in).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
+          outEl.textContent = data.check_out ? new Date(data.check_out).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
+          if(data.status === '請假') { inEl.textContent = '請假'; outEl.textContent = '請假'; inEl.style.color = 'var(--warning)'; } else { inEl.style.color = ''; }
+        } else { 
+          inEl.textContent = '--:--'; outEl.textContent = '--:--'; inEl.style.color = ''; 
+        }
+      } catch (err) {
+        console.error('抓取首頁考勤失敗:', err);
+      }
     }
 
+    // 💡 2. 抓取首頁最新公告
     async function fetchHomeNotis() {
       const container = document.getElementById('home-latest-noti');
-      const { data } = await supabase.from('notifications').select('*').order('created_at', {ascending:false}).limit(2);
-      if(!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無最新公告</div>'; return; }
-      container.innerHTML = data.map(n => `<div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border-solid);"><div style="font-size:12px; color:var(--text-muted);">${new Date(n.created_at).toLocaleDateString()}</div><div style="font-weight:bold; color:var(--text-main); font-size:15px; margin:4px 0;">${n.title}</div><div style="font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.content}</div></div>`).join('');
+      try {
+        const { data, error } = await supabase.from('notifications').select('*').order('created_at', {ascending:false}).limit(2);
+        if (error) throw error;
+        if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無最新公告</div>'; return; }
+        
+        container.innerHTML = data.map(n => `<div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border-solid);"><div style="font-size:12px; color:var(--text-muted);">${new Date(n.created_at).toLocaleDateString()}</div><div style="font-weight:bold; color:var(--text-main); font-size:15px; margin:4px 0;">${n.title}</div><div style="font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.content}</div></div>`).join('');
+      } catch (err) {
+        console.error('抓取首頁公告失敗:', err);
+        container.innerHTML = '<div class="empty-state">無法載入公告</div>';
+      }
     }
 
+    // 💡 3. 初始化行事曆 (完全符合截圖邏輯)
     async function initCalendar() {
-      const { data } = await supabase.from('attendance').select('*').eq('student_id', currentStudent.id);
-      attendanceDataMap = {};
-      if (data) data.forEach(r => attendanceDataMap[r.record_date] = r);
+      try {
+        const { data, error } = await supabase.from('attendance').select('*').eq('student_id', currentStudent.id);
+        if(error) throw error;
 
-      if (!calendarInstance) {
-        calendarInstance = new FullCalendar.Calendar(document.getElementById('calendar'), {
-          initialView: 'dayGridMonth', locale: 'zh-tw', height: 'auto',
-          headerToolbar: { left: 'prev', center: 'title', right: 'next' },
-          dateClick: (info) => renderAttendanceDetail(info.dateStr),
-          dayCellDidMount: (info) => {
-            const dateStr = info.date.toISOString().split('T')[0];
-            if (attendanceDataMap[dateStr]) {
-              // 在日期數字下方加入橘色小圓點 (仿截圖)
-              const dot = document.createElement('div');
-              dot.className = 'event-dot';
-              info.el.querySelector('.fc-daygrid-day-frame').appendChild(dot);
+        attendanceDataMap = {};
+        if (data) data.forEach(r => attendanceDataMap[r.record_date] = r);
+
+        if (!calendarInstance) {
+          calendarInstance = new FullCalendar.Calendar(document.getElementById('calendar'), {
+            initialView: 'dayGridMonth', locale: 'zh-tw', height: 'auto', fixedWeekCount: false,
+            headerToolbar: { left: 'prev', center: 'title', right: 'next' },
+            dayHeaderFormat: { weekday: 'short' }, // 只顯示 週一、週二... (透過 CSS 隱藏"週"字可自訂)
+            // 自訂日期數字，只輸出純數字
+            dayCellContent: (arg) => { return arg.date.getDate(); },
+            // 加入橘色小圓點
+            dayCellDidMount: (info) => {
+              const dateStr = info.date.toISOString().split('T')[0];
+              if (attendanceDataMap[dateStr]) {
+                const dot = document.createElement('div');
+                dot.className = 'event-dot';
+                info.el.querySelector('.fc-daygrid-day-frame').appendChild(dot);
+              }
+            },
+            // 點擊日期時加上綠色外框 (仿截圖 selected 狀態)
+            dateClick: (info) => {
+              document.querySelectorAll('.fc-daygrid-day-frame').forEach(el => el.classList.remove('selected-date'));
+              info.dayEl.querySelector('.fc-daygrid-day-frame').classList.add('selected-date');
+              renderAttendanceDetail(info.dateStr);
             }
-          }
-        });
-        calendarInstance.render();
-      } else {
-        calendarInstance.render(); // 強制重繪以更新圓點
+          });
+          calendarInstance.render();
+        } else {
+          calendarInstance.render(); 
+        }
+        
+        // 預設選中並顯示今天
+        const todayStr = new Date().toISOString().split('T')[0];
+        setTimeout(() => {
+          const todayEl = document.querySelector(`.fc-day[data-date="${todayStr}"] .fc-daygrid-day-frame`);
+          if(todayEl) todayEl.classList.add('selected-date');
+        }, 100);
+        renderAttendanceDetail(todayStr);
+
+      } catch (err) {
+        console.error('載入行事曆失敗:', err);
       }
-      // 預設顯示今天
-      renderAttendanceDetail(new Date().toISOString().split('T')[0]);
     }
 
     function renderAttendanceDetail(dateStr) {
@@ -427,30 +452,52 @@
       }
     }
 
+    // 💡 4. 抓取成績 (強化 JOIN 失敗的防呆)
     async function fetchGrades() {
       const container = document.getElementById('grades-container');
-      const { data, error } = await supabase.from('grades').select('*, class_exams(exam_name, subject, exam_date)').eq('student_id', currentStudent.id).order('created_at', {ascending: false});
-      if (error || !data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無成績紀錄</div>'; return; }
-      container.innerHTML = data.map(g => `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><div><div style="font-weight:bold; font-size:16px;">${g.class_exams.exam_name}</div><div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${g.class_exams.subject} · ${g.class_exams.exam_date}</div></div><div style="font-size:24px; font-weight:bold; color:var(--primary);">${g.score ?? '缺'}</div></div>${g.note ? `<div style="background:var(--detail-card-bg); padding:10px; border-radius:8px; margin-top:12px; font-size:13px; color:var(--text-muted);">評語：${g.note}</div>` : ''}</div>`).join('');
+      try {
+        const { data, error } = await supabase.from('grades').select('*, class_exams(exam_name, subject, exam_date)').eq('student_id', currentStudent.id).order('created_at', {ascending: false});
+        if (error) throw error;
+        if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無成績紀錄</div>'; return; }
+        
+        container.innerHTML = data.map(g => {
+          // 確保就算 class_exams 關聯失敗也不會導致畫面當機
+          const examName = g.class_exams ? g.class_exams.exam_name : '未命名測驗';
+          const subject = g.class_exams ? g.class_exams.subject : '未知科目';
+          const examDate = g.class_exams ? g.class_exams.exam_date : '未知日期';
+          
+          return `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><div><div style="font-weight:bold; font-size:16px;">${examName}</div><div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${subject} · ${examDate}</div></div><div style="font-size:24px; font-weight:bold; color:var(--primary);">${g.score ?? '缺'}</div></div>${g.note ? `<div style="background:var(--detail-card-bg); padding:10px; border-radius:8px; margin-top:12px; font-size:13px; color:var(--text-muted);">評語：${g.note}</div>` : ''}</div>`;
+        }).join('');
+      } catch (err) {
+        console.error('抓取成績失敗:', err);
+        container.innerHTML = '<div class="empty-state">無法載入成績，請檢查資料庫關聯 (class_exams)。</div>';
+      }
     }
 
+    // 💡 5. 抓取通知
     async function fetchNotifications() {
       const container = document.getElementById('notis-container');
-      const { data, error } = await supabase.from('notifications').select('*').order('created_at', {ascending: false});
-      if (error || !data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無班級公告</div>'; return; }
-      
-      const studentBranch = currentStudent.branches?.name || '全校';
-      
-      container.innerHTML = data.map(n => `
-        <div class="list-item" onclick='window.openNoti(${JSON.stringify(n).replace(/'/g, "&apos;")})'>
-          <div style="background:#2563eb30; padding:12px; border-radius:12px; color:var(--primary);"><span class="material-symbols-outlined">campaign</span></div>
-          <div style="flex:1; overflow:hidden;">
-            <div style="font-size:12px; color:var(--primary); font-weight:bold; margin-bottom:4px;">給：${currentStudent.name} / ${studentBranch}</div>
-            <div style="font-weight:bold; font-size:15px; margin-bottom:4px; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.title}</div>
-            <div style="font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.content}</div>
+      try {
+        const { data, error } = await supabase.from('notifications').select('*').order('created_at', {ascending: false});
+        if (error) throw error;
+        if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無班級公告</div>'; return; }
+        
+        const studentBranch = currentStudent.branches?.name || '全校';
+        
+        container.innerHTML = data.map(n => `
+          <div class="list-item" onclick='window.openNoti(${JSON.stringify(n).replace(/'/g, "&apos;")})'>
+            <div style="background:#2563eb30; padding:12px; border-radius:12px; color:var(--primary);"><span class="material-symbols-outlined">campaign</span></div>
+            <div style="flex:1; overflow:hidden;">
+              <div style="font-size:12px; color:var(--primary); font-weight:bold; margin-bottom:4px;">給：${currentStudent.name} / ${studentBranch}</div>
+              <div style="font-weight:bold; font-size:15px; margin-bottom:4px; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.title}</div>
+              <div style="font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.content}</div>
+            </div>
           </div>
-        </div>
-      `).join('');
+        `).join('');
+      } catch (err) {
+        console.error('抓取通知失敗:', err);
+        container.innerHTML = '<div class="empty-state">無法載入公告資料。</div>';
+      }
     }
 
     window.openNoti = (n) => {
