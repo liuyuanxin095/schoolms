@@ -3,44 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>班級與排課管理 - 補習班系統</title>
+  <title>班級與排課 - 陽禾文理補習班管理系統</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="../style.css" />
 </head>
 <body>
-
   <main class="main-wrapper">
     <header class="header">
       <div class="header-left">
         <span class="material-symbols-outlined" style="font-size: 28px; color: var(--primary);">class</span>
         <h1>班級與排課管理</h1>
       </div>
-      <div class="header-right">
-        <span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span>
-      </div>
+      <div class="header-right"><span style="font-size: 14px; color: var(--text-light); font-weight: 600;" id="header-date">載入中...</span></div>
     </header>
 
     <div class="container">
       <div class="card">
         <div class="toolbar">
-          <h2 class="toolbar-title">班級列表</h2>
+          <h2 class="toolbar-title"><span class="material-symbols-outlined">class</span>班級列表</h2>
           <button class="btn btn-primary" onclick="window.openFormModal()"><span class="material-symbols-outlined">add</span>新增班級</button>
         </div>
         
         <div class="filter-bar">
           <span class="material-symbols-outlined" style="color: var(--text-light);">search</span>
-          <input type="text" id="search-input" placeholder="搜尋班級名稱...">
+          <input type="text" id="search-input" placeholder="搜尋班級名稱或老師...">
           <select id="branch-filter"><option value="all">所有分校</option></select>
         </div>
         
         <div class="table-responsive">
           <table>
-            <thead>
-              <tr><th>班級名稱</th><th>開課學期</th><th>所屬分校</th><th>授課教師</th><th>上課時段</th><th>操作</th></tr>
-            </thead>
-            <tbody id="class-list">
-              <tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr>
-            </tbody>
+            <thead><tr><th>班級名稱</th><th>開課學期</th><th>所屬分校</th><th>師資陣容</th><th>上課時段 / 教室</th><th>操作</th></tr></thead>
+            <tbody id="class-list"><tr><td colspan="6" style="text-align: center; color: var(--text-light); padding: 30px;">載入中...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -57,13 +50,16 @@
           <div class="form-group full-width"><label>班級名稱 <span style="color:red">*</span></label><input type="text" id="name" required placeholder="例：高中物理進階班"></div>
           <div class="form-group"><label>所屬分校 <span style="color:red">*</span></label><select id="branch_id" required><option value="" disabled selected>載入中...</option></select></div>
           <div class="form-group"><label>開課學期</label><input type="text" id="semester" placeholder="例：113上學期"></div>
+          
           <div class="form-group"><label>授課教師</label><select id="teacher_id"><option value="">-- 尚未指派 --</option></select></div>
+          <div class="form-group"><label>帶班導師</label><select id="tutor_id"><option value="">-- 尚未指派 --</option></select></div>
+          
           <div class="form-group"><label>上課教室</label><select id="classroom_id"><option value="">-- 尚未安排 --</option></select></div>
           
           <div class="form-group full-width">
             <label>上課時段 <span style="color:red">*</span></label>
             <input type="text" id="schedule" required placeholder="例：週一 18:30~21:30, 週四 18:30~21:30">
-            <span style="font-size: 12px; color: var(--text-light); margin-top: 4px;">請依照格式輸入，用逗號分隔多個時段，系統將自動解析為行事曆。</span>
+            <span style="font-size: 12px; color: var(--text-light); margin-top: 4px;">請用逗號分隔多個時段，系統將自動排序並轉換為視覺化標籤。</span>
           </div>
 
           <div class="form-group"><label>開課日期</label><input type="date" id="start_date"></div>
@@ -74,38 +70,8 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="roster-modal">
-    <div class="modal-content" style="max-width: 600px; background-color: #f9fafb;">
-      <span class="material-symbols-outlined modal-close" onclick="window.closeRosterModal()">close</span>
-      <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid var(--border);">
-        <h2 id="roster-class-name" style="margin: 0 0 5px 0; color: var(--primary);">班級名稱</h2>
-        <div style="color: var(--text-light); font-size: 14px;">管理班級學生名冊</div>
-      </div>
-      
-      <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-        <select id="roster-student-select" style="flex-grow: 1; padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
-          <option value="" disabled selected>載入學生中...</option>
-        </select>
-        <button class="btn btn-primary" onclick="window.addStudentToClass()">加入此班級</button>
-      </div>
-
-      <div style="background: white; border: 1px solid var(--border); border-radius: 8px; max-height: 300px; overflow-y: auto;">
-        <table style="margin: 0; width: 100%;">
-          <thead style="position: sticky; top: 0; background: var(--input-bg);"><tr><th>學生姓名</th><th>學號</th><th width="80">操作</th></tr></thead>
-          <tbody id="roster-list"><tr><td colspan="3" style="text-align: center; padding: 20px;">載入名單中...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="custom-dialog" style="z-index: 9999;">
-    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
-      <div id="dialog-icon" style="margin-bottom: 15px;"></div>
-      <h3 id="dialog-title" style="margin-top: 0; color: var(--text-main); font-size: 20px;">提示</h3>
-      <p id="dialog-message" style="color: var(--text-light); margin-bottom: 25px; line-height: 1.5; font-size: 15px;"></p>
-      <div style="display: flex; gap: 10px; justify-content: center;"><button class="btn btn-cancel" id="dialog-btn-cancel" style="display: none;">取消</button><button class="btn btn-primary" id="dialog-btn-confirm">確定</button></div>
-    </div>
-  </div>
+  <div class="modal-overlay" id="roster-modal"><div class="modal-content" style="max-width: 600px; background-color: #f9fafb;"><span class="material-symbols-outlined modal-close" onclick="window.closeRosterModal()">close</span><div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid var(--border);"><h2 id="roster-class-name" style="margin: 0 0 5px 0; color: var(--primary);">班級名稱</h2><div style="color: var(--text-light); font-size: 14px;">管理班級學生名冊</div></div><div style="display: flex; gap: 10px; margin-bottom: 15px;"><select id="roster-student-select" style="flex-grow: 1; padding: 10px; border-radius: 6px; border: 1px solid var(--border);"><option value="" disabled selected>載入學生中...</option></select><button class="btn btn-primary" onclick="window.addStudentToClass()">加入此班級</button></div><div style="background: white; border: 1px solid var(--border); border-radius: 8px; max-height: 300px; overflow-y: auto;"><table style="margin: 0; width: 100%;"><thead style="position: sticky; top: 0; background: var(--input-bg);"><tr><th>學生姓名</th><th>學號</th><th width="80">操作</th></tr></thead><tbody id="roster-list"><tr><td colspan="3" style="text-align: center; padding: 20px;">載入名單中...</td></tr></tbody></table></div></div></div>
+  <div class="modal-overlay" id="custom-dialog" style="z-index: 9999;"><div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;"><div id="dialog-icon" style="margin-bottom: 15px;"></div><h3 id="dialog-title" style="margin-top: 0; color: var(--text-main); font-size: 20px;">提示</h3><p id="dialog-message" style="color: var(--text-light); margin-bottom: 25px; line-height: 1.5; font-size: 15px;"></p><div style="display: flex; gap: 10px; justify-content: center;"><button class="btn btn-cancel" id="dialog-btn-cancel" style="display: none;">取消</button><button class="btn btn-primary" id="dialog-btn-confirm">確定</button></div></div></div>
 
   <script type="module" src="./app.js"></script>
   <script>document.getElementById('header-date').textContent = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });</script>
