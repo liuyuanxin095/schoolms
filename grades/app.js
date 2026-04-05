@@ -1,198 +1,300 @@
 import { supabase } from '../config.js';
 
-let examsData = [];
-let studentsData = [];
+let currentClassId = null;
+let currentClassName = '';
+let currentExamId = null;
+let rosterData = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
-  await fetchExams();
-  await fetchStudents();
+  await fetchClasses();
+  await loadSubjects();
 });
 
 // ==============================================
-// 1. 測驗項目管理 (包含班級、平均、通知)
+// 共用功能與畫面切換
 // ==============================================
-async function fetchExams() {
-  const { data, error } = await supabase.from('class_exams').select('*').order('created_at', { ascending: false });
-  if (error) return console.error('抓取測驗失敗', error);
-  
-  examsData = data;
-  const select = document.getElementById('exam-select');
-  select.innerHTML = '<option value="">-- 請先選擇測驗項目 --</option>';
-  data.forEach(ex => {
-    select.innerHTML += `<option value="${ex.id}">${ex.exam_date} | ${ex.exam_name} (${ex.subject}) - ${ex.class_name || '未設班級'}</option>`;
-  });
+window.switchView = (viewId) => {
+  document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${viewId}`).classList.add('active');
+};
+
+function showCustomDialog(title, message, type = 'info') {
+  document.getElementById('dialog-title').textContent = title;
+  document.getElementById('dialog-message').innerHTML = message;
+  const icon = type === 'success' ? '<span class="material-symbols-outlined" style="font-size:48px; color:var(--success);">check_circle</span>' : '<span class="material-symbols-outlined" style="font-size:48px; color:var(--primary);">info</span>';
+  document.getElementById('dialog-icon').innerHTML = icon;
+  document.getElementById('custom-dialog').style.display = 'flex';
 }
 
-window.openExamModal = () => {
-  document.getElementById('exam-id').value = '';
-  document.getElementById('exam-name').value = '';
-  document.getElementById('exam-subject').value = '';
-  document.getElementById('exam-date').value = new Date().toISOString().split('T')[0];
-  
-  // 新增的欄位
-  document.getElementById('exam-class-name').value = '';
-  document.getElementById('exam-class-avg').value = '';
-  document.getElementById('exam-class-notice').value = '';
-
-  document.getElementById('exam-modal-title').textContent = '新增測驗項目';
-  document.getElementById('exam-modal').style.display = 'flex';
-};
-
-window.editCurrentExam = () => {
-  const examId = document.getElementById('exam-select').value;
-  if (!examId) return alert('請先從下拉選單選擇一個測驗！');
-  
-  const ex = examsData.find(e => e.id === examId);
-  if (!ex) return;
-
-  document.getElementById('exam-id').value = ex.id;
-  document.getElementById('exam-name').value = ex.exam_name;
-  document.getElementById('exam-subject').value = ex.subject;
-  document.getElementById('exam-date').value = ex.exam_date;
-  
-  // 載入新欄位
-  document.getElementById('exam-class-name').value = ex.class_name || '';
-  document.getElementById('exam-class-avg').value = ex.class_average || '';
-  document.getElementById('exam-class-notice').value = ex.class_notice || '';
-
-  document.getElementById('exam-modal-title').textContent = '編輯測驗設定';
-  document.getElementById('exam-modal').style.display = 'flex';
-};
-
-window.saveExam = async () => {
-  const id = document.getElementById('exam-id').value;
-  const exam_name = document.getElementById('exam-name').value.trim();
-  const subject = document.getElementById('exam-subject').value.trim();
-  const exam_date = document.getElementById('exam-date').value;
-  
-  // 讀取新欄位
-  const class_name = document.getElementById('exam-class-name').value.trim();
-  const class_average = document.getElementById('exam-class-avg').value.trim();
-  const class_notice = document.getElementById('exam-class-notice').value.trim();
-
-  if (!exam_name || !subject || !exam_date) return alert('打 * 號為必填欄位！');
-
-  const payload = { exam_name, subject, exam_date, class_name, class_average, class_notice };
-  let error;
-
-  if (id) {
-    ({ error } = await supabase.from('class_exams').update(payload).eq('id', id));
-  } else {
-    ({ error } = await supabase.from('class_exams').insert([payload]));
-  }
-
-  if (error) {
-    alert('儲存失敗：' + error.message);
-  } else {
-    alert('測驗設定已儲存！');
-    window.closeModal('exam-modal');
-    await fetchExams();
-    if(id) document.getElementById('exam-select').value = id; // 保持選中
-  }
-};
-
 // ==============================================
-// 2. 學生成績管理 (包含分數、排名、評語)
+// 1. 班級列表載入
 // ==============================================
-async function fetchStudents() {
-  const { data } = await supabase.from('students').select('id, name, student_number');
-  if(data) {
-    studentsData = data;
-    const stuSelect = document.getElementById('grade-student');
-    stuSelect.innerHTML = data.map(s => `<option value="${s.id}">${s.student_number} - ${s.name}</option>`).join('');
-  }
-}
-
-window.loadGrades = async () => {
-  const examId = document.getElementById('exam-select').value;
-  const tbody = document.getElementById('grades-table-body');
-  const btnAdd = document.getElementById('btn-add-grade');
-
-  if (!examId) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">請先從上方選擇測驗項目</td></tr>';
-    btnAdd.disabled = true;
+async function fetchClasses() {
+  const tbody = document.getElementById('class-list');
+  const { data, error } = await supabase.from('classes').select('*, branches(name), staff(name)');
+  
+  if (error || !data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">目前無班級資料</td></tr>';
     return;
   }
 
-  btnAdd.disabled = false;
-  const { data, error } = await supabase.from('grades').select('*, students(name)').eq('class_exam_id', examId).order('score', { ascending: false });
+  tbody.innerHTML = data.map(c => `
+    <tr>
+      <td style="font-weight:bold;">${c.class_name}</td>
+      <td>${c.branches?.name || '未指定'}</td>
+      <td>${c.staff?.name || '未指定'}</td>
+      <td><button class="btn btn-primary" onclick="window.openClassExams('${c.id}', '${c.class_name}', '${c.branches?.name || ''}', '${c.staff?.name || ''}')">管理成績</button></td>
+    </tr>
+  `).join('');
+}
+
+window.openClassExams = (classId, className, branchName, teacherName) => {
+  currentClassId = classId;
+  currentClassName = className;
+  document.getElementById('manage-class-title').textContent = className;
+  document.getElementById('manage-class-subtitle').textContent = `${branchName} / 授課教師：${teacherName}`;
+  fetchExamsList();
+  window.switchView('exams');
+};
+
+// ==============================================
+// 2. 測驗列表載入
+// ==============================================
+async function fetchExamsList() {
+  const tbody = document.getElementById('exam-list');
+  const { data, error } = await supabase.from('class_exams').select('*').eq('class_id', currentClassId).order('exam_date', { ascending: false });
 
   if (error || !data || data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">本測驗尚無成績紀錄</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-light);">本班級尚無測驗紀錄</td></tr>';
     return;
   }
 
-  tbody.innerHTML = data.map(g => `
+  tbody.innerHTML = data.map(ex => `
     <tr>
-      <td style="font-weight:bold;">${g.students?.name || '未知學生'}</td>
-      <td style="color:var(--primary); font-weight:bold; font-size:16px;">${g.score}</td>
-      <td>${g.rank || '--'}</td>
-      <td style="color:var(--text-muted); font-size:13px; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${g.note || '無'}</td>
+      <td>${ex.exam_date}</td>
+      <td style="font-weight:bold;">${ex.exam_name} <span style="font-size:12px; color:var(--text-light);">(${ex.subject})</span></td>
+      <td style="color:var(--primary); font-weight:bold;">${ex.class_average || '--'} 分</td>
+      <td>--</td>
+      <td>--</td>
       <td>
-        <button class="btn" style="background:#f1f5f9; padding:6px 10px;" onclick='window.editGrade(${JSON.stringify(g).replace(/'/g, "&apos;")})'>編輯</button>
-        <button class="btn" style="background:#fee2e2; color:#ef4444; padding:6px 10px;" onclick="window.deleteGrade('${g.id}')">刪除</button>
+        <button class="btn" style="background:#f1f5f9; border:1px solid var(--border);" onclick="window.openExamEditor('${ex.id}')">編輯與登錄</button>
+        <button class="btn" style="background:#fee2e2; color:#ef4444;" onclick="deleteExam('${ex.id}')">刪除</button>
       </td>
     </tr>
   `).join('');
-};
+}
 
-window.openGradeModal = () => {
-  document.getElementById('grade-id').value = '';
-  document.getElementById('grade-student').disabled = false; // 新增時可選學生
-  document.getElementById('grade-score').value = '';
-  document.getElementById('grade-rank').value = '';
-  document.getElementById('grade-note').value = '';
+// ==============================================
+// 3. 成績編輯器 (核心功能)
+// ==============================================
+window.openExamEditor = async (examId = null) => {
+  currentExamId = examId;
+  document.getElementById('editor-title').textContent = examId ? '編輯測驗成績' : '新增班級測驗成績';
   
-  document.getElementById('grade-modal-title').textContent = '登錄成績';
-  document.getElementById('grade-modal').style.display = 'flex';
-};
+  // 清空表單
+  document.getElementById('exam_name').value = '';
+  document.getElementById('exam_date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('class_notice').value = '';
+  document.getElementById('subject').selectedIndex = 0;
 
-window.editGrade = (grade) => {
-  document.getElementById('grade-id').value = grade.id;
-  document.getElementById('grade-student').value = grade.student_id;
-  document.getElementById('grade-student').disabled = true; // 編輯時不給換人
-  document.getElementById('grade-score').value = grade.score;
-  document.getElementById('grade-rank').value = grade.rank || '';
-  document.getElementById('grade-note').value = grade.note || '';
-  
-  document.getElementById('grade-modal-title').textContent = '修改成績';
-  document.getElementById('grade-modal').style.display = 'flex';
-};
+  // 抓取全班學生名單
+  const { data: students } = await supabase.from('students').select('*').eq('class_id', currentClassId);
+  rosterData = students || [];
 
-window.saveGrade = async () => {
-  const examId = document.getElementById('exam-select').value;
-  const gradeId = document.getElementById('grade-id').value;
-  const student_id = document.getElementById('grade-student').value;
-  const score = document.getElementById('grade-score').value;
-  const rank = document.getElementById('grade-rank').value.trim();
-  const note = document.getElementById('grade-note').value.trim();
-
-  if (!examId || !student_id || !score) return alert('請確認已選擇測驗、學生並填寫分數！');
-
-  const payload = { class_exam_id: examId, student_id, score, rank, note };
-  let error;
-
-  if (gradeId) {
-    ({ error } = await supabase.from('grades').update(payload).eq('id', gradeId));
-  } else {
-    // 檢查是否重複登錄
-    const { data: exist } = await supabase.from('grades').select('id').match({class_exam_id: examId, student_id}).maybeSingle();
-    if(exist) return alert('此學生在本次測驗中已有成績，請使用編輯功能！');
-    
-    ({ error } = await supabase.from('grades').insert([payload]));
+  let existingGrades = [];
+  if (examId) {
+    const { data: examData } = await supabase.from('class_exams').select('*').eq('id', examId).single();
+    if (examData) {
+      document.getElementById('exam_name').value = examData.exam_name;
+      document.getElementById('exam_date').value = examData.exam_date;
+      document.getElementById('class_notice').value = examData.class_notice || '';
+      document.getElementById('subject').value = examData.subject;
+    }
+    const { data: grades } = await supabase.from('grades').select('*').eq('class_exam_id', examId);
+    existingGrades = grades || [];
   }
 
-  if (error) return alert('儲存失敗：' + error.message);
+  renderRosterTable(existingGrades);
+  window.switchView('editor');
+};
+
+function renderRosterTable(existingGrades) {
+  const tbody = document.getElementById('roster-list');
+  if (rosterData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">此班級目前無學生資料</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rosterData.map(student => {
+    const grade = existingGrades.find(g => g.student_id === student.id) || {};
+    return `
+      <tr>
+        <td>${student.student_number || ''} - <strong>${student.name}</strong></td>
+        <td style="text-align:center;">
+          <input type="number" class="score-input" data-sid="${student.id}" value="${grade.score !== undefined ? grade.score : ''}" placeholder="缺考">
+        </td>
+        <td style="text-align:center;">
+          <input type="text" class="rank-input" id="rank-${student.id}" value="${grade.rank || ''}" placeholder="自動計算" readonly style="background:#f1f5f9; color:#64748b; border:none;">
+        </td>
+        <td>
+          <input type="text" class="row-note" data-sid="${student.id}" value="${grade.note || ''}" placeholder="輸入個人評語...">
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  // 綁定「自動算分與排名」事件
+  document.querySelectorAll('.score-input').forEach(input => {
+    input.addEventListener('input', calculateStatsAndRanks);
+  });
   
-  window.closeModal('grade-modal');
-  window.loadGrades();
+  // 支援 Excel 貼上
+  bindExcelPaste();
+  
+  // 初始化計算一次
+  calculateStatsAndRanks();
+}
+
+// 💡 自動計算平均與排名的超級引擎
+function calculateStatsAndRanks() {
+  const inputs = document.querySelectorAll('.score-input');
+  let validScores = [];
+
+  inputs.forEach(inp => {
+    const val = parseFloat(inp.value);
+    if (!isNaN(val)) validScores.push({ sid: inp.dataset.sid, score: val });
+    else document.getElementById(`rank-${inp.dataset.sid}`).value = ''; // 清空缺考者的排名
+  });
+
+  if (validScores.length === 0) {
+    document.getElementById('stat-avg').textContent = '-';
+    document.getElementById('stat-high').textContent = '-';
+    document.getElementById('stat-low').textContent = '-';
+    return;
+  }
+
+  // 1. 算平均與極值
+  const sum = validScores.reduce((a, b) => a + b.score, 0);
+  document.getElementById('stat-avg').textContent = (sum / validScores.length).toFixed(1);
+  document.getElementById('stat-high').textContent = Math.max(...validScores.map(s => s.score));
+  document.getElementById('stat-low').textContent = Math.min(...validScores.map(s => s.score));
+
+  // 2. 自動算排名 (處理同分並列)
+  validScores.sort((a, b) => b.score - a.score);
+  let currentRank = 1;
+  let previousScore = null;
+  let tieCount = 0;
+
+  validScores.forEach((item, index) => {
+    if (item.score === previousScore) {
+      tieCount++;
+    } else {
+      currentRank = index + 1;
+      tieCount = 0;
+    }
+    document.getElementById(`rank-${item.sid}`).value = currentRank;
+    previousScore = item.score;
+  });
+}
+
+// Excel 貼上功能
+function bindExcelPaste() {
+  const firstInput = document.querySelector('.score-input');
+  if (!firstInput) return;
+  
+  firstInput.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+    const rows = pasteData.split('\n').map(r => r.trim()).filter(r => r);
+    const inputs = document.querySelectorAll('.score-input');
+    
+    rows.forEach((val, i) => {
+      if (inputs[i]) {
+        inputs[i].value = val;
+      }
+    });
+    calculateStatsAndRanks(); // 貼完自動算分
+  });
+}
+
+window.saveExamData = async () => {
+  const exam_name = document.getElementById('exam_name').value.trim();
+  const subject = document.getElementById('subject').value;
+  const exam_date = document.getElementById('exam_date').value;
+  const class_notice = document.getElementById('class_notice').value.trim();
+  const class_average = document.getElementById('stat-avg').textContent;
+
+  if (!exam_name || !subject || !exam_date) return showCustomDialog('錯誤', '請填寫完整的測驗名稱、科目與日期！');
+
+  const btn = document.getElementById('btn-save-exam');
+  btn.disabled = true; btn.textContent = '儲存中...';
+
+  try {
+    // 1. 儲存測驗主檔 (包含家長專區需要的 class_name, avg, notice)
+    const examPayload = { 
+      class_id: currentClassId, 
+      exam_name, subject, exam_date, class_notice,
+      class_name: currentClassName,
+      class_average: class_average === '-' ? null : class_average 
+    };
+
+    let examId = currentExamId;
+    if (examId) {
+      await supabase.from('class_exams').update(examPayload).eq('id', examId);
+    } else {
+      const { data, error } = await supabase.from('class_exams').insert([examPayload]).select().single();
+      if (error) throw error;
+      examId = data.id;
+    }
+
+    // 2. 收集所有學生的成績、排名、評語
+    const gradesPayload = [];
+    document.querySelectorAll('.score-input').forEach(inp => {
+      const sid = inp.dataset.sid;
+      const score = inp.value;
+      const rank = document.getElementById(`rank-${sid}`).value;
+      const note = document.querySelector(`.row-note[data-sid="${sid}"]`).value;
+
+      if (score !== '') {
+        gradesPayload.push({ class_exam_id: examId, student_id: sid, score: parseFloat(score), rank, note });
+      }
+    });
+
+    // 3. 砍掉舊成績，寫入新成績 (最穩定的更新法)
+    await supabase.from('grades').delete().eq('class_exam_id', examId);
+    if (gradesPayload.length > 0) {
+      await supabase.from('grades').insert(gradesPayload);
+    }
+
+    showCustomDialog('成功', '成績已成功儲存並發布給家長！', 'success');
+    window.handleBackFromEditor();
+  } catch (err) {
+    showCustomDialog('錯誤', '儲存失敗：' + err.message);
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<span class="material-symbols-outlined">save</span> 儲存成績與發布';
+  }
 };
 
-window.deleteGrade = async (id) => {
-  if(!confirm('確定要刪除這筆成績嗎？')) return;
-  const { error } = await supabase.from('grades').delete().eq('id', id);
-  if (error) alert('刪除失敗');
-  else window.loadGrades();
+window.handleBackFromEditor = () => {
+  fetchExamsList();
+  window.switchView('exams');
 };
 
-window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
+async function deleteExam(examId) {
+  if(!confirm('確定要刪除整個測驗嗎？這會同時刪除所有學生的成績喔！')) return;
+  await supabase.from('grades').delete().eq('class_exam_id', examId);
+  await supabase.from('class_exams').delete().eq('id', examId);
+  fetchExamsList();
+}
+
+// 科目載入邏輯 (保留你原本的)
+async function loadSubjects() {
+  const { data } = await supabase.from('subjects').select('*');
+  if (data) {
+    const select = document.getElementById('subject');
+    select.innerHTML = '<option value="" disabled selected>請選擇科目</option>' + data.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+  }
+}
+window.openSubjectModal = () => { document.getElementById('subject-modal').style.display = 'flex'; };
+window.closeSubjectModal = () => { document.getElementById('subject-modal').style.display = 'none'; };
+window.printReportCard = () => { window.print(); };
