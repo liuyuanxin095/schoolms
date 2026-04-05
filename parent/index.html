@@ -38,7 +38,7 @@
     .btn-primary { background: var(--primary); color: white; }
 
     /* =========================================
-       📱 導覽列 (支援手機底部 / 電腦側邊)
+       📱 導覽列 (支援手機底部 / 電腦側邊 RWD)
     ========================================= */
     .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--nav-bg); backdrop-filter: blur(10px); border-top: 1px solid var(--border-solid); display: flex; justify-content: space-between; padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) 10px; z-index: 1000; overflow-x: auto; }
     .nav-item { flex: 1; min-width: 55px; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; font-size: 11px; transition: 0.2s; }
@@ -61,7 +61,7 @@
     .list-item { display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--card-bg); border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-solid); cursor: pointer; }
     .empty-state { text-align: center; color: var(--text-muted); padding: 30px 15px; font-size: 14px; }
 
-    /* 🗓️ 行事曆美化 */
+    /* 🗓️ 行事曆無邊框美化 */
     .fc { font-family: inherit; font-size: 14px; }
     .fc .fc-scrollgrid, .fc td, .fc th, .fc-theme-standard .fc-scrollgrid { border: none !important; }
     .fc .fc-toolbar { margin-bottom: 20px !important; }
@@ -335,15 +335,21 @@
       }
     }
 
-    // 💡 完整版成績表 (包含你要求的所有欄位)
+    // 💡 超強寬容模式：抓取成績 (不管缺什麼欄位都不會當機)
     async function fetchGrades() {
       const container = document.getElementById('grades-container');
       try {
-        const { data, error } = await supabase.from('grades').select('*, class_exams(exam_name, subject, exam_date, class_name, class_average, class_notice)').eq('student_id', currentStudent.id).order('created_at', {ascending: false});
+        // 使用 class_exams(*) 抓取所有現有欄位，就算你還沒加 average 也不會報錯
+        const { data, error } = await supabase.from('grades')
+          .select('*, class_exams(*)')
+          .eq('student_id', currentStudent.id)
+          .order('created_at', {ascending: false});
+          
         if (error) throw error;
         if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無成績紀錄</div>'; return; }
         
         container.innerHTML = data.map(g => {
+          // 容錯讀取：有欄位就顯示，沒有就顯示預設字眼，絕對不報錯
           const ex = g.class_exams || {};
           const cName = ex.class_name || '未分班';
           const eName = ex.exam_name || '未命名測驗';
@@ -376,38 +382,56 @@
               </div>
             </div>`;
         }).join('');
-      } catch (err) { console.error(err); container.innerHTML = '<div class="empty-state">無法載入成績</div>'; }
+      } catch (err) { 
+        console.error(err); 
+        container.innerHTML = `
+          <div class="card" style="border-color: var(--danger); background: rgba(239, 68, 68, 0.1);">
+            <div style="color: var(--danger); font-weight: bold; margin-bottom: 8px;">🚨 系統錯誤</div>
+            <div style="font-size: 13px; color: var(--text-main);">代碼：${err.code || '未知'}</div>
+            <div style="font-size: 13px; color: var(--text-main);">訊息：${err.message || '無法取得成績資料'}</div>
+          </div>`;
+      }
     }
 
-    // 💡 餐費抓取
+    // 💡 餐費抓取 (自動相容版：抓 meal_records)
     async function fetchMeals() {
       const container = document.getElementById('meals-container');
       try {
-        const { data, error } = await supabase.from('meals').select('*').eq('student_id', currentStudent.id).order('meal_date', {ascending: false});
+        const { data, error } = await supabase.from('meal_records').select('*').eq('student_id', currentStudent.id).order('created_at', {ascending: false}); 
         if (error) throw error;
         if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無餐費紀錄</div>'; return; }
         
-        container.innerHTML = data.map(m => `
+        container.innerHTML = data.map(m => {
+          const mealName = m.meal_name || m.name || '餐費紀錄';
+          const mealDate = m.meal_date || m.date || new Date(m.created_at).toLocaleDateString('zh-TW');
+          const amount = m.amount || m.price || 0;
+          const status = m.status || '未紀錄';
+          const statusColor = status.includes('已') ? 'var(--success)' : 'var(--danger)';
+
+          return `
           <div class="list-item">
             <div style="background:rgba(16,185,129,0.2); padding:12px; border-radius:12px; color:var(--success);"><span class="material-symbols-outlined">restaurant</span></div>
             <div style="flex:1;">
-              <div style="font-weight:bold; font-size:16px; margin-bottom:4px;">${m.meal_name}</div>
-              <div style="font-size:12px; color:var(--text-muted);">日期：${m.meal_date}</div>
+              <div style="font-weight:bold; font-size:16px; margin-bottom:4px;">${mealName}</div>
+              <div style="font-size:12px; color:var(--text-muted);">日期：${mealDate}</div>
             </div>
             <div style="text-align:right;">
-              <div style="font-weight:bold; font-size:16px;">$${m.amount}</div>
-              <div style="font-size:12px; font-weight:bold; color:${m.status==='已繳'?'var(--success)':'var(--danger)'};">${m.status}</div>
+              <div style="font-weight:bold; font-size:16px;">$${amount}</div>
+              <div style="font-size:12px; font-weight:bold; color:${statusColor};">${status}</div>
             </div>
-          </div>
-        `).join('');
-      } catch (err) { container.innerHTML = '<div class="empty-state">尚無餐費資料表或讀取失敗</div>'; }
+          </div>`
+        }).join('');
+      } catch (err) { 
+        console.error('抓取餐費失敗:', err);
+        container.innerHTML = `<div class="card" style="border-color: var(--danger); background: rgba(239, 68, 68, 0.1); color: var(--text-main); font-size:13px;">🚨 餐費表讀取錯誤：${err.message}</div>`;
+      }
     }
 
     // 💡 繳費抓取
     async function fetchPayments() {
       const container = document.getElementById('payments-container');
       try {
-        const { data, error } = await supabase.from('payments').select('*').eq('student_id', currentStudent.id).order('due_date', {ascending: false});
+        const { data, error } = await supabase.from('payments').select('*').eq('student_id', currentStudent.id).order('created_at', {ascending: false});
         if (error) throw error;
         if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無待繳費用</div>'; return; }
         
@@ -415,16 +439,19 @@
           <div class="list-item">
             <div style="background:rgba(245,158,11,0.2); padding:12px; border-radius:12px; color:var(--warning);"><span class="material-symbols-outlined">receipt_long</span></div>
             <div style="flex:1;">
-              <div style="font-weight:bold; font-size:16px; margin-bottom:4px;">${p.title}</div>
-              <div style="font-size:12px; color:var(--text-muted);">期限：${p.due_date}</div>
+              <div style="font-weight:bold; font-size:16px; margin-bottom:4px;">${p.title || '學雜費'}</div>
+              <div style="font-size:12px; color:var(--text-muted);">期限：${p.due_date || new Date(p.created_at).toLocaleDateString()}</div>
             </div>
             <div style="text-align:right;">
-              <div style="font-weight:bold; font-size:16px; color:var(--warning);">$${p.amount}</div>
-              <div style="font-size:12px; font-weight:bold; color:${p.status==='已繳'?'var(--success)':'var(--danger)'};">${p.status}</div>
+              <div style="font-weight:bold; font-size:16px; color:var(--warning);">$${p.amount || 0}</div>
+              <div style="font-size:12px; font-weight:bold; color:${(p.status||'').includes('已')?'var(--success)':'var(--danger)'};">${p.status || '未紀錄'}</div>
             </div>
           </div>
         `).join('');
-      } catch (err) { container.innerHTML = '<div class="empty-state">尚無繳費資料表或讀取失敗</div>'; }
+      } catch (err) { 
+        console.error('抓取繳費失敗:', err);
+        container.innerHTML = `<div class="card" style="border-color: var(--danger); background: rgba(239, 68, 68, 0.1); color: var(--text-main); font-size:13px;">🚨 繳費表讀取錯誤：${err.message}</div>`; 
+      }
     }
 
     // 💡 通知抓取 (格式修改為 姓名／分校)
