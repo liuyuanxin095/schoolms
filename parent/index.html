@@ -12,44 +12,51 @@
        📱 主題與全域變數
     ========================================= */
     :root {
-      --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --dot-color: #d97706; --danger: #ef4444;
-      /* 預設深色模式 */
+      --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --dot-color: #d97706;
       --bg-color: #000000; --card-bg: #1c1c1e; --text-main: #ffffff; --text-muted: #8e8e93;
       --border-solid: #2c2c2e; --nav-bg: rgba(30, 30, 30, 0.95);
       --header-bg: #1c1c1e; --header-text: #ffffff; --detail-card-bg: #2c2c2e;
     }
-
     [data-theme="light"] {
       --bg-color: #f1f5f9; --card-bg: #ffffff; --text-main: #0f172a; --text-muted: #64748b;
       --border-solid: #e2e8f0; --nav-bg: rgba(255, 255, 255, 0.95);
       --header-bg: linear-gradient(135deg, #3b82f6, #2563eb); --header-text: #ffffff; --detail-card-bg: #f8fafc;
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-    body {
-      background-color: var(--bg-color); color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      margin: 0; min-height: 100vh; overflow-x: hidden; transition: 0.3s;
-    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+    body { background-color: var(--bg-color); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; min-height: 100vh; overflow-x: hidden; transition: 0.3s; }
 
     .view-section { display: none; opacity: 0; min-height: 100vh; }
     .view-section.active { display: block; opacity: 1; animation: slideUp 0.3s ease; }
     @keyframes slideUp { from { transform: translateY(10px); } to { transform: translateY(0); } }
 
     /* 通用 UI */
-    .app-header { background: var(--header-bg); color: var(--header-text); padding: 40px 20px 25px 20px; border-radius: 0 0 24px 24px; margin-bottom: 20px; }
-    .card { background-color: var(--card-bg); border-radius: 16px; padding: 20px; margin: 0 15px 15px 15px; border: 1px solid var(--border-solid); }
+    .app-header { background: var(--header-bg); color: var(--header-text); padding: 40px 20px 25px 20px; border-radius: 0 0 24px 24px; margin-bottom: 20px; transition: 0.3s; }
+    .card { background-color: var(--card-bg); border-radius: 16px; padding: 20px; margin: 0 15px 15px 15px; border: 1px solid var(--border-solid); transition: 0.3s; }
     .card-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
-    
     .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .btn-primary { background: var(--primary); color: white; }
 
-    /* 底部導覽列 */
-    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--nav-bg); backdrop-filter: blur(10px); border-top: 1px solid var(--border-solid); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)) 0; z-index: 1000; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; font-size: 11px; }
+    /* =========================================
+       📱 導覽列 (支援手機底部 / 電腦側邊)
+    ========================================= */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--nav-bg); backdrop-filter: blur(10px); border-top: 1px solid var(--border-solid); display: flex; justify-content: space-between; padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) 10px; z-index: 1000; overflow-x: auto; }
+    .nav-item { flex: 1; min-width: 55px; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer; font-size: 11px; transition: 0.2s; }
     .nav-item.active { color: var(--primary); }
     .has-bottom-nav { padding-bottom: 100px; }
+    
+    /* 💻 電腦版 (RWD) 介面轉換 */
+    @media (min-width: 768px) {
+      .bottom-nav { top: 0; bottom: auto; width: 240px; height: 100vh; flex-direction: column; justify-content: flex-start; padding-top: 40px; border-top: none; border-right: 1px solid var(--border-solid); gap: 10px; }
+      .nav-item { flex-direction: row; width: 100%; padding: 15px 25px; font-size: 16px; gap: 15px; }
+      .nav-item span { font-size: 24px; }
+      .has-bottom-nav { padding-bottom: 0; padding-left: 240px; }
+      .app-header { border-radius: 0; padding: 30px 40px; margin-bottom: 30px; }
+      .card { margin: 0 40px 20px 40px; }
+      #view-login { align-items: center; }
+      #view-login .card { width: 100%; max-width: 400px; margin: 0 auto; }
+      .fc { max-width: 800px; margin: 0 auto; }
+    }
 
     .list-item { display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--card-bg); border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-solid); cursor: pointer; }
     .empty-state { text-align: center; color: var(--text-muted); padding: 30px 15px; font-size: 14px; }
@@ -69,12 +76,6 @@
     .selected-date { border: 1px solid #4ade80 !important; background-color: rgba(74, 222, 128, 0.05); }
     .event-dot { width: 4px; height: 4px; background-color: var(--dot-color); border-radius: 50%; margin: 4px auto 0 auto; }
 
-    /* 當日詳情卡片 */
-    .detail-card { background: var(--detail-card-bg); border-radius: 16px; padding: 20px; margin-top: 10px; }
-    .detail-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; align-items: center; }
-    .detail-label { color: var(--text-muted); }
-    .detail-value { font-weight: bold; color: var(--text-main); }
-
     /* Modal 彈窗 */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 2000; }
     .modal-content { background: var(--card-bg); width: 90%; max-width: 400px; border-radius: 20px; padding: 24px; position: relative; border: 1px solid var(--border-solid); max-height: 80vh; overflow-y: auto; }
@@ -83,9 +84,7 @@
 <body>
 
   <div id="view-loading" class="view-section active" style="display: flex; align-items: center; justify-content: center;">
-    <div style="text-align: center; color: var(--primary);">
-      <span class="material-symbols-outlined" style="font-size: 48px; animation: spin 2s linear infinite;">sync</span>
-    </div>
+    <span class="material-symbols-outlined" style="font-size: 48px; color:var(--primary); animation: spin 2s linear infinite;">sync</span>
   </div>
 
   <div id="view-login" class="view-section" style="display: flex; flex-direction: column; justify-content: center; padding: 30px;">
@@ -104,19 +103,21 @@
   </div>
 
   <div id="view-select" class="view-section" style="padding: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0 24px 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0 24px 0; padding: 0 15px;">
       <h2 style="margin: 0;"><span class="material-symbols-outlined" style="vertical-align:bottom; color:var(--primary);">group</span> 請選擇孩子</h2>
       <button onclick="window.parentLogout()" style="background:transparent; border:none; color:var(--text-muted); font-size:14px; cursor:pointer;">登出</button>
     </div>
-    <div id="child-list-container"></div>
+    <div id="child-list-container" style="padding: 0 15px;"></div>
   </div>
 
   <div id="view-main" class="view-section has-bottom-nav">
     <nav class="bottom-nav">
-      <div class="nav-item active" data-tab="home"><span class="material-symbols-outlined">home</span>首頁</div>
-      <div class="nav-item" data-tab="att"><span class="material-symbols-outlined">calendar_month</span>考勤</div>
-      <div class="nav-item" data-tab="grades"><span class="material-symbols-outlined">analytics</span>成績</div>
-      <div class="nav-item" data-tab="notis"><span class="material-symbols-outlined">campaign</span>通知</div>
+      <div class="nav-item active" data-tab="home"><span class="material-symbols-outlined">home</span><div>首頁</div></div>
+      <div class="nav-item" data-tab="att"><span class="material-symbols-outlined">calendar_month</span><div>考勤</div></div>
+      <div class="nav-item" data-tab="grades"><span class="material-symbols-outlined">analytics</span><div>成績</div></div>
+      <div class="nav-item" data-tab="meals"><span class="material-symbols-outlined">restaurant</span><div>餐費</div></div>
+      <div class="nav-item" data-tab="payments"><span class="material-symbols-outlined">payments</span><div>繳費</div></div>
+      <div class="nav-item" data-tab="notis"><span class="material-symbols-outlined">campaign</span><div>通知</div></div>
     </nav>
 
     <div id="tab-home" class="tab-content active">
@@ -127,7 +128,7 @@
             <p id="header-branch" style="margin: 0; font-size: 14px; opacity: 0.9;">陽禾文理補習班</p>
           </div>
           <div style="display: flex; gap: 10px; align-items: center;">
-            <button id="btn-theme-toggle" style="background:transparent; border:none; color:var(--header-text); display:flex; align-items:center; cursor:pointer;"><span class="material-symbols-outlined" id="theme-icon">light_mode</span></button>
+            <button id="btn-theme-toggle" style="background:transparent; border:none; color:var(--header-text); cursor:pointer;"><span class="material-symbols-outlined" id="theme-icon">light_mode</span></button>
             <button id="btn-switch-child" style="display:none; background:rgba(255,255,255,0.2); border:none; color:white; padding:6px 12px; border-radius:20px; font-size:12px; cursor:pointer;"><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">swap_horiz</span> 切換</button>
           </div>
         </div>
@@ -141,7 +142,6 @@
           <div><div style="font-size:12px; color:var(--text-muted);">離班時間</div><div id="home-out" style="font-size:20px; font-weight:bold; margin-top:4px;">--:--</div></div>
         </div>
       </div>
-
       <div class="card">
         <div class="card-title"><span class="material-symbols-outlined" style="color:var(--warning);">campaign</span> 最新公告</div>
         <div id="home-latest-noti"><div class="empty-state">載入中...</div></div>
@@ -149,22 +149,18 @@
     </div>
 
     <div id="tab-att" class="tab-content" style="display:none; padding-top:20px;">
-      <div style="padding: 0 15px 15px 15px; color:var(--text-main);">
-        <h2 style="margin:0; font-size:24px; font-weight:800;">出勤紀錄</h2>
-      </div>
-      
+      <div style="padding: 0 15px 15px 15px; color:var(--text-main);"><h2 style="margin:0; font-size:24px; font-weight:800;">出勤紀錄</h2></div>
       <div class="card" style="padding: 15px 10px; margin-bottom: 10px;">
         <div style="font-size:14px; color:var(--text-muted); margin-bottom:5px; margin-left:5px; display:flex; align-items:center; gap:5px;"><span class="material-symbols-outlined" style="font-size:16px;">calendar_month</span> 月曆檢視</div>
         <div id="calendar"></div>
       </div>
-
       <div style="padding: 0 15px;">
         <div style="font-size:14px; color:var(--text-muted); margin-bottom:5px; margin-top:15px; display:flex; align-items:center; gap:5px;"><span class="material-symbols-outlined" style="font-size:16px;">description</span> 當日詳情</div>
-        <div class="detail-card" id="att-detail-card">
+        <div style="background:var(--detail-card-bg); border-radius:16px; padding:20px; margin-top:10px;">
           <div id="att-detail-date" style="font-size:18px; font-weight:bold; margin-bottom:20px; color:var(--text-main);">--月--日</div>
-          <div class="detail-row"><span class="detail-label">到班</span><span id="att-detail-in" class="detail-value">--:--</span></div>
-          <div class="detail-row"><span class="detail-label">離班</span><span id="att-detail-out" class="detail-value">尚未紀錄</span></div>
-          <div class="detail-row" style="margin-bottom:0;"><span class="detail-label">狀態</span><span id="att-detail-status" class="detail-value">無紀錄</span></div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><span style="color:var(--text-muted);">到班</span><span id="att-detail-in" style="font-weight:bold;">--:--</span></div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><span style="color:var(--text-muted);">離班</span><span id="att-detail-out" style="font-weight:bold;">尚未紀錄</span></div>
+          <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-muted);">狀態</span><span id="att-detail-status" style="font-weight:bold;">無紀錄</span></div>
         </div>
       </div>
     </div>
@@ -172,6 +168,16 @@
     <div id="tab-grades" class="tab-content" style="display:none; padding-top:20px;">
       <h2 style="margin: 0 15px 15px 15px; font-size:24px; font-weight:800;">成績紀錄</h2>
       <div id="grades-container"></div>
+    </div>
+
+    <div id="tab-meals" class="tab-content" style="display:none; padding-top:20px;">
+      <h2 style="margin: 0 15px 15px 15px; font-size:24px; font-weight:800;">餐費管理</h2>
+      <div id="meals-container"></div>
+    </div>
+
+    <div id="tab-payments" class="tab-content" style="display:none; padding-top:20px;">
+      <h2 style="margin: 0 15px 15px 15px; font-size:24px; font-weight:800;">費用繳納</h2>
+      <div id="payments-container"></div>
     </div>
 
     <div id="tab-notis" class="tab-content" style="display:none; padding-top:20px;">
@@ -194,10 +200,7 @@
   <script type="module">
     import { supabase } from '../config.js';
 
-    let allMyKids = [];
-    let currentStudent = null;
-    let calendarInstance = null;
-    let attendanceDataMap = {};
+    let allMyKids = []; let currentStudent = null; let calendarInstance = null; let attendanceDataMap = {};
 
     function initTheme() {
       const savedTheme = localStorage.getItem('yh_parent_theme') || 'dark';
@@ -214,62 +217,33 @@
     document.addEventListener('DOMContentLoaded', async () => {
       initTheme();
       const savedPhone = localStorage.getItem('yh_parent_phone');
-      if (savedPhone) await executeLogin(savedPhone, true);
-      else switchView('view-login');
-
+      if (savedPhone) await executeLogin(savedPhone, true); else switchView('view-login');
       document.getElementById('btn-login').addEventListener('click', () => {
         const phone = document.getElementById('input-phone').value.trim();
-        if(!phone) return alert('請輸入家長手機號碼！');
-        executeLogin(phone, false);
+        if(!phone) return alert('請輸入家長手機號碼！'); executeLogin(phone, false);
       });
-
-      document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', (e) => switchTab(e.currentTarget.dataset.tab));
-      });
-
+      document.querySelectorAll('.nav-item').forEach(item => { item.addEventListener('click', (e) => switchTab(e.currentTarget.dataset.tab)); });
       document.getElementById('close-modal').addEventListener('click', () => { document.getElementById('noti-modal').style.display = 'none'; });
       document.getElementById('btn-switch-child').addEventListener('click', () => renderChildSelection(allMyKids));
     });
 
-    window.parentLogout = () => {
-      if(confirm('確定要登出家長專區嗎？')) {
-        localStorage.removeItem('yh_parent_phone'); localStorage.removeItem('yh_kid_id');
-        window.location.reload();
-      }
-    };
+    window.parentLogout = () => { if(confirm('確定要登出家長專區嗎？')) { localStorage.removeItem('yh_parent_phone'); localStorage.removeItem('yh_kid_id'); window.location.reload(); } };
 
     async function executeLogin(phone, isAutoLogin = false) {
-      const btn = document.getElementById('btn-login');
-      if(!isAutoLogin) { btn.textContent = '連線中...'; btn.disabled = true; }
-      switchView('view-loading');
-
+      const btn = document.getElementById('btn-login'); if(!isAutoLogin) { btn.textContent = '連線中...'; btn.disabled = true; } switchView('view-loading');
       try {
         const { data: students, error } = await supabase.from('students').select('*, branches(name)').eq('parent_phone', phone);
-        if (error) throw error;
-        if (!students || students.length === 0) {
-          localStorage.removeItem('yh_parent_phone');
-          throw new Error('查無此號碼綁定的孩子資料，請聯絡補習班。');
-        }
-
-        localStorage.setItem('yh_parent_phone', phone);
-        allMyKids = students;
-
-        if (students.length === 1) { loadDashboard(students[0]); } 
+        if (error) throw error; if (!students || students.length === 0) { localStorage.removeItem('yh_parent_phone'); throw new Error('查無此號碼綁定的孩子資料。'); }
+        localStorage.setItem('yh_parent_phone', phone); allMyKids = students;
+        if (students.length === 1) loadDashboard(students[0]);
         else {
-          const savedKidId = localStorage.getItem('yh_kid_id');
-          const targetKid = students.find(s => s.id === savedKidId);
-          if (targetKid && isAutoLogin) loadDashboard(targetKid);
-          else renderChildSelection(students);
+          const savedKidId = localStorage.getItem('yh_kid_id'); const targetKid = students.find(s => s.id === savedKidId);
+          if (targetKid && isAutoLogin) loadDashboard(targetKid); else renderChildSelection(students);
         }
-      } catch (err) { alert(err.message); switchView('view-login'); } 
-      finally { if(!isAutoLogin) { btn.textContent = '進入系統'; btn.disabled = false; } }
+      } catch (err) { alert(err.message); switchView('view-login'); } finally { if(!isAutoLogin) { btn.textContent = '進入系統'; btn.disabled = false; } }
     }
 
-    function switchView(viewId) {
-      document.querySelectorAll('.view-section').forEach(v => { v.classList.remove('active'); v.style.display = 'none'; });
-      const target = document.getElementById(viewId); target.style.display = 'block';
-      setTimeout(() => target.classList.add('active'), 10);
-    }
+    function switchView(viewId) { document.querySelectorAll('.view-section').forEach(v => { v.classList.remove('active'); v.style.display = 'none'; }); const target = document.getElementById(viewId); target.style.display = 'block'; setTimeout(() => target.classList.add('active'), 10); }
 
     function renderChildSelection(students) {
       const container = document.getElementById('child-list-container'); container.innerHTML = '';
@@ -286,22 +260,27 @@
       currentStudent = student;
       document.getElementById('header-name').textContent = `${student.name} 同學`;
       document.getElementById('header-branch').textContent = student.branches?.name || '陽禾文理補習班';
-      document.getElementById('btn-switch-child').style.display = allMyKids.length > 1 ? 'inline-block' : 'none';
+      document.getElementById('btn-switch-child').style.display = allMyKids.length > 1 ? 'flex' : 'none';
       switchView('view-main'); switchTab('home'); 
     }
 
     function switchTab(tabId) {
       document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-      document.querySelector(`.nav-item[data-tab="${tabId}"]`).classList.add('active');
+      let targetNav = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+      if(targetNav) targetNav.classList.add('active');
+      
       document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
       document.getElementById(`tab-${tabId}`).style.display = 'block';
 
       if (tabId === 'home') { fetchHomeData(); fetchHomeNotis(); }
       if (tabId === 'att') initCalendar();
       if (tabId === 'grades') fetchGrades();
+      if (tabId === 'meals') fetchMeals();
+      if (tabId === 'payments') fetchPayments();
       if (tabId === 'notis') fetchNotifications();
     }
 
+    // --- 資料抓取區塊 ---
     async function fetchHomeData() {
       try {
         const today = new Date().toISOString().split('T')[0];
@@ -327,31 +306,17 @@
     async function initCalendar() {
       try {
         const { data } = await supabase.from('attendance').select('*').eq('student_id', currentStudent.id);
-        attendanceDataMap = {};
-        if (data) data.forEach(r => attendanceDataMap[r.record_date] = r);
-
+        attendanceDataMap = {}; if (data) data.forEach(r => attendanceDataMap[r.record_date] = r);
         if (!calendarInstance) {
           calendarInstance = new FullCalendar.Calendar(document.getElementById('calendar'), {
             initialView: 'dayGridMonth', locale: 'zh-tw', height: 'auto', fixedWeekCount: false,
-            headerToolbar: { left: 'prev', center: 'title', right: 'next' },
-            dayHeaderFormat: { weekday: 'short' },
+            headerToolbar: { left: 'prev', center: 'title', right: 'next' }, dayHeaderFormat: { weekday: 'short' },
             dayCellContent: (arg) => arg.date.getDate(),
-            dayCellDidMount: (info) => {
-              const dateStr = info.date.toISOString().split('T')[0];
-              if (attendanceDataMap[dateStr]) {
-                const dot = document.createElement('div'); dot.className = 'event-dot';
-                info.el.querySelector('.fc-daygrid-day-frame').appendChild(dot);
-              }
-            },
-            dateClick: (info) => {
-              document.querySelectorAll('.fc-daygrid-day-frame').forEach(el => el.classList.remove('selected-date'));
-              info.dayEl.querySelector('.fc-daygrid-day-frame').classList.add('selected-date');
-              renderAttendanceDetail(info.dateStr);
-            }
+            dayCellDidMount: (info) => { const dateStr = info.date.toISOString().split('T')[0]; if (attendanceDataMap[dateStr]) { const dot = document.createElement('div'); dot.className = 'event-dot'; info.el.querySelector('.fc-daygrid-day-frame').appendChild(dot); } },
+            dateClick: (info) => { document.querySelectorAll('.fc-daygrid-day-frame').forEach(el => el.classList.remove('selected-date')); info.dayEl.querySelector('.fc-daygrid-day-frame').classList.add('selected-date'); renderAttendanceDetail(info.dateStr); }
           });
           calendarInstance.render();
         } else { calendarInstance.render(); }
-        
         const todayStr = new Date().toISOString().split('T')[0];
         setTimeout(() => { const todayEl = document.querySelector(`.fc-day[data-date="${todayStr}"] .fc-daygrid-day-frame`); if(todayEl) todayEl.classList.add('selected-date'); }, 100);
         renderAttendanceDetail(todayStr);
@@ -370,50 +335,111 @@
       }
     }
 
-    // 💡 除錯版成績抓取函數
+    // 💡 完整版成績表 (包含你要求的所有欄位)
     async function fetchGrades() {
       const container = document.getElementById('grades-container');
       try {
-        const { data, error } = await supabase.from('grades')
-          .select('*, class_exams(exam_name, subject, exam_date)')
-          .eq('student_id', currentStudent.id)
-          .order('created_at', {ascending: false});
-          
+        const { data, error } = await supabase.from('grades').select('*, class_exams(exam_name, subject, exam_date, class_name, class_average, class_notice)').eq('student_id', currentStudent.id).order('created_at', {ascending: false});
         if (error) throw error;
         if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無成績紀錄</div>'; return; }
         
         container.innerHTML = data.map(g => {
-          const examName = g.class_exams ? g.class_exams.exam_name : '未命名測驗';
-          const subject = g.class_exams ? g.class_exams.subject : '未知科目';
-          const examDate = g.class_exams ? g.class_exams.exam_date : '未知日期';
+          const ex = g.class_exams || {};
+          const cName = ex.class_name || '未分班';
+          const eName = ex.exam_name || '未命名測驗';
+          const subj = ex.subject || '未設定';
+          const eDate = ex.exam_date || '未設定';
+          const avg = ex.class_average || '--';
+          const notice = ex.class_notice || '無';
+          const rank = g.rank || '--';
           
-          return `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><div><div style="font-weight:bold; font-size:16px;">${examName}</div><div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${subject} · ${examDate}</div></div><div style="font-size:24px; font-weight:bold; color:var(--primary);">${g.score ?? '缺'}</div></div>${g.note ? `<div style="background:var(--detail-card-bg); padding:10px; border-radius:8px; margin-top:12px; font-size:13px; color:var(--text-muted);">評語：${g.note}</div>` : ''}</div>`;
+          return `
+            <div class="card" style="padding:0; overflow:hidden;">
+              <div style="background:var(--detail-card-bg); padding:15px; border-bottom:1px solid var(--border-solid); display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <span style="background:var(--primary); color:white; padding:3px 8px; border-radius:6px; font-size:11px; margin-right:8px;">${cName}</span>
+                  <span style="font-weight:bold; font-size:16px;">${eName}</span>
+                </div>
+                <div style="text-align:right;">
+                  <span style="font-size:28px; font-weight:800; color:var(--primary);">${g.score ?? '缺'}</span>
+                </div>
+              </div>
+              <div style="padding:15px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; font-size:13px; color:var(--text-muted); margin-bottom:15px;">
+                  <div><span style="color:var(--text-main);">科目：</span>${subj}</div>
+                  <div><span style="color:var(--text-main);">日期：</span>${eDate}</div>
+                  <div><span style="color:var(--text-main);">班均：</span>${avg} 分</div>
+                  <div><span style="color:var(--text-main);">排名：</span>第 ${rank} 名</div>
+                </div>
+                ${g.note ? `<div style="background:rgba(59,130,246,0.1); border-left:3px solid var(--primary); padding:10px; margin-bottom:10px; font-size:13px; color:var(--text-main);"><strong>個人評語：</strong>${g.note}</div>` : ''}
+                ${notice !== '無' ? `<div style="background:rgba(245,158,11,0.1); border-left:3px solid var(--warning); padding:10px; font-size:13px; color:var(--text-main);"><strong>班級通知：</strong>${notice}</div>` : ''}
+              </div>
+            </div>`;
         }).join('');
-        
-      } catch (err) {
-        console.error('抓取成績失敗:', err);
-        container.innerHTML = `
-          <div class="card" style="border-color: var(--danger); background: rgba(239, 68, 68, 0.1);">
-            <div style="color: var(--danger); font-weight: bold; margin-bottom: 8px;">🚨 資料庫連線錯誤</div>
-            <div style="font-size: 13px; color: var(--text-main); margin-bottom: 4px;">代碼：${err.code || '無'}</div>
-            <div style="font-size: 13px; color: var(--text-main); line-height: 1.4;">訊息：${err.message || '未知錯誤'}</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">請將此紅框內容提供給系統開發人員</div>
-          </div>`;
-      }
+      } catch (err) { console.error(err); container.innerHTML = '<div class="empty-state">無法載入成績</div>'; }
     }
 
+    // 💡 餐費抓取
+    async function fetchMeals() {
+      const container = document.getElementById('meals-container');
+      try {
+        const { data, error } = await supabase.from('meals').select('*').eq('student_id', currentStudent.id).order('meal_date', {ascending: false});
+        if (error) throw error;
+        if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無餐費紀錄</div>'; return; }
+        
+        container.innerHTML = data.map(m => `
+          <div class="list-item">
+            <div style="background:rgba(16,185,129,0.2); padding:12px; border-radius:12px; color:var(--success);"><span class="material-symbols-outlined">restaurant</span></div>
+            <div style="flex:1;">
+              <div style="font-weight:bold; font-size:16px; margin-bottom:4px;">${m.meal_name}</div>
+              <div style="font-size:12px; color:var(--text-muted);">日期：${m.meal_date}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:bold; font-size:16px;">$${m.amount}</div>
+              <div style="font-size:12px; font-weight:bold; color:${m.status==='已繳'?'var(--success)':'var(--danger)'};">${m.status}</div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) { container.innerHTML = '<div class="empty-state">尚無餐費資料表或讀取失敗</div>'; }
+    }
+
+    // 💡 繳費抓取
+    async function fetchPayments() {
+      const container = document.getElementById('payments-container');
+      try {
+        const { data, error } = await supabase.from('payments').select('*').eq('student_id', currentStudent.id).order('due_date', {ascending: false});
+        if (error) throw error;
+        if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無待繳費用</div>'; return; }
+        
+        container.innerHTML = data.map(p => `
+          <div class="list-item">
+            <div style="background:rgba(245,158,11,0.2); padding:12px; border-radius:12px; color:var(--warning);"><span class="material-symbols-outlined">receipt_long</span></div>
+            <div style="flex:1;">
+              <div style="font-weight:bold; font-size:16px; margin-bottom:4px;">${p.title}</div>
+              <div style="font-size:12px; color:var(--text-muted);">期限：${p.due_date}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:bold; font-size:16px; color:var(--warning);">$${p.amount}</div>
+              <div style="font-size:12px; font-weight:bold; color:${p.status==='已繳'?'var(--success)':'var(--danger)'};">${p.status}</div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) { container.innerHTML = '<div class="empty-state">尚無繳費資料表或讀取失敗</div>'; }
+    }
+
+    // 💡 通知抓取 (格式修改為 姓名／分校)
     async function fetchNotifications() {
       const container = document.getElementById('notis-container');
       try {
         const { data, error } = await supabase.from('notifications').select('*').order('created_at', {ascending: false});
         if (error) throw error;
         if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無班級公告</div>'; return; }
-        const studentBranch = currentStudent.branches?.name || '全校';
+        const branch = currentStudent.branches?.name || '全校';
         container.innerHTML = data.map(n => `
           <div class="list-item" onclick='window.openNoti(${JSON.stringify(n).replace(/'/g, "&apos;")})'>
             <div style="background:#2563eb30; padding:12px; border-radius:12px; color:var(--primary);"><span class="material-symbols-outlined">campaign</span></div>
             <div style="flex:1; overflow:hidden;">
-              <div style="font-size:12px; color:var(--primary); font-weight:bold; margin-bottom:4px;">給：${currentStudent.name} / ${studentBranch}</div>
+              <div style="font-size:12px; color:var(--primary); font-weight:bold; margin-bottom:4px;">${currentStudent.name}／${branch}</div>
               <div style="font-weight:bold; font-size:15px; margin-bottom:4px; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.title}</div>
               <div style="font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.content}</div>
             </div>
