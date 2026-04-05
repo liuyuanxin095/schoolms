@@ -12,8 +12,8 @@
        📱 主題與全域變數
     ========================================= */
     :root {
-      --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --dot-color: #d97706;
-      /* 預設深色模式 (仿截圖質感) */
+      --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --dot-color: #d97706; --danger: #ef4444;
+      /* 預設深色模式 */
       --bg-color: #000000; --card-bg: #1c1c1e; --text-main: #ffffff; --text-muted: #8e8e93;
       --border-solid: #2c2c2e; --nav-bg: rgba(30, 30, 30, 0.95);
       --header-bg: #1c1c1e; --header-text: #ffffff; --detail-card-bg: #2c2c2e;
@@ -54,44 +54,22 @@
     .list-item { display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--card-bg); border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-solid); cursor: pointer; }
     .empty-state { text-align: center; color: var(--text-muted); padding: 30px 15px; font-size: 14px; }
 
-    /* =========================================
-       🗓️ 行事曆究極美化 (完全仿製截圖)
-    ========================================= */
+    /* 🗓️ 行事曆美化 */
     .fc { font-family: inherit; font-size: 14px; }
-    /* 拔掉所有醜陋的邊框 */
     .fc .fc-scrollgrid, .fc td, .fc th, .fc-theme-standard .fc-scrollgrid { border: none !important; }
-    
-    /* 頂部月份標題與切換按鈕 */
     .fc .fc-toolbar { margin-bottom: 20px !important; }
     .fc .fc-toolbar-title { font-size: 18px !important; font-weight: bold; color: var(--text-main); letter-spacing: 1px; }
     .fc .fc-button { background: transparent !important; border: none !important; color: var(--text-muted) !important; box-shadow: none !important; padding: 0 !important; }
     .fc .fc-button:hover { color: var(--text-main) !important; }
-    
-    /* 星期標題 (日 一 二...) */
     .fc .fc-col-header-cell-cushion { color: var(--text-muted); font-weight: normal; font-size: 13px; padding-bottom: 15px; text-transform: uppercase; }
-    
-    /* 日期數字的容器 */
-    .fc-daygrid-day-frame { 
-      display: flex !important; flex-direction: column; align-items: center; justify-content: flex-start; 
-      padding: 6px 0 !important; min-height: 48px !important; border-radius: 10px; border: 1px solid transparent; transition: 0.2s; cursor: pointer;
-    }
-    
-    /* 日期數字本身 */
+    .fc-daygrid-day-frame { display: flex !important; flex-direction: column; align-items: center; justify-content: flex-start; padding: 6px 0 !important; min-height: 48px !important; border-radius: 10px; border: 1px solid transparent; transition: 0.2s; cursor: pointer; }
     .fc-daygrid-day-number { color: var(--text-main); font-size: 16px; width: 100%; text-align: center; padding: 0 !important; text-decoration: none !important; }
-    
-    /* 移除今天的預設背景，改為單純文字加亮 */
     .fc-day-today .fc-daygrid-day-frame { background-color: transparent !important; }
     .fc-day-today .fc-daygrid-day-number { font-weight: bold; color: var(--primary); }
-
-    /* 💡 點擊選中時的綠色外框 (仿截圖的框線) */
     .selected-date { border: 1px solid #4ade80 !important; background-color: rgba(74, 222, 128, 0.05); }
-
-    /* 考勤橘色小圓點 */
     .event-dot { width: 4px; height: 4px; background-color: var(--dot-color); border-radius: 50%; margin: 4px auto 0 auto; }
 
-    /* =========================================
-       📄 當日詳情卡片
-    ========================================= */
+    /* 當日詳情卡片 */
     .detail-card { background: var(--detail-card-bg); border-radius: 16px; padding: 20px; margin-top: 10px; }
     .detail-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; align-items: center; }
     .detail-label { color: var(--text-muted); }
@@ -221,30 +199,18 @@
     let calendarInstance = null;
     let attendanceDataMap = {};
 
-    // ==============================================
-    // 💡 日夜模式切換邏輯
-    // ==============================================
     function initTheme() {
       const savedTheme = localStorage.getItem('yh_parent_theme') || 'dark';
       document.documentElement.setAttribute('data-theme', savedTheme);
-      updateThemeIcon(savedTheme);
-
+      document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? 'light_mode' : 'dark_mode';
       document.getElementById('btn-theme-toggle').addEventListener('click', () => {
-        const current = document.documentElement.getAttribute('data-theme');
-        const next = current === 'dark' ? 'light' : 'dark';
+        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('yh_parent_theme', next);
-        updateThemeIcon(next);
+        document.getElementById('theme-icon').textContent = next === 'dark' ? 'light_mode' : 'dark_mode';
       });
     }
 
-    function updateThemeIcon(theme) {
-      document.getElementById('theme-icon').textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
-    }
-
-    // ==============================================
-    // 初始化與記憶登入
-    // ==============================================
     document.addEventListener('DOMContentLoaded', async () => {
       initTheme();
       const savedPhone = localStorage.getItem('yh_parent_phone');
@@ -267,8 +233,7 @@
 
     window.parentLogout = () => {
       if(confirm('確定要登出家長專區嗎？')) {
-        localStorage.removeItem('yh_parent_phone');
-        localStorage.removeItem('yh_kid_id');
+        localStorage.removeItem('yh_parent_phone'); localStorage.removeItem('yh_kid_id');
         window.location.reload();
       }
     };
@@ -289,39 +254,29 @@
         localStorage.setItem('yh_parent_phone', phone);
         allMyKids = students;
 
-        if (students.length === 1) {
-          loadDashboard(students[0]);
-        } else {
+        if (students.length === 1) { loadDashboard(students[0]); } 
+        else {
           const savedKidId = localStorage.getItem('yh_kid_id');
           const targetKid = students.find(s => s.id === savedKidId);
           if (targetKid && isAutoLogin) loadDashboard(targetKid);
           else renderChildSelection(students);
         }
-      } catch (err) {
-        alert(err.message);
-        switchView('view-login');
-      } finally {
-        if(!isAutoLogin) { btn.textContent = '進入系統'; btn.disabled = false; }
-      }
+      } catch (err) { alert(err.message); switchView('view-login'); } 
+      finally { if(!isAutoLogin) { btn.textContent = '進入系統'; btn.disabled = false; } }
     }
 
     function switchView(viewId) {
       document.querySelectorAll('.view-section').forEach(v => { v.classList.remove('active'); v.style.display = 'none'; });
-      const target = document.getElementById(viewId);
-      target.style.display = 'block';
+      const target = document.getElementById(viewId); target.style.display = 'block';
       setTimeout(() => target.classList.add('active'), 10);
     }
 
     function renderChildSelection(students) {
-      const container = document.getElementById('child-list-container');
-      container.innerHTML = '';
+      const container = document.getElementById('child-list-container'); container.innerHTML = '';
       students.forEach(student => {
         const div = document.createElement('div'); div.className = 'list-item';
         div.innerHTML = `<div style="background:#2563eb30; padding:10px; border-radius:50%;"><span class="material-symbols-outlined" style="color:var(--primary);">face</span></div><div style="flex:1;"><div style="font-weight:bold; font-size:18px; color:var(--text-main);">${student.name}</div><div style="font-size:12px; color:var(--text-muted);">學號：${student.student_number || '無'}</div></div><span class="material-symbols-outlined" style="color:var(--text-muted);">chevron_right</span>`;
-        div.addEventListener('click', () => {
-          localStorage.setItem('yh_kid_id', student.id);
-          loadDashboard(student);
-        });
+        div.addEventListener('click', () => { localStorage.setItem('yh_kid_id', student.id); loadDashboard(student); });
         container.appendChild(div);
       });
       switchView('view-select');
@@ -332,9 +287,7 @@
       document.getElementById('header-name').textContent = `${student.name} 同學`;
       document.getElementById('header-branch').textContent = student.branches?.name || '陽禾文理補習班';
       document.getElementById('btn-switch-child').style.display = allMyKids.length > 1 ? 'inline-block' : 'none';
-
-      switchView('view-main');
-      switchTab('home'); 
+      switchView('view-main'); switchTab('home'); 
     }
 
     function switchTab(tabId) {
@@ -349,51 +302,31 @@
       if (tabId === 'notis') fetchNotifications();
     }
 
-    // ==============================================
-    // 資料抓取與渲染 (增強防呆與錯誤捕捉)
-    // ==============================================
-    
-    // 💡 1. 抓取首頁考勤
     async function fetchHomeData() {
       try {
         const today = new Date().toISOString().split('T')[0];
-        const { data, error } = await supabase.from('attendance').select('*').eq('student_id', currentStudent.id).eq('record_date', today).maybeSingle();
-        if (error) throw error;
-
+        const { data } = await supabase.from('attendance').select('*').eq('student_id', currentStudent.id).eq('record_date', today).maybeSingle();
         const inEl = document.getElementById('home-in'); const outEl = document.getElementById('home-out');
         if (data) {
           inEl.textContent = data.check_in ? new Date(data.check_in).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
           outEl.textContent = data.check_out ? new Date(data.check_out).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '--:--';
           if(data.status === '請假') { inEl.textContent = '請假'; outEl.textContent = '請假'; inEl.style.color = 'var(--warning)'; } else { inEl.style.color = ''; }
-        } else { 
-          inEl.textContent = '--:--'; outEl.textContent = '--:--'; inEl.style.color = ''; 
-        }
-      } catch (err) {
-        console.error('抓取首頁考勤失敗:', err);
-      }
+        } else { inEl.textContent = '--:--'; outEl.textContent = '--:--'; inEl.style.color = ''; }
+      } catch (err) { console.error(err); }
     }
 
-    // 💡 2. 抓取首頁最新公告
     async function fetchHomeNotis() {
       const container = document.getElementById('home-latest-noti');
       try {
-        const { data, error } = await supabase.from('notifications').select('*').order('created_at', {ascending:false}).limit(2);
-        if (error) throw error;
+        const { data } = await supabase.from('notifications').select('*').order('created_at', {ascending:false}).limit(2);
         if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無最新公告</div>'; return; }
-        
         container.innerHTML = data.map(n => `<div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border-solid);"><div style="font-size:12px; color:var(--text-muted);">${new Date(n.created_at).toLocaleDateString()}</div><div style="font-weight:bold; color:var(--text-main); font-size:15px; margin:4px 0;">${n.title}</div><div style="font-size:13px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${n.content}</div></div>`).join('');
-      } catch (err) {
-        console.error('抓取首頁公告失敗:', err);
-        container.innerHTML = '<div class="empty-state">無法載入公告</div>';
-      }
+      } catch (err) { container.innerHTML = '<div class="empty-state">無法載入公告</div>'; }
     }
 
-    // 💡 3. 初始化行事曆 (完全符合截圖邏輯)
     async function initCalendar() {
       try {
-        const { data, error } = await supabase.from('attendance').select('*').eq('student_id', currentStudent.id);
-        if(error) throw error;
-
+        const { data } = await supabase.from('attendance').select('*').eq('student_id', currentStudent.id);
         attendanceDataMap = {};
         if (data) data.forEach(r => attendanceDataMap[r.record_date] = r);
 
@@ -401,19 +334,15 @@
           calendarInstance = new FullCalendar.Calendar(document.getElementById('calendar'), {
             initialView: 'dayGridMonth', locale: 'zh-tw', height: 'auto', fixedWeekCount: false,
             headerToolbar: { left: 'prev', center: 'title', right: 'next' },
-            dayHeaderFormat: { weekday: 'short' }, // 只顯示 週一、週二... (透過 CSS 隱藏"週"字可自訂)
-            // 自訂日期數字，只輸出純數字
-            dayCellContent: (arg) => { return arg.date.getDate(); },
-            // 加入橘色小圓點
+            dayHeaderFormat: { weekday: 'short' },
+            dayCellContent: (arg) => arg.date.getDate(),
             dayCellDidMount: (info) => {
               const dateStr = info.date.toISOString().split('T')[0];
               if (attendanceDataMap[dateStr]) {
-                const dot = document.createElement('div');
-                dot.className = 'event-dot';
+                const dot = document.createElement('div'); dot.className = 'event-dot';
                 info.el.querySelector('.fc-daygrid-day-frame').appendChild(dot);
               }
             },
-            // 點擊日期時加上綠色外框 (仿截圖 selected 狀態)
             dateClick: (info) => {
               document.querySelectorAll('.fc-daygrid-day-frame').forEach(el => el.classList.remove('selected-date'));
               info.dayEl.querySelector('.fc-daygrid-day-frame').classList.add('selected-date');
@@ -421,28 +350,17 @@
             }
           });
           calendarInstance.render();
-        } else {
-          calendarInstance.render(); 
-        }
+        } else { calendarInstance.render(); }
         
-        // 預設選中並顯示今天
         const todayStr = new Date().toISOString().split('T')[0];
-        setTimeout(() => {
-          const todayEl = document.querySelector(`.fc-day[data-date="${todayStr}"] .fc-daygrid-day-frame`);
-          if(todayEl) todayEl.classList.add('selected-date');
-        }, 100);
+        setTimeout(() => { const todayEl = document.querySelector(`.fc-day[data-date="${todayStr}"] .fc-daygrid-day-frame`); if(todayEl) todayEl.classList.add('selected-date'); }, 100);
         renderAttendanceDetail(todayStr);
-
-      } catch (err) {
-        console.error('載入行事曆失敗:', err);
-      }
+      } catch (err) { console.error(err); }
     }
 
     function renderAttendanceDetail(dateStr) {
-      const record = attendanceDataMap[dateStr];
-      const d = new Date(dateStr); const days = ['日','一','二','三','四','五','六'];
+      const record = attendanceDataMap[dateStr]; const d = new Date(dateStr); const days = ['日','一','二','三','四','五','六'];
       document.getElementById('att-detail-date').textContent = `${d.getMonth()+1}月${d.getDate()}日 (${days[d.getDay()]})`;
-      
       if (record) {
         document.getElementById('att-detail-in').textContent = record.check_in ? new Date(record.check_in).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '尚未紀錄';
         document.getElementById('att-detail-out').textContent = record.check_out ? new Date(record.check_out).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '尚未紀錄';
@@ -452,38 +370,45 @@
       }
     }
 
-    // 💡 4. 抓取成績 (強化 JOIN 失敗的防呆)
+    // 💡 除錯版成績抓取函數
     async function fetchGrades() {
       const container = document.getElementById('grades-container');
       try {
-        const { data, error } = await supabase.from('grades').select('*, class_exams(exam_name, subject, exam_date)').eq('student_id', currentStudent.id).order('created_at', {ascending: false});
+        const { data, error } = await supabase.from('grades')
+          .select('*, class_exams(exam_name, subject, exam_date)')
+          .eq('student_id', currentStudent.id)
+          .order('created_at', {ascending: false});
+          
         if (error) throw error;
         if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無成績紀錄</div>'; return; }
         
         container.innerHTML = data.map(g => {
-          // 確保就算 class_exams 關聯失敗也不會導致畫面當機
           const examName = g.class_exams ? g.class_exams.exam_name : '未命名測驗';
           const subject = g.class_exams ? g.class_exams.subject : '未知科目';
           const examDate = g.class_exams ? g.class_exams.exam_date : '未知日期';
           
           return `<div class="card"><div style="display:flex; justify-content:space-between; align-items:center;"><div><div style="font-weight:bold; font-size:16px;">${examName}</div><div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${subject} · ${examDate}</div></div><div style="font-size:24px; font-weight:bold; color:var(--primary);">${g.score ?? '缺'}</div></div>${g.note ? `<div style="background:var(--detail-card-bg); padding:10px; border-radius:8px; margin-top:12px; font-size:13px; color:var(--text-muted);">評語：${g.note}</div>` : ''}</div>`;
         }).join('');
+        
       } catch (err) {
         console.error('抓取成績失敗:', err);
-        container.innerHTML = '<div class="empty-state">無法載入成績，請檢查資料庫關聯 (class_exams)。</div>';
+        container.innerHTML = `
+          <div class="card" style="border-color: var(--danger); background: rgba(239, 68, 68, 0.1);">
+            <div style="color: var(--danger); font-weight: bold; margin-bottom: 8px;">🚨 資料庫連線錯誤</div>
+            <div style="font-size: 13px; color: var(--text-main); margin-bottom: 4px;">代碼：${err.code || '無'}</div>
+            <div style="font-size: 13px; color: var(--text-main); line-height: 1.4;">訊息：${err.message || '未知錯誤'}</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">請將此紅框內容提供給系統開發人員</div>
+          </div>`;
       }
     }
 
-    // 💡 5. 抓取通知
     async function fetchNotifications() {
       const container = document.getElementById('notis-container');
       try {
         const { data, error } = await supabase.from('notifications').select('*').order('created_at', {ascending: false});
         if (error) throw error;
         if (!data || data.length === 0) { container.innerHTML = '<div class="empty-state">目前尚無班級公告</div>'; return; }
-        
         const studentBranch = currentStudent.branches?.name || '全校';
-        
         container.innerHTML = data.map(n => `
           <div class="list-item" onclick='window.openNoti(${JSON.stringify(n).replace(/'/g, "&apos;")})'>
             <div style="background:#2563eb30; padding:12px; border-radius:12px; color:var(--primary);"><span class="material-symbols-outlined">campaign</span></div>
@@ -494,17 +419,11 @@
             </div>
           </div>
         `).join('');
-      } catch (err) {
-        console.error('抓取通知失敗:', err);
-        container.innerHTML = '<div class="empty-state">無法載入公告資料。</div>';
-      }
+      } catch (err) { container.innerHTML = '<div class="empty-state">無法載入公告資料。</div>'; }
     }
 
     window.openNoti = (n) => {
-      document.getElementById('modal-title').textContent = n.title;
-      document.getElementById('modal-time').textContent = new Date(n.created_at).toLocaleString('zh-TW');
-      document.getElementById('modal-body').textContent = n.content;
-      document.getElementById('noti-modal').style.display = 'flex';
+      document.getElementById('modal-title').textContent = n.title; document.getElementById('modal-time').textContent = new Date(n.created_at).toLocaleString('zh-TW'); document.getElementById('modal-body').textContent = n.content; document.getElementById('noti-modal').style.display = 'flex';
     };
   </script>
 </body>
